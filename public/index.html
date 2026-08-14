@@ -430,6 +430,461 @@
 .results-scroll::-webkit-scrollbar-thumb:hover{
     background:#475569;
 }
+
+/* ===== 메인 게시판 미리보기 ===== */
+
+.notice-card{
+    overflow:hidden;
+}
+
+.notice-card .head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+
+.more-link{
+    color:#64748b;
+    font-size:11px;
+    font-weight:600;
+    text-decoration:none;
+    transition:.2s;
+}
+
+.more-link:hover{
+    color:#60a5fa;
+}
+
+.board-preview{
+    padding:4px 14px 10px;
+}
+
+.preview-row{
+    min-height:42px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+
+    border-bottom:1px solid rgba(255,255,255,.055);
+
+    color:#cbd5e1;
+    text-decoration:none;
+}
+
+.preview-row:last-child{
+    border-bottom:0;
+}
+
+.preview-row:hover .preview-title{
+    color:#60a5fa;
+}
+
+.preview-text{
+    min-width:0;
+    display:flex;
+    align-items:center;
+    gap:7px;
+}
+
+.preview-title{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+
+    font-size:12px;
+    transition:.15s;
+}
+
+.preview-date{
+    flex-shrink:0;
+    color:#52627a;
+    font-size:10px;
+}
+
+.notice-label{
+    flex-shrink:0;
+
+    padding:3px 5px;
+    border-radius:4px;
+
+    background:rgba(37,99,235,.14);
+    color:#60a5fa;
+
+    font-size:9px;
+    font-weight:800;
+}
+
+/* 새 글 게시판 구분 라벨 */
+.board-label{
+    flex-shrink:0;
+    min-width:30px;
+
+    padding:3px 5px;
+    border-radius:4px;
+
+    background:rgba(148,163,184,.09);
+    color:#94a3b8;
+
+    text-align:center;
+    font-size:9px;
+    font-weight:700;
+}
+
+/* ===== 새 댓글 ===== */
+
+.comment-row{
+    min-height:52px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+
+    border-bottom:1px solid rgba(255,255,255,.055);
+
+    text-decoration:none;
+}
+
+.comment-row:last-child{
+    border-bottom:0;
+}
+
+.comment-content{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+}
+
+.comment-text{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+
+    color:#cbd5e1;
+    font-size:12px;
+    font-weight:600;
+}
+
+.comment-post{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+
+    color:#52627a;
+    font-size:10px;
+}
+
+.comment-row:hover .comment-text{
+    color:#60a5fa;
+}
+
+/* ===== TOVIEW PARTNER BANNERS ===== */
+
+.partner-section{
+    margin:18px 0;
+}
+
+.partner-title{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    margin-bottom:10px;
+}
+
+.partner-title > div{
+    display:flex;
+    align-items:center;
+    gap:9px;
+}
+
+.partner-title strong{
+    color:#e2e8f0;
+    font-size:14px;
+    font-weight:700;
+}
+
+.partner-label{
+    color:#3b82f6;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:1.3px;
+}
+
+.partner-ad-label{
+    color:#52627a;
+    font-size:9px;
+}
+
+.partner-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+}
+
+.partner-banner{
+    display:block;
+    height:90px;
+
+    overflow:hidden;
+
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:9px;
+
+    background:#0b1628;
+
+    text-decoration:none;
+
+    transition:
+        transform .18s ease,
+        border-color .18s ease;
+}
+
+.partner-banner:hover{
+    transform:translateY(-2px);
+    border-color:rgba(96,165,250,.35);
+}
+
+.partner-banner img{
+    width:100%;
+    height:100%;
+    display:block;
+
+    object-fit:cover;
+}
+
+.partner-placeholder{
+    width:100%;
+    height:100%;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    background:
+        linear-gradient(135deg,
+        rgba(37,99,235,.09),
+        rgba(15,23,42,.15));
+
+    color:#64748b;
+}
+
+.partner-placeholder span{
+    margin-bottom:5px;
+
+    color:#3b82f6;
+    font-size:8px;
+    font-weight:900;
+    letter-spacing:1.4px;
+}
+
+.partner-placeholder strong{
+    color:#cbd5e1;
+    font-size:14px;
+}
+
+.partner-placeholder small{
+    margin-top:3px;
+    color:#475569;
+    font-size:9px;
+}
+
+@media(max-width:750px){
+
+    .partner-grid{
+        grid-template-columns:1fr;
+    }
+
+    .partner-banner{
+        height:82px;
+    }
+}
+
+/* ===== MAIN PREMIUM BANNER ===== */
+
+.main-promo{
+    margin:18px 0;
+}
+
+.main-promo-link{
+    position:relative;
+    display:block;
+    min-height:190px;
+    overflow:hidden;
+
+    border:1px solid rgba(96,165,250,.15);
+    border-radius:12px;
+
+    background:
+        radial-gradient(
+            circle at 82% 35%,
+            rgba(37,99,235,.22),
+            transparent 30%
+        ),
+        linear-gradient(
+            120deg,
+            #0b1628 0%,
+            #0d1b31 55%,
+            #101e35 100%
+        );
+
+    text-decoration:none;
+    transition:.2s ease;
+}
+
+.main-promo-link:hover{
+    border-color:rgba(96,165,250,.35);
+    transform:translateY(-1px);
+}
+
+.main-promo-content{
+    min-height:190px;
+    padding:30px 38px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:30px;
+}
+
+.promo-copy{
+    position:relative;
+    z-index:2;
+}
+
+.promo-badge{
+    display:inline-flex;
+    align-items:center;
+
+    margin-bottom:14px;
+    padding:5px 8px;
+
+    border:1px solid rgba(96,165,250,.18);
+    border-radius:5px;
+
+    background:rgba(37,99,235,.08);
+    color:#60a5fa;
+
+    font-size:9px;
+    font-weight:800;
+    letter-spacing:1px;
+}
+
+.promo-copy h2{
+    margin:0;
+
+    color:#fff;
+    font-size:27px;
+    line-height:1.2;
+    letter-spacing:-.7px;
+}
+
+.promo-copy h2 strong{
+    color:#60a5fa;
+}
+
+.promo-copy p{
+    margin:9px 0 18px;
+
+    color:#8292aa;
+    font-size:12px;
+}
+
+.promo-button{
+    display:inline-flex;
+    align-items:center;
+    gap:9px;
+
+    color:#dbeafe;
+    font-size:11px;
+    font-weight:700;
+}
+
+.promo-button span{
+    transition:.2s;
+}
+
+.main-promo-link:hover .promo-button span{
+    transform:translateX(4px);
+}
+
+
+/* 오른쪽 장식 */
+.promo-visual{
+    position:relative;
+
+    width:190px;
+    height:105px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:12px;
+
+    background:rgba(255,255,255,.025);
+
+    box-shadow:
+        inset 0 0 30px rgba(59,130,246,.05),
+        0 20px 50px rgba(0,0,0,.15);
+
+    transform:rotate(-3deg);
+}
+
+.promo-visual::before{
+    content:"";
+
+    position:absolute;
+    width:60px;
+    height:60px;
+
+    border-radius:50%;
+
+    background:#2563eb;
+    filter:blur(45px);
+    opacity:.35;
+}
+
+.promo-visual span,
+.promo-visual strong{
+    position:relative;
+    z-index:2;
+
+    font-size:25px;
+    font-weight:900;
+}
+
+.promo-visual span{
+    color:#fff;
+}
+
+.promo-visual strong{
+    color:#60a5fa;
+}
+
+
+/* 모바일 */
+@media(max-width:700px){
+
+    .main-promo-link,
+    .main-promo-content{
+        min-height:160px;
+    }
+
+    .main-promo-content{
+        padding:25px 22px;
+    }
+
+    .promo-copy h2{
+        font-size:21px;
+    }
+
+    .promo-visual{
+        display:none;
+    }
+}
     
 </style>
 </head>
@@ -577,7 +1032,264 @@
 
 </div>
     
-<main class="wrap"><div class="notice">TOVIEW는 결과 데이터와 통계를 시각화하는 정보 서비스 프로토타입입니다. 베팅·충전·환전 기능은 포함하지 않습니다.</div><section class="hero" id="live"><div class="card"><div class="head"><span class="status"><i class="pulse"></i> 실시간 결과</span><span class="sub" id="clock">--:--:--</span></div><div class="live"><div class="round">TOVIEW POWER · <b id="round">데이터 불러오는 중</b></div><div class="timer" id="timer">--:--</div><div class="sub">다음 5분 회차까지</div><div class="balls" id="balls"><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball power">-</span></div><div class="tags" id="tags"></div><div id="apiState" class="sub" style="margin-top:14px">API 연결 확인 중…</div></div></div><div class="card"><div class="head">최근 통계 <span class="sub" id="sampleN">-</span></div><div class="stats"><div class="stat">파워볼 홀<strong id="sOdd">-</strong></div><div class="stat">파워볼 짝<strong id="sEven">-</strong></div><div class="stat">파워볼 언더<strong id="sUnder">-</strong></div><div class="stat">파워볼 오버<strong id="sOver">-</strong></div></div></div></section><section class="grid"><div><div class="card" id="results"><div class="head">최근 결과 <span class="sub">최신순</span></div><div style="display:flex;gap:8px;padding:12px 14px;flex-wrap:wrap"><input id="roundSearch" placeholder="회차 검색" style="flex:1;min-width:120px;padding:9px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff"><select id="resultFilter" style="padding:9px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff"><option value="all">전체</option><option value="odd">파워 홀</option><option value="even">파워 짝</option><option value="under">언더</option><option value="over">오버</option></select><button onclick="exportCSV()" style="padding:9px 12px;border:0;border-radius:8px;background:#2563eb;color:white;cursor:pointer">CSV 저장</button><button onclick="toggleTheme()" style="padding:9px 12px;border:1px solid #2b3d5c;border-radius:8px;background:#17243a;color:white;cursor:pointer">화면 전환</button></div><div class="results-scroll"><table class="table"><thead><tr><th>회차</th><th>일반볼</th><th>합</th><th>일반 홀짝</th><th>파워볼</th><th>파워 홀짝</th><th>언/오버</th></tr></thead><tbody id="rows"></tbody></table></div></div><div class="card" id="pattern" style="margin-top:18px"><div class="head">패턴 시각화 <span class="sub">최근 결과 기반</span></div><div class="pattern"><b>파워볼 홀/짝</b><div class="patternrow" id="p1"></div><br><b>파워볼 언더/오버</b><div class="patternrow" id="p2"></div></div></div></div><aside><div class="card" id="analysis"><div class="head">분석 메뉴</div><div class="sideitem" onclick="location.href='analysis.html#daily'">📊 일별 분석</div><div class="sideitem" onclick="location.href='analysis.html#range'">📈 구간 분석</div><div class="sideitem" onclick="location.href='analysis.html#round'">🔢 회차 분석</div><div class="sideitem" onclick="location.href='pattern.html'">🧩 패턴 분석</div></div><div class="card" id="community" style="margin-top:18px"><div class="head">커뮤니티 <span class="sub">준비중</span></div><div class="sideitem" onclick="location.href='community.html?board=자유게시판'">💬 자유게시판</div><div class="sideitem" onclick="location.href='community.html?board=분석%20토론'">🔥 분석 토론</div><div class="sideitem" onclick="location.href='community.html?board=공지사항'">📢 공지사항</div></div><div class="card" id="rank" style="margin-top:18px"><div class="head">활동 랭킹 <span class="sub">이 브라우저 기준</span></div><div id="rankList"></div></div><div class="card" id="dashboard" style="margin-top:18px"><div class="head">내 대시보드 <span class="sub">브라우저 저장</span></div><div class="sideitem" onclick="toggleFavorite()">⭐ <span id="favText">실시간 결과 즐겨찾기</span></div><div class="sideitem" onclick="openAlerts()">🔔 알림센터 <span class="sub" id="alertCount" style="float:right">0</span></div><div class="sideitem" onclick="openDetailedStats()">🧮 상세 통계</div></div><div class="card" style="margin-top:18px"><div class="head">안내</div><div class="sideitem" style="cursor:default;color:#93a4c0;line-height:1.6">통계는 과거 결과를 요약한 값이며 미래 결과를 보장하지 않습니다.</div></div></aside></section></main><footer class="foot">TOVIEW · 독립적인 데이터 시각화 프로토타입 · 임시 로고<br>V7 · 실제 페이지 이동형 프로토타입<br>© 2026 TOVIEW</footer>
+<main class="wrap"><div class="notice">TOVIEW는 결과 데이터와 통계를 시각화하는 정보 서비스 프로토타입입니다. 베팅·충전·환전 기능은 포함하지 않습니다.</div>
+    
+<section class="main-promo">
+
+    <a href="#"
+       class="main-promo-link"
+       target="_blank"
+       rel="noopener noreferrer sponsored">
+
+        <div class="main-promo-content">
+
+            <div class="promo-copy">
+                <span class="promo-badge">PREMIUM PARTNER · AD</span>
+
+                <h2>
+                    TOVIEW
+                    <strong>PREMIUM PARTNER</strong>
+                </h2>
+
+                <p>
+                    공식 제휴 사이트 배너 영역입니다.
+                </p>
+
+                <div class="promo-button">
+                    자세히 보기
+                    <span>→</span>
+                </div>
+            </div>
+
+            <div class="promo-visual">
+                <span>TO</span>
+                <strong>VIEW</strong>
+            </div>
+
+        </div>
+
+    </a>
+
+</section>
+
+<section class="hero" id="live"><div class="card"><div class="head"><span class="status"><i class="pulse"></i> 실시간 결과</span><span class="sub" id="clock">--:--:--</span></div><div class="live"><div class="round">TOVIEW POWER · <b id="round">데이터 불러오는 중</b></div><div class="timer" id="timer">--:--</div><div class="sub">다음 5분 회차까지</div><div class="balls" id="balls"><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball power">-</span></div><div class="tags" id="tags"></div><div id="apiState" class="sub" style="margin-top:14px">API 연결 확인 중…</div></div></div><div class="card"><div class="head">최근 통계 <span class="sub" id="sampleN">-</span></div><div class="stats"><div class="stat">파워볼 홀<strong id="sOdd">-</strong></div><div class="stat">파워볼 짝<strong id="sEven">-</strong></div><div class="stat">파워볼 언더<strong id="sUnder">-</strong></div><div class="stat">파워볼 오버<strong id="sOver">-</strong></div></div></div></section>
+    
+<section class="partner-section">
+
+    <div class="partner-title">
+        <div>
+            <span class="partner-label">PARTNER</span>
+            <strong>제휴 사이트</strong>
+        </div>
+
+        <span class="partner-ad-label">AD · 제휴</span>
+    </div>
+
+    <div class="partner-grid">
+
+        <a href="#"
+           class="partner-banner"
+           target="_blank"
+           rel="noopener noreferrer sponsored">
+
+            <div class="partner-placeholder">
+                <span>PARTNER 01</span>
+                <strong>제휴 배너</strong>
+                <small>이미지 준비중</small>
+            </div>
+
+        </a>
+
+        <a href="#"
+           class="partner-banner"
+           target="_blank"
+           rel="noopener noreferrer sponsored">
+
+            <div class="partner-placeholder">
+                <span>PARTNER 02</span>
+                <strong>제휴 배너</strong>
+                <small>이미지 준비중</small>
+            </div>
+
+        </a>
+
+        <a href="#"
+           class="partner-banner"
+           target="_blank"
+           rel="noopener noreferrer sponsored">
+
+            <div class="partner-placeholder">
+                <span>PARTNER 03</span>
+                <strong>제휴 배너</strong>
+                <small>이미지 준비중</small>
+            </div>
+
+        </a>
+
+    </div>
+
+</section>
+    
+<section class="grid"><div><div class="card" id="results"><div class="head">최근 결과 <span class="sub">최신순</span></div><div style="display:flex;gap:8px;padding:12px 14px;flex-wrap:wrap"><input id="roundSearch" placeholder="회차 검색" style="flex:1;min-width:120px;padding:9px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff"><select id="resultFilter" style="padding:9px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff"><option value="all">전체</option><option value="odd">파워 홀</option><option value="even">파워 짝</option><option value="under">언더</option><option value="over">오버</option></select><button onclick="exportCSV()" style="padding:9px 12px;border:0;border-radius:8px;background:#2563eb;color:white;cursor:pointer">CSV 저장</button><button onclick="toggleTheme()" style="padding:9px 12px;border:1px solid #2b3d5c;border-radius:8px;background:#17243a;color:white;cursor:pointer">화면 전환</button></div><div class="results-scroll"><table class="table"><thead><tr><th>회차</th><th>일반볼</th><th>합</th><th>일반 홀짝</th><th>파워볼</th><th>파워 홀짝</th><th>언/오버</th></tr></thead><tbody id="rows"></tbody></table></div></div><div class="card" id="pattern" style="margin-top:18px"><div class="head">패턴 시각화 <span class="sub">최근 결과 기반</span></div><div class="pattern"><b>파워볼 홀/짝</b><div class="patternrow" id="p1"></div><br><b>파워볼 언더/오버</b><div class="patternrow" id="p2"></div></div></div></div><aside><div class="card notice-card" id="community">
+
+    <div class="head">
+        <span>공지사항</span>
+
+        <a href="community.html?board=공지사항" class="more-link">
+            더보기 →
+        </a>
+    </div>
+
+    <div class="board-preview">
+
+        <a href="community.html?board=공지사항" class="preview-row">
+            <div class="preview-text">
+                <span class="notice-label">공지</span>
+                <span class="preview-title">TOVIEW 서비스 이용 안내</span>
+            </div>
+            <span class="preview-date">08.14</span>
+        </a>
+
+        <a href="community.html?board=공지사항" class="preview-row">
+            <div class="preview-text">
+                <span class="notice-label">공지</span>
+                <span class="preview-title">회원가입 및 계정 이용 안내</span>
+            </div>
+            <span class="preview-date">08.14</span>
+        </a>
+
+        <a href="community.html?board=공지사항" class="preview-row">
+            <div class="preview-text">
+                <span class="preview-title">TOVIEW 베타 서비스 운영 안내</span>
+            </div>
+            <span class="preview-date">08.14</span>
+        </a>
+
+        <a href="community.html?board=공지사항" class="preview-row">
+            <div class="preview-text">
+                <span class="preview-title">커뮤니티 이용수칙 안내</span>
+            </div>
+            <span class="preview-date">08.14</span>
+        </a>
+
+        <a href="community.html?board=공지사항" class="preview-row">
+            <div class="preview-text">
+                <span class="preview-title">서비스 업데이트 안내</span>
+            </div>
+            <span class="preview-date">08.14</span>
+        </a>
+
+    </div>
+
+</div><div class="card" id="rank" style="margin-top:18px"><div class="head">활동 랭킹 <span class="sub">이 브라우저 기준</span></div><div id="rankList"></div></div><div class="card latest-post-card" style="margin-top:18px">
+
+    <div class="head">
+        <span>새 글</span>
+
+        <a href="community.html" class="more-link">
+            더보기 →
+        </a>
+    </div>
+
+    <div class="board-preview">
+
+        <a href="community.html" class="preview-row">
+            <div class="preview-text">
+                <span class="board-label">자유</span>
+                <span class="preview-title">TOVIEW 커뮤니티가 오픈했습니다.</span>
+            </div>
+            <span class="preview-date">방금</span>
+        </a>
+
+        <a href="community.html" class="preview-row">
+            <div class="preview-text">
+                <span class="board-label">분석</span>
+                <span class="preview-title">최근 회차 흐름 같이 봅시다.</span>
+            </div>
+            <span class="preview-date">3분</span>
+        </a>
+
+        <a href="community.html" class="preview-row">
+            <div class="preview-text">
+                <span class="board-label">자유</span>
+                <span class="preview-title">오늘 처음 가입했습니다.</span>
+            </div>
+            <span class="preview-date">8분</span>
+        </a>
+
+        <a href="community.html" class="preview-row">
+            <div class="preview-text">
+                <span class="board-label">분석</span>
+                <span class="preview-title">패턴 데이터 확인해봤습니다.</span>
+            </div>
+            <span class="preview-date">12분</span>
+        </a>
+
+        <a href="community.html" class="preview-row">
+            <div class="preview-text">
+                <span class="board-label">자유</span>
+                <span class="preview-title">다들 반갑습니다.</span>
+            </div>
+            <span class="preview-date">21분</span>
+        </a>
+
+    </div>
+
+</div><div class="card latest-comment-card" style="margin-top:18px">
+
+    <div class="head">
+        <span>새 댓글</span>
+
+        <a href="community.html" class="more-link">
+            더보기 →
+        </a>
+    </div>
+
+    <div class="board-preview">
+
+        <a href="community.html" class="comment-row">
+            <div class="comment-content">
+                <span class="comment-text">저도 비슷하게 보고 있습니다.</span>
+                <span class="comment-post">최근 회차 흐름 같이 봅시다.</span>
+            </div>
+            <span class="preview-date">1분</span>
+        </a>
+
+        <a href="community.html" class="comment-row">
+            <div class="comment-content">
+                <span class="comment-text">자료 감사합니다.</span>
+                <span class="comment-post">패턴 데이터 확인해봤습니다.</span>
+            </div>
+            <span class="preview-date">4분</span>
+        </a>
+
+        <a href="community.html" class="comment-row">
+            <div class="comment-content">
+                <span class="comment-text">반갑습니다!</span>
+                <span class="comment-post">오늘 처음 가입했습니다.</span>
+            </div>
+            <span class="preview-date">7분</span>
+        </a>
+
+        <a href="community.html" class="comment-row">
+            <div class="comment-content">
+                <span class="comment-text">이 부분은 조금 더 봐야겠네요.</span>
+                <span class="comment-post">오늘 데이터 정리</span>
+            </div>
+            <span class="preview-date">15분</span>
+        </a>
+
+        <a href="community.html" class="comment-row">
+            <div class="comment-content">
+                <span class="comment-text">확인했습니다.</span>
+                <span class="comment-post">TOVIEW 서비스 이용 안내</span>
+            </div>
+            <span class="preview-date">28분</span>
+        </a>
+
+    </div>
+
+</div></aside></section></main><footer class="foot">TOVIEW · 독립적인 데이터 시각화 프로토타입 · 임시 로고<br>V7 · 실제 페이지 이동형 프로토타입<br>© 2026 TOVIEW</footer>
 <div class="modal" id="modal"><div class="modalbox"><div class="close" onclick="modal.classList.remove('on')">✕</div><h2 id="modalTitle">로그인</h2><div id="modalBody"><input id="uid" placeholder="아이디"><input id="pw" type="password" placeholder="비밀번호"><button onclick="demoLogin()">데모 로그인</button><div class="sub" style="margin-top:10px">현재 버전은 서버 계정 시스템 없이 브라우저에만 로그인 상태를 저장합니다.</div></div></div></div>
 <script>
 
