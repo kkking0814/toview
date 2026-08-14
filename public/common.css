@@ -184,3 +184,54 @@
 
     z-index: 100 !important;
 }
+
+/* ========================================
+   전체메뉴 숨김/열림 강제 적용
+======================================== */
+
+#mainMenuOverlay {
+    position: fixed !important;
+    inset: 0 !important;
+
+    z-index: 9999 !important;
+
+    display: flex !important;
+    justify-content: flex-end !important;
+
+    background: rgba(2, 6, 15, 0.68) !important;
+    backdrop-filter: blur(4px);
+
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* 전체메뉴 버튼 눌렀을 때 */
+#mainMenuOverlay.on {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+/* 오른쪽에서 나오는 메뉴 */
+#mainMenuOverlay .menu-panel {
+    width: min(520px, 92vw) !important;
+    height: 100vh !important;
+
+    padding: 0 28px !important;
+
+    overflow-y: auto !important;
+
+    background: #0b1423 !important;
+    border-left: 1px solid rgba(255,255,255,.08) !important;
+
+    transform: translateX(100%) !important;
+    transition: transform .25s ease !important;
+
+    box-shadow: -20px 0 60px rgba(0,0,0,.3) !important;
+}
+
+/* 열렸을 때 오른쪽에서 등장 */
+#mainMenuOverlay.on .menu-panel {
+    transform: translateX(0) !important;
+}
