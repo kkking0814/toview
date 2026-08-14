@@ -373,4 +373,133 @@ app.get('/api/me', (req, res) => {
 app.get('/api/posts',(req,res)=>res.json(db().posts.slice().reverse()));
 app.post('/api/posts',(req,res)=>{if(!req.session.user)return res.status(401).json({error:'로그인이 필요합니다.'});let {title,content,board='자유게시판'}=req.body||{};if(!title||!content)return res.status(400).json({error:'제목과 내용을 입력하세요.'});let d=db();let p={id:Date.now(),title,content,board,author:req.session.user,createdAt:new Date().toISOString()};d.posts.push(p);save(d);res.json(p)});
 app.get('/api/results',async(req,res)=>{try{let r=await fetch('https://api.bepick.io/eth/get/'); if(!r.ok)throw Error('upstream');res.type('json').send(await r.text())}catch(e){res.status(502).json({error:'외부 결과 API 연결 실패'})}});
-app.use(express.static(path.join(__dirname,'public'))); app.listen(PORT,()=>console.log(`TOVIEW http://localhost:${PORT}`));
+app.use(express.static(path.join(__dirname,'public')));
+
+// ========================================
+// 게시글 작성 API
+// ========================================
+
+app.post('/api/posts', (req, res) => {
+
+    // 로그인 확인
+    if (!req.session || !req.session.user) {
+        return res.status(401).json({
+            error: '로그인이 필요합니다.'
+        });
+    }
+
+    const title = String(req.body?.title || '').trim();
+    const content = String(req.body?.content || '').trim();
+    const board = String(req.body?.board || '자유게시판').trim();
+
+    // 제목 확인
+    if (!title) {
+        return res.status(400).json({
+            error: '제목을 입력해주세요.'
+        });
+    }
+
+    // 내용 확인
+    if (!content) {
+        return res.status(400).json({
+            error: '내용을 입력해주세요.'
+        });
+    }
+
+    // 제목 길이 제한
+    if (title.length > 100) {
+        return res.status(400).json({
+            error: '제목은 100자 이하로 입력해주세요.'
+        });
+    }
+
+    // 허용된 게시판만 사용
+    const allowedBoards = [
+        '자유게시판',
+        '분석게시판'
+    ];
+
+    if (!allowedBoards.includes(board)) {
+        return res.status(400).json({
+            error: '올바르지 않은 게시판입니다.'
+        });
+    }
+
+    const d = db();
+
+    // 기존 data.json에 posts가 없더라도 자동 생성
+    if (!Array.isArray(d.posts)) {
+        d.posts = [];
+    }
+
+    // 현재 로그인 회원 찾기
+    const user = d.users.find(
+        u => u.username === req.session.user
+    );
+
+    if (!user) {
+        return res.status(401).json({
+            error: '사용자 정보를 찾을 수 없습니다.'
+        });
+    }
+
+    // 게시글 생성
+    const post = {
+        id: Date.now(),
+
+        board,
+        title,
+        content,
+
+        username: user.username,
+        nickname: user.nickname,
+
+        views: 0,
+        likes: 0,
+        comments: [],
+
+        createdAt: new Date().toISOString()
+    };
+
+    // 최신 글을 맨 앞에 추가
+    d.posts.unshift(post);
+
+    // data.json 저장
+    save(d);
+
+    return res.json({
+        ok: true,
+        post
+    });
+});
+
+// ========================================
+// 게시글 목록 API
+// ========================================
+
+app.get('/api/posts', (req, res) => {
+
+    const d = db();
+
+    if (!Array.isArray(d.posts)) {
+        d.posts = [];
+    }
+
+    const board = String(req.query.board || '').trim();
+
+    let posts = d.posts;
+
+    // 특정 게시판을 요청했으면 해당 게시판 글만
+    if (board) {
+        posts = posts.filter(
+            post => post.board === board
+        );
+    }
+
+    return res.json({
+        ok: true,
+        posts
+    });
+});
+
+app.listen(PORT,()=>console.log(`TOVIEW http://localhost:${PORT}`));
