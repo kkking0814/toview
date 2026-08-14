@@ -1,7 +1,19 @@
 const express=require('express'); const session=require('express-session'); const bcrypt=require('bcryptjs'); const fs=require('fs'); const path=require('path');
 const app=express(); const PORT=process.env.PORT||3000; const dbPath=path.join(__dirname,'data.json');
 function db(){try{return JSON.parse(fs.readFileSync(dbPath,'utf8'))}catch{return {users:[],posts:[]}}} function save(x){fs.writeFileSync(dbPath,JSON.stringify(x,null,2))}
-app.use(express.json()); app.use(session({secret:process.env.SESSION_SECRET||'change-this-in-production',resave:false,saveUninitialized:false,cookie:{maxAge:1000*60*60*24*7}}));
+app.set('trust proxy', 1);
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'change-this-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24 * 7,
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax'
+  }
+}));
 app.post('/api/register',async(req,res)=>{let {username,password}=req.body||{}; if(!username||!password||password.length<6)return res.status(400).json({error:'아이디와 6자 이상 비밀번호가 필요합니다.'});let d=db();if(d.users.some(u=>u.username===username))return res.status(409).json({error:'이미 존재하는 아이디입니다.'});d.users.push({username,password:await bcrypt.hash(password,10),createdAt:new Date().toISOString()});save(d);req.session.user=username;res.json({ok:true,username})});
 app.post('/api/login',async(req,res)=>{let {username,password}=req.body||{};let u=db().users.find(x=>x.username===username);if(!u||!(await bcrypt.compare(password||'',u.password)))return res.status(401).json({error:'아이디 또는 비밀번호가 올바르지 않습니다.'});req.session.user=username;res.json({ok:true,username})});
 app.post('/api/logout',(req,res)=>req.session.destroy(()=>res.json({ok:true})));
