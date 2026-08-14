@@ -783,4 +783,157 @@ app.get('/api/db-test', async (req, res) => {
     }
 });
 
+// ========================================
+// TOVIEW 공용 실시간 채팅
+// ========================================
+
+
+// 최근 채팅 불러오기
+app.get('/api/chat', async (req, res) => {
+
+    try {
+
+        const result = await pool.query(`
+            SELECT
+                c.id,
+                c.username,
+                c.nickname,
+                c.message,
+                c.created_at
+            FROM chat_messages c
+            ORDER BY c.created_at DESC
+            LIMIT 100
+        `);
+
+        // DB에서는 최신순으로 가져오고
+        // 화면에는 오래된 글 → 최신 글 순서로 전달
+        const messages = result.rows.reverse();
+
+        return res.json({
+            ok: true,
+            messages
+        });
+
+    } catch (error) {
+
+        console.error('채팅 불러오기 DB 오류:', error);
+
+        return res.status(500).json({
+            error: '채팅을 불러오지 못했습니다.'
+        });
+
+    }
+
+});
+
+
+// ========================================
+// 채팅 전송
+// ========================================
+
+app.post('/api/chat', async (req, res) => {
+
+    try {
+
+        // 로그인 확인
+        if (!req.session || !req.session.user) {
+
+            return res.status(401).json({
+                error: '로그인이 필요합니다.'
+            });
+
+        }
+
+
+        const username = req.session.user;
+
+        const message =
+            String(req.body?.message || '').trim();
+
+
+        // 빈 메시지 방지
+        if (!message) {
+
+            return res.status(400).json({
+                error: '메시지를 입력해주세요.'
+            });
+
+        }
+
+
+        // 너무 긴 메시지 방지
+        if (message.length > 200) {
+
+            return res.status(400).json({
+                error: '메시지는 200자 이하로 입력해주세요.'
+            });
+
+        }
+
+
+        // 현재 로그인 회원의 닉네임을 DB에서 직접 가져옴
+        const userResult = await pool.query(
+            `
+            SELECT username, nickname
+            FROM users
+            WHERE username = $1
+            LIMIT 1
+            `,
+            [username]
+        );
+
+
+        if (userResult.rows.length === 0) {
+
+            return res.status(401).json({
+                error: '회원 정보를 찾을 수 없습니다.'
+            });
+
+        }
+
+
+        const nickname =
+            userResult.rows[0].nickname;
+
+
+        // 채팅 저장
+        const result = await pool.query(
+            `
+            INSERT INTO chat_messages
+                (username, nickname, message)
+            VALUES
+                ($1, $2, $3)
+            RETURNING
+                id,
+                username,
+                nickname,
+                message,
+                created_at
+            `,
+            [
+                username,
+                nickname,
+                message
+            ]
+        );
+
+
+        return res.json({
+            ok: true,
+            message: result.rows[0]
+        });
+
+
+    } catch (error) {
+
+        console.error('채팅 전송 DB 오류:', error);
+
+        return res.status(500).json({
+            error: '채팅 전송에 실패했습니다.'
+        });
+
+    }
+
+});
+
 app.listen(PORT,()=>console.log(`TOVIEW http://localhost:${PORT}`));
