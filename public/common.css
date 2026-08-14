@@ -573,3 +573,214 @@
 
     letter-spacing: 1.3px !important;
 }
+
+/* ========================================
+   TOVIEW GAME LIVE CENTER
+======================================== */
+
+.game-center-head{
+    margin-bottom:18px;
+}
+
+.game-center-title{
+    min-height:112px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:24px 26px;
+
+    background:
+        radial-gradient(
+            circle at 90% 20%,
+            rgba(37,99,235,.18),
+            transparent 32%
+        ),
+        #0e192b;
+
+    border:1px solid #22334e;
+    border-radius:14px 14px 0 0;
+}
+
+.game-center-label{
+    color:#60a5fa;
+
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:1.4px;
+}
+
+.game-center-title h1{
+    margin:7px 0 4px;
+
+    color:#fff;
+
+    font-size:25px;
+    font-weight:900;
+    letter-spacing:-.7px;
+}
+
+.game-center-title p{
+    margin:0;
+
+    color:#8294b1;
+    font-size:12px;
+}
+
+
+/* LIVE 표시 */
+
+.live-status{
+    display:flex;
+    align-items:center;
+    gap:8px;
+
+    padding:8px 12px;
+
+    border:1px solid rgba(34,197,94,.25);
+    border-radius:20px;
+
+    background:rgba(34,197,94,.07);
+
+    color:#86efac;
+
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:1px;
+}
+
+.live-status span{
+    width:7px;
+    height:7px;
+
+    border-radius:50%;
+    background:#22c55e;
+
+    box-shadow:0 0 10px #22c55e;
+}
+
+
+/* ========================================
+   게임 선택 탭
+======================================== */
+
+.game-tabs{
+    display:grid;
+
+    grid-template-columns:
+        repeat(6, minmax(120px,1fr));
+
+    background:#091426;
+
+    border-left:1px solid #22334e;
+    border-right:1px solid #22334e;
+    border-bottom:1px solid #22334e;
+
+    border-radius:0 0 14px 14px;
+
+    overflow:hidden;
+}
+
+.game-tab{
+    min-height:66px;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    gap:4px;
+
+    border:0;
+    border-right:1px solid #1c2a40;
+
+    background:transparent;
+    color:#94a3b8;
+
+    cursor:pointer;
+
+    transition:.18s ease;
+}
+
+.game-tab:last-child{
+    border-right:0;
+}
+
+.game-tab strong{
+    font-size:12px;
+    font-weight:700;
+}
+
+.game-tab small{
+    color:#52627a;
+
+    font-size:8px;
+    font-weight:700;
+
+    letter-spacing:.7px;
+}
+
+.game-tab:hover{
+    background:#101d31;
+    color:#fff;
+}
+
+
+/* 선택된 게임 */
+
+.game-tab.active{
+    position:relative;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(37,99,235,.18),
+            rgba(37,99,235,.05)
+        );
+
+    color:#60a5fa;
+}
+
+.game-tab.active::after{
+    content:"";
+
+    position:absolute;
+
+    left:18%;
+    right:18%;
+    bottom:0;
+
+    height:2px;
+
+    background:#3b82f6;
+
+    box-shadow:0 0 10px rgba(59,130,246,.7);
+}
+
+.game-tab.active small{
+    color:#3b82f6;
+}
+
+
+/* 모바일 */
+
+@media(max-width:900px){
+
+    .game-tabs{
+        display:flex;
+        overflow-x:auto;
+    }
+
+    .game-tab{
+        flex:0 0 125px;
+    }
+
+    .game-center-title{
+        padding:20px;
+    }
+
+    .game-center-title h1{
+        font-size:21px;
+    }
+}
