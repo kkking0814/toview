@@ -42,6 +42,7 @@ loginBtn.onclick=async()=>{
         <input id="uid" placeholder="아이디">
         <input id="pw" type="password" placeholder="비밀번호">
         <button onclick="realLogin()">로그인</button>
+        <button onclick="showRegister()" style="margin-top:8px;background:#18263d">회원가입</button>
         <div class="sub" style="margin-top:10px">
           서버 계정으로 로그인합니다.
         </div>
@@ -53,7 +54,62 @@ loginBtn.onclick=async()=>{
     alert('서버 연결에 실패했습니다.');
   }
 };
+function showRegister(){
+  modalTitle.textContent='회원가입';
 
+  modalBody.innerHTML=`
+    <input id="regUid" placeholder="아이디">
+    <input id="regPw" type="password" placeholder="비밀번호">
+    <input id="regPw2" type="password" placeholder="비밀번호 확인">
+    <button onclick="registerAccount()">회원가입</button>
+    <button onclick="loginBtn.click()" style="margin-top:8px;background:#18263d">로그인으로 돌아가기</button>
+    <div class="sub" style="margin-top:10px">
+      비밀번호는 6자 이상 입력해주세요.
+    </div>
+  `;
+}
+
+async function registerAccount(){
+  const username=document.getElementById('regUid').value.trim();
+  const password=document.getElementById('regPw').value;
+  const password2=document.getElementById('regPw2').value;
+
+  if(!username || !password){
+    alert('아이디와 비밀번호를 입력해주세요.');
+    return;
+  }
+
+  if(password.length<6){
+    alert('비밀번호는 6자 이상이어야 합니다.');
+    return;
+  }
+
+  if(password!==password2){
+    alert('비밀번호가 서로 다릅니다.');
+    return;
+  }
+
+  try{
+    const r=await fetch('/api/register',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username,password})
+    });
+
+    const data=await r.json();
+
+    if(!r.ok){
+      alert(data.error || '회원가입에 실패했습니다.');
+      return;
+    }
+
+    alert('회원가입이 완료되었습니다. 로그인해주세요.');
+    loginBtn.click();
+
+  }catch(e){
+    alert('서버 연결에 실패했습니다.');
+  }
+}
 async function realLogin(){
   const username=document.getElementById('uid').value.trim();
   const password=document.getElementById('pw').value;
