@@ -59,7 +59,22 @@ app.post('/api/register', async (req, res) => {
 });
 app.post('/api/login',async(req,res)=>{let {username,password}=req.body||{};let u=db().users.find(x=>x.username===username);if(!u||!(await bcrypt.compare(password||'',u.password)))return res.status(401).json({error:'아이디 또는 비밀번호가 올바르지 않습니다.'});req.session.user=username;res.json({ok:true,username})});
 app.post('/api/logout',(req,res)=>req.session.destroy(()=>res.json({ok:true})));
-app.get('/api/me',(req,res)=>res.json({username:req.session.user||null}));
+app.get('/api/me', (req, res) => {
+    if (!req.session.user) {
+        return res.json({
+            username: null,
+            nickname: null
+        });
+    }
+
+    const d = db();
+    const user = d.users.find(u => u.username === req.session.user);
+
+    res.json({
+        username: req.session.user,
+        nickname: user?.nickname || req.session.user
+    });
+});
 app.get('/api/posts',(req,res)=>res.json(db().posts.slice().reverse()));
 app.post('/api/posts',(req,res)=>{if(!req.session.user)return res.status(401).json({error:'로그인이 필요합니다.'});let {title,content,board='자유게시판'}=req.body||{};if(!title||!content)return res.status(400).json({error:'제목과 내용을 입력하세요.'});let d=db();let p={id:Date.now(),title,content,board,author:req.session.user,createdAt:new Date().toISOString()};d.posts.push(p);save(d);res.json(p)});
 app.get('/api/results',async(req,res)=>{try{let r=await fetch('https://api.bepick.io/eth/get/'); if(!r.ok)throw Error('upstream');res.type('json').send(await r.text())}catch(e){res.status(502).json({error:'외부 결과 API 연결 실패'})}});
