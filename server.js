@@ -48,12 +48,18 @@ function checkEmailRateLimit(ip){
         allowed: true
     };
 }
+
 const mailTransporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: {
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_APP_PASSWORD
-    }
+    },
+    connectionTimeout: 20000,
+    greetingTimeout: 20000,
+    socketTimeout: 30000
 });
 
 app.set('trust proxy', 1);
