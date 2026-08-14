@@ -1,1 +1,14 @@
-{"name":"toview","version":"1.0.0","private":true,"scripts":{"start":"node server.js"},"dependencies":{"express":"^4.21.2","express-session":"^1.18.1","bcryptjs":"^2.4.3"}}
+{
+  "name": "toview",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "bcryptjs": "^2.4.3",
+    "nodemailer": "^7.0.0"
+  }
+}
