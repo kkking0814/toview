@@ -1,6 +1,216 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TOVIEW | 데이터 분석 커뮤니티</title><style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,'Noto Sans KR',sans-serif;background:#07101f;color:#eef4ff}button,input{font:inherit}a{color:inherit;text-decoration:none}.top{position:sticky;top:0;z-index:10;background:#08111fee;border-bottom:1px solid #24324a;backdrop-filter:blur(10px)}.bar{max-width:1200px;margin:auto;height:68px;display:flex;align-items:center;gap:26px;padding:0 18px}.logo{font-size:26px;font-weight:900}.logo b{color:#4f9cff}.badge{font-size:10px;background:#15345e;color:#8fc3ff;padding:3px 6px;border-radius:5px}.nav{display:flex;gap:18px;color:#aebbd1;font-size:14px}.nav a:hover{color:#fff}.login{margin-left:auto;background:#2563eb;color:#fff;border:0;padding:10px 16px;border-radius:9px;cursor:pointer}.wrap{max-width:1200px;margin:22px auto;padding:0 18px}.notice{padding:11px 14px;background:#0c1a30;border:1px solid #213655;border-radius:10px;color:#9fb3d2;font-size:13px;margin-bottom:16px}.hero{display:grid;grid-template-columns:1.55fr 1fr;gap:18px}.card{background:#0e192b;border:1px solid #22334e;border-radius:14px;overflow:hidden}.head{padding:14px 16px;border-bottom:1px solid #22334e;font-weight:700;display:flex;justify-content:space-between;align-items:center}.sub{font-size:12px;color:#8294b1}.live{padding:23px;text-align:center}.round{color:#92a4c2;font-size:14px}.timer{font-size:42px;font-weight:900;margin:8px}.balls{display:flex;justify-content:center;gap:9px;margin:20px 0}.ball{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#334155;font-weight:900;box-shadow:inset 0 -5px 10px #0003}.power{background:#2563eb}.tags{display:flex;justify-content:center;gap:7px;flex-wrap:wrap}.tag{padding:7px 11px;border-radius:20px;background:#17243a;font-size:13px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}.stat{background:#091426;border-radius:10px;padding:15px;color:#9badc9}.stat strong{display:block;font-size:25px;color:#fff;margin-top:5px}.grid{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-top:18px}.table{width:100%;border-collapse:collapse;font-size:13px}.table th,.table td{padding:11px;text-align:center;border-bottom:1px solid #1c2a40}.table th{color:#899ab6;background:#091426}.blue{color:#60a5fa}.red{color:#fb7185}.sideitem{padding:13px 16px;border-bottom:1px solid #1c2a40;font-size:14px;cursor:pointer}.sideitem:hover{background:#132039}.pattern{padding:16px}.patternrow{display:flex;gap:5px;flex-wrap:wrap;margin:9px 0}.dot{min-width:28px;height:28px;border-radius:6px;background:#2563eb;display:grid;place-items:center;font-size:11px}.dot.r{background:#d9465f}.status{display:inline-flex;align-items:center;gap:6px}.pulse{width:8px;height:8px;border-radius:50%;background:#22c55e}.foot{text-align:center;color:#63748f;padding:35px;font-size:12px}.modal{display:none;position:fixed;inset:0;background:#0009;z-index:20;place-items:center}.modal.on{display:grid}.modalbox{width:min(390px,90vw);background:#0e192b;border:1px solid #2b3d5c;border-radius:14px;padding:22px}.modalbox input{width:100%;margin:7px 0;padding:12px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff}.modalbox button{width:100%;margin-top:8px;padding:11px;border:0;border-radius:8px;background:#2563eb;color:#fff}.close{text-align:right;color:#93a4c0;cursor:pointer}.err{color:#fda4af;font-size:12px;margin-top:10px}.apiok{color:#86efac}.apifail{color:#fbbf24}body.light{background:#eef3f9;color:#172033}body.light .top{background:#ffffffee}body.light .card,body.light .modalbox{background:#fff;border-color:#d5deea}body.light .notice,body.light .stat,body.light .table th,body.light .modalbox input{background:#f5f8fc;color:#334155}body.light .head,body.light .table th,body.light .table td,body.light .sideitem{border-color:#e2e8f0}body.light .stat strong{color:#172033}body.light .nav{color:#64748b}body.light .nav a:hover{color:#111827}@media(max-width:800px){.nav{display:none}.hero,.grid{grid-template-columns:1fr}.balls{gap:5px}.ball{width:40px;height:40px}.timer{font-size:34px}.table th:nth-child(2),.table td:nth-child(2){font-size:11px}}
-</style></head><body><header class="top"><div class="bar"><div class="logo">TO<b>VIEW</b> <span class="badge">BETA</span></div><nav class="nav"><a href="index.html">실시간</a><a href="results.html">결과</a><a href="analysis.html">분석</a><a href="pattern.html">패턴</a><a href="community.html">커뮤니티</a><a href="community.html#rank">랭킹</a><a href="dashboard.html">대시보드</a></nav><button class="login" id="loginBtn">로그인</button></div></header><main class="wrap"><div class="notice">TOVIEW는 결과 데이터와 통계를 시각화하는 정보 서비스 프로토타입입니다. 베팅·충전·환전 기능은 포함하지 않습니다.</div><section class="hero" id="live"><div class="card"><div class="head"><span class="status"><i class="pulse"></i> 실시간 결과</span><span class="sub" id="clock">--:--:--</span></div><div class="live"><div class="round">TOVIEW POWER · <b id="round">데이터 불러오는 중</b></div><div class="timer" id="timer">--:--</div><div class="sub">다음 5분 회차까지</div><div class="balls" id="balls"><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball power">-</span></div><div class="tags" id="tags"></div><div id="apiState" class="sub" style="margin-top:14px">API 연결 확인 중…</div></div></div><div class="card"><div class="head">최근 통계 <span class="sub" id="sampleN">-</span></div><div class="stats"><div class="stat">파워볼 홀<strong id="sOdd">-</strong></div><div class="stat">파워볼 짝<strong id="sEven">-</strong></div><div class="stat">파워볼 언더<strong id="sUnder">-</strong></div><div class="stat">파워볼 오버<strong id="sOver">-</strong></div></div></div></section><section class="grid"><div><div class="card" id="results"><div class="head">최근 결과 <span class="sub">최신순</span></div><div style="display:flex;gap:8px;padding:12px 14px;flex-wrap:wrap"><input id="roundSearch" placeholder="회차 검색" style="flex:1;min-width:120px;padding:9px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff"><select id="resultFilter" style="padding:9px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff"><option value="all">전체</option><option value="odd">파워 홀</option><option value="even">파워 짝</option><option value="under">언더</option><option value="over">오버</option></select><button onclick="exportCSV()" style="padding:9px 12px;border:0;border-radius:8px;background:#2563eb;color:white;cursor:pointer">CSV 저장</button><button onclick="toggleTheme()" style="padding:9px 12px;border:1px solid #2b3d5c;border-radius:8px;background:#17243a;color:white;cursor:pointer">화면 전환</button></div><div style="overflow:auto"><table class="table"><thead><tr><th>회차</th><th>일반볼</th><th>합</th><th>일반 홀짝</th><th>파워볼</th><th>파워 홀짝</th><th>언/오버</th></tr></thead><tbody id="rows"></tbody></table></div></div><div class="card" id="pattern" style="margin-top:18px"><div class="head">패턴 시각화 <span class="sub">최근 결과 기반</span></div><div class="pattern"><b>파워볼 홀/짝</b><div class="patternrow" id="p1"></div><br><b>파워볼 언더/오버</b><div class="patternrow" id="p2"></div></div></div></div><aside><div class="card" id="analysis"><div class="head">분석 메뉴</div><div class="sideitem" onclick="location.href='analysis.html#daily'">📊 일별 분석</div><div class="sideitem" onclick="location.href='analysis.html#range'">📈 구간 분석</div><div class="sideitem" onclick="location.href='analysis.html#round'">🔢 회차 분석</div><div class="sideitem" onclick="location.href='pattern.html'">🧩 패턴 분석</div></div><div class="card" id="community" style="margin-top:18px"><div class="head">커뮤니티 <span class="sub">준비중</span></div><div class="sideitem" onclick="location.href='community.html?board=자유게시판'">💬 자유게시판</div><div class="sideitem" onclick="location.href='community.html?board=분석%20토론'">🔥 분석 토론</div><div class="sideitem" onclick="location.href='community.html?board=공지사항'">📢 공지사항</div></div><div class="card" id="rank" style="margin-top:18px"><div class="head">활동 랭킹 <span class="sub">이 브라우저 기준</span></div><div id="rankList"></div></div><div class="card" id="dashboard" style="margin-top:18px"><div class="head">내 대시보드 <span class="sub">브라우저 저장</span></div><div class="sideitem" onclick="toggleFavorite()">⭐ <span id="favText">실시간 결과 즐겨찾기</span></div><div class="sideitem" onclick="openAlerts()">🔔 알림센터 <span class="sub" id="alertCount" style="float:right">0</span></div><div class="sideitem" onclick="openDetailedStats()">🧮 상세 통계</div></div><div class="card" style="margin-top:18px"><div class="head">안내</div><div class="sideitem" style="cursor:default;color:#93a4c0;line-height:1.6">통계는 과거 결과를 요약한 값이며 미래 결과를 보장하지 않습니다.</div></div></aside></section></main><footer class="foot">TOVIEW · 독립적인 데이터 시각화 프로토타입 · 임시 로고<br>V7 · 실제 페이지 이동형 프로토타입<br>© 2026 TOVIEW</footer>
+
+/* ===== TOVIEW NEW HEADER ===== */
+
+.top{
+    position:sticky;
+    top:0;
+    z-index:1000;
+    width:100%;
+    background:rgba(7,14,26,.96);
+    border-bottom:1px solid rgba(255,255,255,.08);
+    backdrop-filter:blur(14px);
+}
+
+.bar{
+    max-width:1280px;
+    height:72px;
+    margin:0 auto;
+    padding:0 24px;
+    display:flex;
+    align-items:center;
+    gap:38px;
+}
+
+/* 로고 */
+.brand{
+    display:flex;
+    align-items:center;
+    gap:11px;
+    text-decoration:none;
+    flex-shrink:0;
+}
+
+.brand-mark{
+    width:38px;
+    height:38px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:10px;
+    background:#2563eb;
+    color:#fff;
+    font-size:21px;
+    font-weight:900;
+    box-shadow:0 6px 20px rgba(37,99,235,.25);
+}
+
+.brand-name{
+    display:flex;
+    flex-direction:column;
+    line-height:1;
+}
+
+.brand-name strong{
+    color:#fff;
+    font-size:20px;
+    font-weight:800;
+    letter-spacing:-.5px;
+}
+
+.brand-name strong span{
+    color:#60a5fa;
+}
+
+.brand-name small{
+    margin-top:5px;
+    color:#64748b;
+    font-size:8px;
+    font-weight:700;
+    letter-spacing:1.3px;
+}
+
+/* 메뉴 */
+.nav{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    flex:1;
+}
+
+.nav a{
+    position:relative;
+    padding:26px 13px 24px;
+    color:#94a3b8;
+    text-decoration:none;
+    font-size:14px;
+    font-weight:600;
+    white-space:nowrap;
+    transition:.2s ease;
+}
+
+.nav a:hover{
+    color:#fff;
+}
+
+.nav a.active{
+    color:#fff;
+}
+
+.nav a.active::after{
+    content:"";
+    position:absolute;
+    left:13px;
+    right:13px;
+    bottom:0;
+    height:2px;
+    border-radius:2px;
+    background:#3b82f6;
+}
+
+/* 우측 로그인 */
+.header-actions{
+    display:flex;
+    align-items:center;
+    margin-left:auto;
+}
+
+.login{
+    min-width:86px;
+    height:38px;
+    padding:0 17px;
+    border:1px solid rgba(96,165,250,.35);
+    border-radius:8px;
+    background:rgba(37,99,235,.12);
+    color:#dbeafe;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    transition:.2s ease;
+}
+
+.login:hover{
+    background:#2563eb;
+    border-color:#2563eb;
+    color:#fff;
+    transform:translateY(-1px);
+}
+
+/* 태블릿/모바일 */
+@media(max-width:900px){
+    .bar{
+        height:auto;
+        min-height:64px;
+        padding:12px 16px;
+        gap:18px;
+        flex-wrap:wrap;
+    }
+
+    .brand-name small{
+        display:none;
+    }
+
+    .nav{
+        order:3;
+        width:100%;
+        overflow-x:auto;
+        gap:0;
+        scrollbar-width:none;
+    }
+
+    .nav::-webkit-scrollbar{
+        display:none;
+    }
+
+    .nav a{
+        padding:11px 13px;
+    }
+
+    .nav a.active::after{
+        left:13px;
+        right:13px;
+    }
+
+    .header-actions{
+        margin-left:auto;
+    }
+}
+
+</style>
+</head>
+<body>
+
+<header class="top">
+    <div class="bar">
+
+        <a href="index.html" class="brand">
+            <div class="brand-mark">T</div>
+
+            <div class="brand-name">
+                <strong>TO<span>VIEW</span></strong>
+                <small>DATA & COMMUNITY</small>
+            </div>
+        </a>
+
+        <nav class="nav">
+            <a href="index.html" class="active">홈</a>
+            <a href="index.html#live">실시간</a>
+            <a href="results.html">결과</a>
+            <a href="analysis.html">분석</a>
+            <a href="pattern.html">패턴</a>
+            <a href="community.html">커뮤니티</a>
+            <a href="community.html#rank">랭킹</a>
+        </nav>
+
+        <div class="header-actions">
+            <button class="login" id="loginBtn">로그인</button>
+        </div>
+
+    </div>
+</header>
+
+<main class="wrap"><div class="notice">TOVIEW는 결과 데이터와 통계를 시각화하는 정보 서비스 프로토타입입니다. 베팅·충전·환전 기능은 포함하지 않습니다.</div><section class="hero" id="live"><div class="card"><div class="head"><span class="status"><i class="pulse"></i> 실시간 결과</span><span class="sub" id="clock">--:--:--</span></div><div class="live"><div class="round">TOVIEW POWER · <b id="round">데이터 불러오는 중</b></div><div class="timer" id="timer">--:--</div><div class="sub">다음 5분 회차까지</div><div class="balls" id="balls"><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball power">-</span></div><div class="tags" id="tags"></div><div id="apiState" class="sub" style="margin-top:14px">API 연결 확인 중…</div></div></div><div class="card"><div class="head">최근 통계 <span class="sub" id="sampleN">-</span></div><div class="stats"><div class="stat">파워볼 홀<strong id="sOdd">-</strong></div><div class="stat">파워볼 짝<strong id="sEven">-</strong></div><div class="stat">파워볼 언더<strong id="sUnder">-</strong></div><div class="stat">파워볼 오버<strong id="sOver">-</strong></div></div></div></section><section class="grid"><div><div class="card" id="results"><div class="head">최근 결과 <span class="sub">최신순</span></div><div style="display:flex;gap:8px;padding:12px 14px;flex-wrap:wrap"><input id="roundSearch" placeholder="회차 검색" style="flex:1;min-width:120px;padding:9px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff"><select id="resultFilter" style="padding:9px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff"><option value="all">전체</option><option value="odd">파워 홀</option><option value="even">파워 짝</option><option value="under">언더</option><option value="over">오버</option></select><button onclick="exportCSV()" style="padding:9px 12px;border:0;border-radius:8px;background:#2563eb;color:white;cursor:pointer">CSV 저장</button><button onclick="toggleTheme()" style="padding:9px 12px;border:1px solid #2b3d5c;border-radius:8px;background:#17243a;color:white;cursor:pointer">화면 전환</button></div><div style="overflow:auto"><table class="table"><thead><tr><th>회차</th><th>일반볼</th><th>합</th><th>일반 홀짝</th><th>파워볼</th><th>파워 홀짝</th><th>언/오버</th></tr></thead><tbody id="rows"></tbody></table></div></div><div class="card" id="pattern" style="margin-top:18px"><div class="head">패턴 시각화 <span class="sub">최근 결과 기반</span></div><div class="pattern"><b>파워볼 홀/짝</b><div class="patternrow" id="p1"></div><br><b>파워볼 언더/오버</b><div class="patternrow" id="p2"></div></div></div></div><aside><div class="card" id="analysis"><div class="head">분석 메뉴</div><div class="sideitem" onclick="location.href='analysis.html#daily'">📊 일별 분석</div><div class="sideitem" onclick="location.href='analysis.html#range'">📈 구간 분석</div><div class="sideitem" onclick="location.href='analysis.html#round'">🔢 회차 분석</div><div class="sideitem" onclick="location.href='pattern.html'">🧩 패턴 분석</div></div><div class="card" id="community" style="margin-top:18px"><div class="head">커뮤니티 <span class="sub">준비중</span></div><div class="sideitem" onclick="location.href='community.html?board=자유게시판'">💬 자유게시판</div><div class="sideitem" onclick="location.href='community.html?board=분석%20토론'">🔥 분석 토론</div><div class="sideitem" onclick="location.href='community.html?board=공지사항'">📢 공지사항</div></div><div class="card" id="rank" style="margin-top:18px"><div class="head">활동 랭킹 <span class="sub">이 브라우저 기준</span></div><div id="rankList"></div></div><div class="card" id="dashboard" style="margin-top:18px"><div class="head">내 대시보드 <span class="sub">브라우저 저장</span></div><div class="sideitem" onclick="toggleFavorite()">⭐ <span id="favText">실시간 결과 즐겨찾기</span></div><div class="sideitem" onclick="openAlerts()">🔔 알림센터 <span class="sub" id="alertCount" style="float:right">0</span></div><div class="sideitem" onclick="openDetailedStats()">🧮 상세 통계</div></div><div class="card" style="margin-top:18px"><div class="head">안내</div><div class="sideitem" style="cursor:default;color:#93a4c0;line-height:1.6">통계는 과거 결과를 요약한 값이며 미래 결과를 보장하지 않습니다.</div></div></aside></section></main><footer class="foot">TOVIEW · 독립적인 데이터 시각화 프로토타입 · 임시 로고<br>V7 · 실제 페이지 이동형 프로토타입<br>© 2026 TOVIEW</footer>
 <div class="modal" id="modal"><div class="modalbox"><div class="close" onclick="modal.classList.remove('on')">✕</div><h2 id="modalTitle">로그인</h2><div id="modalBody"><input id="uid" placeholder="아이디"><input id="pw" type="password" placeholder="비밀번호"><button onclick="demoLogin()">데모 로그인</button><div class="sub" style="margin-top:10px">현재 버전은 서버 계정 시스템 없이 브라우저에만 로그인 상태를 저장합니다.</div></div></div></div>
 <script>
 const API='/api/results'; let records=[];
