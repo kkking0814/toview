@@ -486,10 +486,8 @@ async function realLogin(){
         modal.classList.remove('on');
         await checkLogin();
 
-    }catch(error){
-        console.error('로그인 오류:', error);
-        alert('서버 연결에 실패했습니다.');
-    }
+}catch(error){
+    alert('실제 오류: ' + error.name + ' / ' + error.message);
 }
 
 async function logout(){
