@@ -454,7 +454,6 @@ if(passwordError){
 }
 
 async function realLogin(){
-    alert('로그인 함수 실행됨');
   
     const username = document.getElementById('uid').value.trim();
     const password = document.getElementById('pw').value;
@@ -486,8 +485,10 @@ async function realLogin(){
         modal.classList.remove('on');
         await checkLogin();
 
-}catch(error){
-    alert('실제 오류: ' + error.name + ' / ' + error.message);
+    }catch(e){
+        console.error(e);
+        alert('서버 연결에 실패했습니다.');
+    }
 }
 
 async function logout(){
