@@ -6,9 +6,171 @@
 
 </head>
 <body>
-<header class="top"><div class="bar"><a class="logo" href="index.html">TO<b>VIEW</b> <span class="badge">V7</span></a><nav class="nav"><a href="index.html">실시간</a><a href="results.html">결과</a><a href="analysis.html">분석</a><a href="pattern.html">패턴</a><a href="community.html">커뮤니티</a><a href="dashboard.html">대시보드</a></nav><button class="login" onclick="location.href='account.html'" id="userBtn">로그인</button></div></header><main class="wrap"><div class="hero"><div class="card"><div class="head">내 대시보드</div><div class="sideitem" onclick="fav()">⭐ <span id="favText">즐겨찾기</span></div><div class="sideitem" onclick="location.href='results.html'">📋 최근 결과 보기</div><div class="sideitem" onclick="location.href='community.html'">💬 내가 쓰는 커뮤니티</div></div><div class="card"><div class="head">계정</div><div class="stats"><div class="stat">로그인 사용자<strong id="who">비회원</strong></div><div class="stat">내 게시글<strong id="cnt">0</strong></div></div></div></div></main><footer class="foot">TOVIEW V7 · 페이지 이동형 프로토타입 · © 2026 TOVIEW</footer><script>function r(){let u=localStorage.getItem('toviewUser');who.textContent=u||'비회원';let a=JSON.parse(localStorage.getItem('toviewPosts')||'[]');cnt.textContent=u?a.filter(x=>x.user===u).length:0;favText.textContent=localStorage.getItem('toviewFav')==='1'?'실시간 결과 즐겨찾기됨':'실시간 결과 즐겨찾기'}function fav(){localStorage.setItem('toviewFav',localStorage.getItem('toviewFav')==='1'?'0':'1');r()}r()
+
+<header class="top">
+    <div class="bar">
+
+        <a href="index.html" class="brand">
+            <div class="brand-mark">T</div>
+            <div class="brand-name">
+                <strong>TO<span>VIEW</span></strong>
+                <small>DATA & COMMUNITY</small>
+            </div>
+        </a>
+
+        <nav class="nav">
+            <a href="index.html">실시간</a>
+            <a href="results.html">결과</a>
+            <a href="analysis.html">분석</a>
+            <a href="pattern.html">패턴</a>
+            <a href="community.html">커뮤니티</a>
+            <a href="dashboard.html">대시보드</a>
+        </nav>
+
+        <button class="menu-btn" type="button" onclick="openMainMenu()">
+            <span class="menu-icon">☰</span>
+            <span>전체메뉴</span>
+        </button>
+
+        <button class="login"
+                id="loginBtn"
+                onclick="location.href='account.html'">
+            로그인
+        </button>
+
+    </div>
+</header>  
+
+<div class="menu-overlay" id="mainMenuOverlay" onclick="closeMainMenu(event)">
+
+    <div class="menu-panel">
+
+        <div class="menu-panel-top">
+            <div>
+                <strong>전체 메뉴</strong>
+                <span>TOVIEW SERVICE</span>
+            </div>
+
+            <button type="button" class="menu-close" onclick="closeMainMenu()">
+                ✕
+            </button>
+        </div>
+
+        <div class="menu-sections">
+
+            <div class="menu-section">
+                <div class="menu-section-title">GAME</div>
+
+                <a href="index.html#live">
+                    <b>실시간 게임</b>
+                    <span>실시간 회차 및 결과</span>
+                </a>
+
+                <a href="results.html">
+                    <b>게임 결과</b>
+                    <span>최근 회차 결과 조회</span>
+                </a>
+
+                <a href="pattern.html">
+                    <b>패턴 분석</b>
+                    <span>결과 흐름 및 패턴</span>
+                </a>
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-section-title">ANALYSIS</div>
+
+                <a href="analysis.html#daily">
+                    <b>일별 분석</b>
+                    <span>날짜별 데이터 분석</span>
+                </a>
+
+                <a href="analysis.html#range">
+                    <b>구간 분석</b>
+                    <span>구간별 결과 통계</span>
+                </a>
+
+                <a href="analysis.html#round">
+                    <b>회차 분석</b>
+                    <span>회차별 상세 데이터</span>
+                </a>
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-section-title">COMMUNITY</div>
+
+                <a href="community.html?board=자유게시판">
+                    <b>자유게시판</b>
+                    <span>자유로운 커뮤니티</span>
+                </a>
+
+                <a href="community.html?board=분석%20토론">
+                    <b>분석 토론</b>
+                    <span>데이터 및 분석 토론</span>
+                </a>
+
+                <a href="community.html#rank">
+                    <b>활동 랭킹</b>
+                    <span>회원 활동 순위</span>
+                </a>
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-section-title">MY TOVIEW</div>
+
+                <a href="dashboard.html">
+                    <b>대시보드</b>
+                    <span>내 활동 한눈에 보기</span>
+                </a>
+
+                <a href="javascript:void(0)" onclick="openAlerts(); closeMainMenu();">
+                    <b>알림센터</b>
+                    <span>새로운 알림 확인</span>
+                </a>
+
+                <a href="javascript:void(0)" onclick="document.getElementById('loginBtn').click(); closeMainMenu();">
+                    <b>내 계정</b>
+                    <span>로그인 및 계정 관리</span>
+                </a>
+            </div>
+
+        </div>
+
+        <div class="menu-panel-bottom">
+            TOVIEW · DATA & COMMUNITY PLATFORM
+        </div>
+
+    </div>
+
+</div>
+  
+<main class="wrap"><div class="hero"><div class="card"><div class="head">내 대시보드</div><div class="sideitem" onclick="fav()">⭐ <span id="favText">즐겨찾기</span></div><div class="sideitem" onclick="location.href='results.html'">📋 최근 결과 보기</div><div class="sideitem" onclick="location.href='community.html'">💬 내가 쓰는 커뮤니티</div></div><div class="card"><div class="head">계정</div><div class="stats"><div class="stat">로그인 사용자<strong id="who">비회원</strong></div><div class="stat">내 게시글<strong id="cnt">0</strong></div></div></div></div></main><footer class="foot">TOVIEW V7 · 페이지 이동형 프로토타입 · © 2026 TOVIEW</footer><script>function r(){let u=localStorage.getItem('toviewUser');who.textContent=u||'비회원';let a=JSON.parse(localStorage.getItem('toviewPosts')||'[]');cnt.textContent=u?a.filter(x=>x.user===u).length:0;favText.textContent=localStorage.getItem('toviewFav')==='1'?'실시간 결과 즐겨찾기됨':'실시간 결과 즐겨찾기'}function fav(){localStorage.setItem('toviewFav',localStorage.getItem('toviewFav')==='1'?'0':'1');r()}r()
 </script>
 
+<script>
+function openMainMenu() {
+    const menu = document.getElementById('mainMenuOverlay');
+
+    if (!menu) return;
+
+    menu.classList.add('on');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeMainMenu(event) {
+    const menu = document.getElementById('mainMenuOverlay');
+
+    if (!menu) return;
+
+    if (event && event.target !== menu) {
+        return;
+    }
+
+    menu.classList.remove('on');
+    document.body.style.overflow = '';
+}
+</script>
+  
 <script src="auth.js"></script>
 </body>
 </html>
