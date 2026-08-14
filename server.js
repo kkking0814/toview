@@ -285,7 +285,14 @@ if (!validNickname(nickname)) {
         error: '닉네임은 완성된 한글로 2글자 이상 입력하고, 같은 글자를 3번 이상 연속 사용할 수 없습니다.'
     });
 }
-if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+
+if (
+    !email ||
+    !email.includes('@') ||
+    email.startsWith('@') ||
+    email.endsWith('@') ||
+    !email.substring(email.indexOf('@') + 1).includes('.')
+) {
     return res.status(400).json({
         error: '올바른 이메일 주소가 필요합니다.'
     });
