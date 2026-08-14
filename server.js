@@ -17,10 +17,10 @@ app.use(session({
 app.get('/api/check-username', (req, res) => {
     const username = String(req.query.username || '').trim();
 
-    if (!username) {
+    if (!validUsername(username)) {
         return res.status(400).json({
             available: false,
-            error: '아이디를 입력해주세요.'
+            error: '아이디는 영문으로만 5자 이상 입력하고, 같은 영문자를 3번 이상 연속 사용할 수 없습니다.'
         });
     }
 
@@ -35,10 +35,10 @@ app.get('/api/check-username', (req, res) => {
 app.get('/api/check-nickname', (req, res) => {
     const nickname = String(req.query.nickname || '').trim();
 
-    if (!nickname) {
+    if (!validNickname(nickname)) {
         return res.status(400).json({
             available: false,
-            error: '닉네임을 입력해주세요.'
+            error: '닉네임은 완성된 한글로 2글자 이상 입력하고, 같은 글자를 3번 이상 연속 사용할 수 없습니다.'
         });
     }
 
@@ -49,15 +49,46 @@ app.get('/api/check-nickname', (req, res) => {
         available: !exists
     });
 });
+function validUsername(username){
+    return typeof username === 'string' &&
+           /^[A-Za-z]{5,}$/.test(username) &&
+           !/([A-Za-z])\1\1/i.test(username);
+}
+
+function validPassword(password){
+    return typeof password === 'string' &&
+           password.length >= 8 &&
+           /^[A-Za-z0-9]+$/.test(password) &&
+           /[A-Za-z]/.test(password) &&
+           /[0-9]/.test(password) &&
+           !/(.)\1\1/.test(password);
+}
+
+function validNickname(nickname){
+    return typeof nickname === 'string' &&
+           /^[가-힣]{2,}$/.test(nickname) &&
+           !/(.)\1\1/.test(nickname);
+}
 app.post('/api/register', async (req, res) => {
     const { username, password, nickname } = req.body || {};
 
-    if (!username || !password || !nickname || password.length < 6) {
-        return res.status(400).json({
-            error: '아이디, 닉네임, 6자 이상 비밀번호가 필요합니다.'
-        });
-    }
+if (!validUsername(username)) {
+    return res.status(400).json({
+        error: '아이디는 영문으로만 5자 이상 입력하고, 같은 영문자를 3번 이상 연속 사용할 수 없습니다.'
+    });
+}
 
+if (!validPassword(password)) {
+    return res.status(400).json({
+        error: '비밀번호는 영문과 숫자를 포함해 8자 이상 입력하고, 같은 문자를 3번 이상 연속 사용할 수 없습니다.'
+    });
+}
+
+if (!validNickname(nickname)) {
+    return res.status(400).json({
+        error: '닉네임은 완성된 한글로 2글자 이상 입력하고, 같은 글자를 3번 이상 연속 사용할 수 없습니다.'
+    });
+}
     const d = db();
 
     // 아이디 중복 최종 검사
