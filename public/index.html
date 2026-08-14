@@ -2333,4 +2333,80 @@ document.addEventListener('DOMContentLoaded',()=>{
     });
 
 });
-</script></body></html>
+</script>
+
+<script>
+async function updateLoginButton() {
+    const loginBtn = document.getElementById('loginBtn');
+
+    if (!loginBtn) return;
+
+    try {
+        const response = await fetch('/api/me', {
+            credentials: 'same-origin'
+        });
+
+        const user = await response.json();
+
+        if (user.username) {
+            // 로그인 상태
+            loginBtn.textContent = user.nickname || user.username;
+
+            loginBtn.onclick = function () {
+                const logout = confirm(
+                    (user.nickname || user.username) +
+                    '님\n\n로그아웃 하시겠습니까?'
+                );
+
+                if (logout) {
+                    logoutUser();
+                }
+            };
+
+        } else {
+            // 로그아웃 상태
+            loginBtn.textContent = '로그인';
+
+            loginBtn.onclick = function () {
+                location.href = 'account.html';
+            };
+        }
+
+    } catch (error) {
+        console.error('로그인 상태 확인 실패:', error);
+
+        loginBtn.textContent = '로그인';
+
+        loginBtn.onclick = function () {
+            location.href = 'account.html';
+        };
+    }
+}
+
+
+async function logoutUser() {
+    try {
+        const response = await fetch('/api/logout', {
+            method: 'POST',
+            credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+            alert('로그아웃에 실패했습니다.');
+            return;
+        }
+
+        location.reload();
+
+    } catch (error) {
+        console.error('로그아웃 오류:', error);
+        alert('로그아웃 중 오류가 발생했습니다.');
+    }
+}
+
+
+window.addEventListener('DOMContentLoaded', updateLoginButton);
+</script>
+    
+</body>
+</html>
