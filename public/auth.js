@@ -67,36 +67,4 @@ async function logoutUser() {
     }
 }
 
-function applyAuthButtonStyle() {
-    const button =
-        document.getElementById('userBtn') ||
-        document.getElementById('loginBtn');
-
-    if (!button) return;
-
-    button.style.height = '38px';
-    button.style.minWidth = '88px';
-    button.style.padding = '0 16px';
-
-    button.style.display = 'inline-flex';
-    button.style.alignItems = 'center';
-    button.style.justifyContent = 'center';
-
-    button.style.background = '#2563eb';
-    button.style.color = '#ffffff';
-
-    button.style.border = '1px solid #3b82f6';
-    button.style.borderRadius = '8px';
-
-    button.style.fontSize = '13px';
-    button.style.fontWeight = '700';
-    button.style.whiteSpace = 'nowrap';
-
-    button.style.cursor = 'pointer';
-    button.style.boxSizing = 'border-box';
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-    applyAuthButtonStyle();
-    updateAuthUI();
-});
+window.addEventListener('DOMContentLoaded', updateAuthUI);
