@@ -21,7 +21,95 @@ function normalize(j){
 function render(a){records=a;let latest=a[0],p=latest.PowerBall;round.textContent=(latest.Date?latest.Date+' · ':'')+(latest.Round?latest.Round+'회 / ':'')+(latest.AllRound||latest.ID||'최신 회차');balls.innerHTML=[p.nBall1,p.nBall2,p.nBall3,p.nBall4,p.nBall5].map(n=>`<span class="ball">${n}</span>`).join('')+`<span class="ball power">${p.pBall}</span>`;tags.innerHTML=`<span class="tag">일반합 ${p.nBallSum} · ${p.nOddEven===1?'홀':'짝'}</span><span class="tag">파워볼 ${p.pBall} · ${p.pOddEven===1?'홀':'짝'}</span><span class="tag">${p.pUnderOver===1?'UNDER':'OVER'}</span>`;renderRows(a.slice(0,30));let n=a.length,odd=a.filter(x=>x.PowerBall.pOddEven===1).length,un=a.filter(x=>x.PowerBall.pUnderOver===1).length;sampleN.textContent=`${n}회 기준`;sOdd.textContent=Math.round(odd/n*100)+'%';sEven.textContent=Math.round((n-odd)/n*100)+'%';sUnder.textContent=Math.round(un/n*100)+'%';sOver.textContent=Math.round((n-un)/n*100)+'%';p1.innerHTML=a.slice(0,20).reverse().map(x=>`<span class="dot ${x.PowerBall.pOddEven===2?'r':''}">${x.PowerBall.pOddEven===1?'홀':'짝'}</span>`).join('');p2.innerHTML=a.slice(0,20).reverse().map(x=>`<span class="dot ${x.PowerBall.pUnderOver===2?'r':''}">${x.PowerBall.pUnderOver===1?'U':'O'}</span>`).join('')}
 async function load(){try{let r=await fetch(API,{cache:'no-store'});if(!r.ok)throw Error(r.status);let a=normalize(await r.json());if(!a.length)throw Error('empty');render(a);apiState.innerHTML='<span class="apiok">● 실시간 API 연결됨</span>'}catch(e){render(demo);apiState.innerHTML='<span class="apifail">● 브라우저에서 API 연결 불가 — 데모 데이터 표시 중</span>'}}
 function tick(){let d=new Date(),sec=d.getMinutes()%5*60+d.getSeconds(),left=300-sec;if(left===300)left=0;timer.textContent=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');clock.textContent=d.toLocaleTimeString('ko-KR');if(left===0)setTimeout(load,1500)}setInterval(tick,1000);tick();load();setInterval(load,60000);
-const modal=document.getElementById('modal');loginBtn.onclick=()=>{modalTitle.textContent='로그인';modalBody.innerHTML='<input id="uid" placeholder="아이디"><input id="pw" type="password" placeholder="비밀번호"><button onclick="demoLogin()">데모 로그인</button><div class="sub" style="margin-top:10px">현재 버전은 서버 계정 시스템 없이 브라우저에만 로그인 상태를 저장합니다.</div>';modal.classList.add('on')};function demoLogin(){let u=document.getElementById('uid').value.trim();if(!u)return;localStorage.setItem('toviewUser',u);loginBtn.textContent=u+' 님';modal.classList.remove('on')}let saved=localStorage.getItem('toviewUser');if(saved)loginBtn.textContent=saved+' 님';function showInfo(t,b){modalTitle.textContent=t;modalBody.innerHTML=`<p style="color:#aebbd1;line-height:1.7">${b}</p><button onclick="modal.classList.remove('on')">확인</button>`;modal.classList.add('on')}
+const modal=document.getElementById('modal');
+
+loginBtn.onclick=async()=>{
+  try{
+    const r=await fetch('/api/me');
+    const me=await r.json();
+
+    if(me.username){
+      modalTitle.textContent='계정';
+      modalBody.innerHTML=`
+        <div style="color:#aebbd1;margin-bottom:15px">
+          <b style="color:white">${me.username}</b> 님으로 로그인 중입니다.
+        </div>
+        <button onclick="logout()">로그아웃</button>
+      `;
+    }else{
+      modalTitle.textContent='로그인';
+      modalBody.innerHTML=`
+        <input id="uid" placeholder="아이디">
+        <input id="pw" type="password" placeholder="비밀번호">
+        <button onclick="realLogin()">로그인</button>
+        <div class="sub" style="margin-top:10px">
+          서버 계정으로 로그인합니다.
+        </div>
+      `;
+    }
+
+    modal.classList.add('on');
+  }catch(e){
+    alert('서버 연결에 실패했습니다.');
+  }
+};
+
+async function realLogin(){
+  const username=document.getElementById('uid').value.trim();
+  const password=document.getElementById('pw').value;
+
+  if(!username || !password){
+    alert('아이디와 비밀번호를 입력해주세요.');
+    return;
+  }
+
+  try{
+    const r=await fetch('/api/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username,password})
+    });
+
+    const data=await r.json();
+
+    if(!r.ok){
+      alert(data.error || '로그인에 실패했습니다.');
+      return;
+    }
+
+    loginBtn.textContent=username+' 님';
+    modal.classList.remove('on');
+  }catch(e){
+    alert('서버 연결에 실패했습니다.');
+  }
+}
+
+async function logout(){
+  await fetch('/api/logout',{method:'POST'});
+  loginBtn.textContent='로그인';
+  modal.classList.remove('on');
+}
+
+async function checkLogin(){
+  try{
+    const r=await fetch('/api/me');
+    const me=await r.json();
+
+    if(me.username){
+      loginBtn.textContent=me.username+' 님';
+    }else{
+      loginBtn.textContent='로그인';
+    }
+  }catch(e){}
+}
+
+checkLogin();
+
+function showInfo(t,b){
+  modalTitle.textContent=t;
+  modalBody.innerHTML=`<p style="color:#aebbd1;line-height:1.7">${b}</p><button onclick="modal.classList.remove('on')">확인</button>`;
+  modal.classList.add('on');
+}
 function openCommunity(board){let posts=JSON.parse(localStorage.getItem('toviewPosts')||'[]').filter(x=>x.board===board);modalTitle.textContent=board;modalBody.innerHTML=`<div id="postList" style="max-height:220px;overflow:auto;margin-bottom:12px">${posts.length?posts.slice().reverse().map(x=>`<div style="padding:10px;border-bottom:1px solid #22334e"><b>${esc(x.title)}</b><div class="sub">${esc(x.user)} · ${x.time}</div><div style="margin-top:5px;color:#aebbd1">${esc(x.body)}</div></div>`).join(''):'<div class="sub">아직 게시글이 없습니다.</div>'}</div>${board==='공지사항'?'':'<input id="pt" placeholder="제목"><input id="pb" placeholder="내용"><button onclick="writePost(\''+board+'\')">글쓰기</button>'}`;modal.classList.add('on')}
 function writePost(board){let u=localStorage.getItem('toviewUser');if(!u){alert('먼저 로그인해 주세요.');return}let title=document.getElementById('pt').value.trim(),body=document.getElementById('pb').value.trim();if(!title||!body)return;let posts=JSON.parse(localStorage.getItem('toviewPosts')||'[]');posts.push({board,title,body,user:u,time:new Date().toLocaleString('ko-KR')});localStorage.setItem('toviewPosts',JSON.stringify(posts));renderRank();openCommunity(board)}
 function renderRank(){let posts=JSON.parse(localStorage.getItem('toviewPosts')||'[]'),m={};posts.forEach(x=>m[x.user]=(m[x.user]||0)+1);let r=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,5);rankList.innerHTML=r.length?r.map((x,i)=>`<div class="sideitem" style="cursor:default"><b>${i+1}위 · ${esc(x[0])}</b><span class="sub" style="float:right">${x[1]}글</span></div>`).join(''):'<div class="sideitem sub" style="cursor:default">게시글을 작성하면 활동 랭킹이 표시됩니다.</div>'}renderRank();
