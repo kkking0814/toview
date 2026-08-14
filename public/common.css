@@ -784,3 +784,643 @@
         font-size:21px;
     }
 }
+
+
+/* ========================================
+   LIVE GAME + LARGE CHAT
+======================================== */
+
+.live-center-grid{
+    display:grid;
+    grid-template-columns:minmax(0, 1.75fr) minmax(360px, .95fr);
+    gap:16px;
+
+    margin-top:18px;
+    margin-bottom:18px;
+
+    align-items:stretch;
+}
+
+
+/* ===== LIVE GAME ===== */
+
+.live-game-card,
+.live-chat-card{
+    background:#0e192b;
+    border:1px solid #22334e;
+    border-radius:14px;
+    overflow:hidden;
+}
+
+.live-game-card{
+    min-width:0;
+}
+
+.live-card-head{
+    height:58px;
+
+    padding:0 18px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    border-bottom:1px solid #22334e;
+}
+
+.live-game-name{
+    display:flex;
+    align-items:center;
+    gap:9px;
+}
+
+.live-game-name strong{
+    color:#e8eef8;
+    font-size:16px;
+}
+
+.live-badge{
+    padding:4px 7px;
+
+    border-radius:6px;
+
+    background:#dc3545;
+    color:white;
+
+    font-size:9px;
+    font-weight:900;
+}
+
+.auto-update{
+    display:flex;
+    align-items:center;
+    gap:7px;
+
+    padding:7px 10px;
+
+    background:#091426;
+    border:1px solid #1d304c;
+    border-radius:7px;
+
+    color:#9badc9;
+    font-size:10px;
+}
+
+.auto-update i,
+.draw-ready i{
+    width:7px;
+    height:7px;
+
+    display:block;
+
+    border-radius:50%;
+    background:#22c55e;
+
+    box-shadow:0 0 9px rgba(34,197,94,.7);
+}
+
+
+/* ===== GAME SCREEN ===== */
+
+.game-screen{
+    height:410px;
+
+    display:grid;
+    grid-template-columns:155px minmax(0,1fr);
+
+    background:#050b15;
+}
+
+.round-info-panel{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    padding:20px 12px;
+
+    border-right:1px solid #22334e;
+
+    background:
+        linear-gradient(
+            180deg,
+            #101d32,
+            #091426
+        );
+
+    text-align:center;
+}
+
+.power-preview{
+    width:82px;
+    height:82px;
+
+    display:grid;
+    place-items:center;
+
+    margin-bottom:10px;
+
+    border:1px solid #3b82f6;
+    border-radius:50%;
+
+    background:
+        radial-gradient(
+            circle at 35% 30%,
+            #60a5fa,
+            #1d4ed8 45%,
+            #081329 75%
+        );
+
+    box-shadow:
+        0 0 30px rgba(37,99,235,.22),
+        inset 0 0 18px rgba(255,255,255,.1);
+
+    color:#fff;
+
+    font-size:26px;
+    font-weight:900;
+}
+
+.round-info-panel small{
+    color:#60a5fa;
+
+    font-size:9px;
+    font-weight:900;
+}
+
+.round-info-panel > strong{
+    margin-top:14px;
+
+    color:#fff;
+
+    font-size:20px;
+    font-weight:900;
+}
+
+.drawing-status{
+    margin-top:7px;
+
+    padding:5px 8px;
+
+    border-radius:12px;
+
+    background:#2563eb;
+    color:#fff;
+
+    font-size:9px;
+    font-weight:800;
+}
+
+.round-info-panel p{
+    margin:17px 0 4px;
+
+    color:#64748b;
+    font-size:10px;
+}
+
+.round-info-panel > b{
+    color:#e2e8f0;
+
+    font-size:25px;
+    letter-spacing:1px;
+}
+
+
+/* 실제 영상 들어갈 자리 */
+
+.game-video-area{
+    position:relative;
+
+    min-width:0;
+    height:100%;
+
+    overflow:hidden;
+
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(37,99,235,.16),
+            transparent 45%
+        ),
+        #050b15;
+}
+
+.game-video-area iframe,
+.game-video-area video{
+    width:100%;
+    height:100%;
+
+    display:block;
+
+    border:0;
+    object-fit:cover;
+}
+
+.video-placeholder{
+    width:100%;
+    height:100%;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    gap:7px;
+
+    color:#475569;
+}
+
+.machine-icon{
+    width:100px;
+    height:100px;
+
+    display:grid;
+    place-items:center;
+
+    margin-bottom:8px;
+
+    border:1px solid #1e3a5f;
+    border-radius:50%;
+
+    background:#091426;
+
+    color:#2563eb;
+
+    font-size:55px;
+}
+
+.video-placeholder strong{
+    color:#64748b;
+    font-size:17px;
+}
+
+.video-placeholder span{
+    font-size:10px;
+}
+
+
+/* ===== 최근 결과 BAR ===== */
+
+.live-result-bar{
+    min-height:70px;
+
+    display:flex;
+    align-items:center;
+
+    gap:16px;
+
+    padding:10px 16px;
+
+    border-top:1px solid #22334e;
+
+    background:#0a1526;
+}
+
+.draw-ready{
+    display:flex;
+    align-items:center;
+    gap:7px;
+
+    color:#94a3b8;
+    font-size:10px;
+
+    white-space:nowrap;
+}
+
+.last-result-title{
+    color:#64748b;
+
+    font-size:10px;
+
+    white-space:nowrap;
+}
+
+.last-result-balls{
+    display:flex;
+    align-items:center;
+
+    gap:6px;
+
+    flex:1;
+}
+
+.mini-ball{
+    width:30px;
+    height:30px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:50%;
+
+    background:#2563eb;
+    color:#fff;
+
+    font-size:11px;
+    font-weight:900;
+
+    box-shadow:inset 0 -4px 7px rgba(0,0,0,.25);
+}
+
+.power-mini{
+    background:#dc3545;
+}
+
+.last-result-balls b{
+    color:#64748b;
+}
+
+.previous-result-btn{
+    padding:8px 10px;
+
+    border:1px solid #2b3d5c;
+    border-radius:7px;
+
+    background:#101c30;
+    color:#cbd5e1;
+
+    font-size:10px;
+
+    cursor:pointer;
+}
+
+
+/* ========================================
+   LARGE LIVE CHAT
+======================================== */
+
+.live-chat-card{
+    min-width:0;
+
+    display:flex;
+    flex-direction:column;
+
+    height:540px;
+}
+
+.chat-head{
+    height:58px;
+
+    flex-shrink:0;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:0 16px;
+
+    border-bottom:1px solid #22334e;
+}
+
+.chat-head > div{
+    display:flex;
+    align-items:center;
+    gap:7px;
+}
+
+.chat-head strong{
+    color:#60a5fa;
+    font-size:15px;
+}
+
+.chat-live-dot{
+    width:6px;
+    height:6px;
+
+    border-radius:50%;
+    background:#22c55e;
+
+    box-shadow:0 0 8px #22c55e;
+}
+
+.chat-users{
+    color:#64748b;
+    font-size:9px;
+}
+
+.chat-users b{
+    color:#4ade80;
+}
+
+
+/* 공지 */
+
+.chat-notice{
+    margin:10px 12px 0;
+    padding:9px 10px;
+
+    flex-shrink:0;
+
+    border:1px solid #22334e;
+    border-radius:6px;
+
+    background:#142238;
+
+    color:#8da0bd;
+    font-size:9px;
+}
+
+
+/* 메시지 목록 */
+
+.chat-messages{
+    flex:1;
+
+    min-height:0;
+
+    overflow-y:auto;
+
+    padding:12px 14px;
+}
+
+.chat-messages::-webkit-scrollbar{
+    width:5px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb{
+    background:#334155;
+    border-radius:10px;
+}
+
+.chat-empty{
+    height:100%;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    gap:5px;
+
+    color:#475569;
+}
+
+.chat-empty strong{
+    color:#64748b;
+    font-size:13px;
+}
+
+.chat-empty span{
+    font-size:10px;
+}
+
+
+/* 실제 채팅 한 줄 */
+
+.chat-message{
+    display:flex;
+    gap:9px;
+
+    margin-bottom:14px;
+}
+
+.chat-avatar{
+    width:30px;
+    height:30px;
+
+    flex:0 0 30px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:50%;
+
+    background:#2563eb;
+    color:#fff;
+
+    font-size:11px;
+    font-weight:900;
+}
+
+.chat-content{
+    min-width:0;
+    flex:1;
+}
+
+.chat-user-line{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    margin-bottom:3px;
+}
+
+.chat-nickname{
+    color:#cbd5e1;
+
+    font-size:10px;
+    font-weight:800;
+}
+
+.chat-time{
+    color:#475569;
+    font-size:8px;
+}
+
+.chat-text{
+    color:#aebbd1;
+
+    font-size:11px;
+    line-height:1.45;
+
+    word-break:break-word;
+}
+
+
+/* 채팅 입력 */
+
+.chat-input-area{
+    height:64px;
+
+    flex-shrink:0;
+
+    display:flex;
+    gap:8px;
+
+    padding:10px 12px;
+
+    border-top:1px solid #22334e;
+
+    background:#0a1526;
+}
+
+.chat-input-area input{
+    min-width:0;
+    flex:1;
+
+    padding:0 12px;
+
+    border:1px solid #22334e;
+    border-radius:7px;
+
+    outline:none;
+
+    background:#091426;
+    color:#fff;
+
+    font-size:11px;
+}
+
+.chat-input-area input:focus{
+    border-color:#2563eb;
+}
+
+.chat-input-area button{
+    width:64px;
+
+    border:0;
+    border-radius:7px;
+
+    background:#2563eb;
+    color:#fff;
+
+    font-size:11px;
+    font-weight:800;
+
+    cursor:pointer;
+}
+
+.chat-input-area button:hover{
+    background:#1d4ed8;
+}
+
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media(max-width:1000px){
+
+    .live-center-grid{
+        grid-template-columns:1fr;
+    }
+
+    .live-chat-card{
+        height:500px;
+    }
+}
+
+@media(max-width:650px){
+
+    .game-screen{
+        height:auto;
+        grid-template-columns:1fr;
+    }
+
+    .round-info-panel{
+        border-right:0;
+        border-bottom:1px solid #22334e;
+    }
+
+    .game-video-area{
+        height:300px;
+    }
+
+    .live-result-bar{
+        flex-wrap:wrap;
+    }
+
+    .live-chat-card{
+        height:520px;
+    }
+}
