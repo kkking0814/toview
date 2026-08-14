@@ -465,7 +465,7 @@ async function realLogin(){
     const r=await fetch('/api/login',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({username,password,nickname,email})
+      body:JSON.stringify({username,password})
     });
 
     const data=await r.json();
