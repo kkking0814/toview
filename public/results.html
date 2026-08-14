@@ -629,6 +629,85 @@ function changeGame(game, button) {
     console.log('선택 게임:', game);
 }
 
+const currentPick = {
+    oddEven: null,
+    underOver: null
+};
+
+
+function selectPick(button) {
+
+    const type = button.dataset.type;
+    const value = button.dataset.value;
+
+    document
+        .querySelectorAll(
+            `.pick-option[data-type="${type}"]`
+        )
+        .forEach(function(btn) {
+
+            btn.classList.remove('selected');
+
+        });
+
+
+    button.classList.add('selected');
+
+    currentPick[type] = value;
+
+    updateMyPick();
+}
+
+
+function updateMyPick() {
+
+    const text =
+        document.getElementById('myPickText');
+
+    if (!text) return;
+
+
+    const oddEvenText =
+        currentPick.oddEven === 'odd'
+            ? '홀'
+            : currentPick.oddEven === 'even'
+                ? '짝'
+                : '미선택';
+
+
+    const underOverText =
+        currentPick.underOver === 'under'
+            ? '언더'
+            : currentPick.underOver === 'over'
+                ? '오버'
+                : '미선택';
+
+
+    text.textContent =
+        `홀짝 ${oddEvenText} · 언오버 ${underOverText}`;
+}
+
+
+function submitPick() {
+
+    if (
+        !currentPick.oddEven ||
+        !currentPick.underOver
+    ) {
+
+        alert(
+            '홀짝과 언더/오버를 모두 선택해주세요.'
+        );
+
+        return;
+    }
+
+
+    alert(
+        'PICK 저장 기능은 다음 단계에서 연결합니다.'
+    );
+}
+    
 async function sendChat() {
 
     const input = document.getElementById('chatInput');
