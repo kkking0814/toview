@@ -113,3 +113,71 @@
 
     flex: 0 0 110px !important;
 }
+
+/* ========================================
+   TOVIEW 공통 전체메뉴 + 회원 버튼
+======================================== */
+
+/* 전체메뉴 */
+.menu-btn {
+    width: 110px !important;
+    min-width: 110px !important;
+    max-width: 110px !important;
+
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+
+    padding: 0 14px !important;
+    margin: 0 !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+
+    box-sizing: border-box !important;
+
+    border-radius: 8px !important;
+
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+
+    white-space: nowrap !important;
+    flex: 0 0 110px !important;
+
+    cursor: pointer !important;
+}
+
+/* 로그인 / 닉네임 */
+#loginBtn,
+#userBtn {
+    width: 110px !important;
+    min-width: 110px !important;
+    max-width: 110px !important;
+
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+
+    padding: 0 14px !important;
+    margin: 0 !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    box-sizing: border-box !important;
+
+    border-radius: 8px !important;
+
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+
+    white-space: nowrap !important;
+    flex: 0 0 110px !important;
+
+    cursor: pointer !important;
+}
