@@ -273,93 +273,142 @@ function validNickname(nickname){
            /^[가-힣]{2,}$/.test(nickname) &&
            !/(.)\1\1/.test(nickname);
 }
+
 app.post('/api/register', async (req, res) => {
-const { username, password, nickname } = req.body || {};
-const email = String(req.body?.email || '').trim().toLowerCase();
+    try {
+        const { username, password, nickname } = req.body || {};
+        const email = String(req.body?.email || '').trim().toLowerCase();
 
-if (!validUsername(username)) {
-    return res.status(400).json({
-        error: '아이디는 영문으로만 5자 이상 입력하고, 같은 영문자를 3번 이상 연속 사용할 수 없습니다.'
-    });
-}
+        // 아이디 검사
+        if (!validUsername(username)) {
+            return res.status(400).json({
+                error: '아이디는 영문으로만 5자 이상 입력하고, 같은 영문자를 3번 이상 연속 사용할 수 없습니다.'
+            });
+        }
 
-if (!validPassword(password)) {
-    return res.status(400).json({
-        error: '비밀번호는 영문과 숫자를 포함해 8자 이상 입력하고, 같은 문자를 3번 이상 연속 사용할 수 없습니다.'
-    });
-}
+        // 비밀번호 검사
+        if (!validPassword(password)) {
+            return res.status(400).json({
+                error: '비밀번호는 영문과 숫자를 포함해 8자 이상 입력하고, 같은 문자를 3번 이상 연속 사용할 수 없습니다.'
+            });
+        }
 
-if (!validNickname(nickname)) {
-    return res.status(400).json({
-        error: '닉네임은 완성된 한글로 2글자 이상 입력하고, 같은 글자를 3번 이상 연속 사용할 수 없습니다.'
-    });
-}
+        // 닉네임 검사
+        if (!validNickname(nickname)) {
+            return res.status(400).json({
+                error: '닉네임은 완성된 한글로 2글자 이상 입력하고, 같은 글자를 3번 이상 연속 사용할 수 없습니다.'
+            });
+        }
 
-if (
-    !email ||
-    !email.includes('@') ||
-    email.startsWith('@') ||
-    email.endsWith('@') ||
-    !email.substring(email.indexOf('@') + 1).includes('.')
-) {
-    return res.status(400).json({
-        error: '올바른 이메일 주소가 필요합니다.'
-    });
-}
+        // 이메일 검사
+        if (
+            !email ||
+            !email.includes('@') ||
+            email.startsWith('@') ||
+            email.endsWith('@') ||
+            !email.substring(email.indexOf('@') + 1).includes('.')
+        ) {
+            return res.status(400).json({
+                error: '올바른 이메일 주소가 필요합니다.'
+            });
+        }
 
-const emailAuth = emailCodes.get(email);
+        // 이메일 인증 여부 확인
+        const emailAuth = emailCodes.get(email);
 
-if (
-    !emailAuth ||
-    !emailAuth.verified ||
-    Date.now() > emailAuth.expiresAt
-) {
-    return res.status(403).json({
-        error: '이메일 인증을 완료해주세요.'
-    });
-}
-    const d = db();
-if (d.users.some(u =>
-    String(u.email || '').trim().toLowerCase() === email
-)) {
-    return res.status(409).json({
-        error: '이미 가입된 이메일입니다.'
-    });
-}
+        if (
+            !emailAuth ||
+            !emailAuth.verified ||
+            Date.now() > emailAuth.expiresAt
+        ) {
+            return res.status(403).json({
+                error: '이메일 인증을 완료해주세요.'
+            });
+        }
 
-    // 아이디 중복 최종 검사
-    if (d.users.some(u => u.username === username)) {
-        return res.status(409).json({
-            error: '이미 존재하는 아이디입니다.'
+        // Neon에서 중복 회원 확인
+        const duplicate = await pool.query(
+            `
+            SELECT username, nickname, email
+            FROM users
+            WHERE username = $1
+               OR nickname = $2
+               OR LOWER(email) = LOWER($3)
+            `,
+            [username, nickname, email]
+        );
+
+        if (duplicate.rows.length > 0) {
+            const users = duplicate.rows;
+
+            if (users.some(u => u.username === username)) {
+                return res.status(409).json({
+                    error: '이미 존재하는 아이디입니다.'
+                });
+            }
+
+            if (users.some(u => u.nickname === nickname)) {
+                return res.status(409).json({
+                    error: '이미 존재하는 닉네임입니다.'
+                });
+            }
+
+            if (users.some(u =>
+                String(u.email).toLowerCase() === email
+            )) {
+                return res.status(409).json({
+                    error: '이미 가입된 이메일입니다.'
+                });
+            }
+        }
+
+        // 비밀번호 암호화
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // ★ Neon DB에 실제 회원 저장
+        await pool.query(
+            `
+            INSERT INTO users
+                (username, password, nickname, email)
+            VALUES
+                ($1, $2, $3, $4)
+            `,
+            [
+                username,
+                hashedPassword,
+                nickname,
+                email
+            ]
+        );
+
+        // 사용한 이메일 인증정보 삭제
+        emailCodes.delete(email);
+
+        // 가입과 동시에 로그인 세션 생성
+        req.session.user = username;
+
+        console.log('Neon 회원가입 성공:', username);
+
+        return res.json({
+            ok: true,
+            username,
+            nickname
+        });
+
+    } catch (error) {
+        console.error('회원가입 Neon DB 오류:', error);
+
+        // DB UNIQUE 중복 오류
+        if (error.code === '23505') {
+            return res.status(409).json({
+                error: '이미 사용 중인 회원정보입니다.'
+            });
+        }
+
+        return res.status(500).json({
+            error: '회원가입 처리 중 오류가 발생했습니다.'
         });
     }
-
-    // 닉네임 중복 최종 검사
-    if (d.users.some(u => u.nickname === nickname)) {
-        return res.status(409).json({
-            error: '이미 존재하는 닉네임입니다.'
-        });
-    }
-
-    // 회원 저장
-d.users.push({
-    username,
-    password: await bcrypt.hash(password, 10),
-    nickname,
-    email,
-    createdAt: new Date().toISOString()
-});
-
-    save(d);
-    emailCodes.delete(email);
-
-    req.session.user = username;
-
-    res.json({
-        ok: true,
-        username,
-        nickname
-    });
 });
 
 app.post('/api/login', async (req, res) => {
