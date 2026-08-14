@@ -387,6 +387,204 @@
     </aside>
 
 </section>
+
+    <!-- ========================================
+     TOVIEW MEMBER PICK
+======================================== -->
+
+<section class="pick-center">
+
+    <div class="pick-head">
+
+        <div>
+            <span class="pick-label">MEMBER PREDICTION</span>
+
+            <h2>
+                <span id="pickRound">---</span>회차 MEMBER PICK
+            </h2>
+
+            <p>회원들의 실시간 결과 예측</p>
+        </div>
+
+        <div class="pick-timer">
+            <span>마감까지</span>
+            <strong id="pickCountdown">--:--</strong>
+        </div>
+
+    </div>
+
+
+    <div class="pick-body">
+
+        <!-- 홀짝 -->
+        <div class="pick-category">
+
+            <div class="pick-category-title">
+                <div>
+                    <strong>파워볼 홀짝</strong>
+                    <span>POWERBALL ODD / EVEN</span>
+                </div>
+
+                <span id="oddEvenParticipants">
+                    참여 0명
+                </span>
+            </div>
+
+
+            <div class="pick-buttons">
+
+                <button
+                    type="button"
+                    class="pick-option"
+                    data-type="oddEven"
+                    data-value="odd"
+                    onclick="selectPick(this)"
+                >
+                    <span class="pick-circle odd">홀</span>
+
+                    <div>
+                        <strong>홀</strong>
+                        <small>ODD</small>
+                    </div>
+                </button>
+
+
+                <button
+                    type="button"
+                    class="pick-option"
+                    data-type="oddEven"
+                    data-value="even"
+                    onclick="selectPick(this)"
+                >
+                    <span class="pick-circle even">짝</span>
+
+                    <div>
+                        <strong>짝</strong>
+                        <small>EVEN</small>
+                    </div>
+                </button>
+
+            </div>
+
+
+            <div class="pick-percent-row">
+
+                <div class="pick-percent-info">
+                    <span>홀 <b id="oddPercent">50%</b></span>
+                    <span>짝 <b id="evenPercent">50%</b></span>
+                </div>
+
+                <div class="pick-progress">
+                    <div
+                        class="pick-progress-blue"
+                        id="oddBar"
+                        style="width:50%"
+                    ></div>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- 언더 / 오버 -->
+        <div class="pick-category">
+
+            <div class="pick-category-title">
+                <div>
+                    <strong>파워볼 언더 / 오버</strong>
+                    <span>POWERBALL UNDER / OVER</span>
+                </div>
+
+                <span id="underOverParticipants">
+                    참여 0명
+                </span>
+            </div>
+
+
+            <div class="pick-buttons">
+
+                <button
+                    type="button"
+                    class="pick-option"
+                    data-type="underOver"
+                    data-value="under"
+                    onclick="selectPick(this)"
+                >
+                    <span class="pick-circle under">언</span>
+
+                    <div>
+                        <strong>언더</strong>
+                        <small>UNDER</small>
+                    </div>
+                </button>
+
+
+                <button
+                    type="button"
+                    class="pick-option"
+                    data-type="underOver"
+                    data-value="over"
+                    onclick="selectPick(this)"
+                >
+                    <span class="pick-circle over">오</span>
+
+                    <div>
+                        <strong>오버</strong>
+                        <small>OVER</small>
+                    </div>
+                </button>
+
+            </div>
+
+
+            <div class="pick-percent-row">
+
+                <div class="pick-percent-info">
+                    <span>언더 <b id="underPercent">50%</b></span>
+                    <span>오버 <b id="overPercent">50%</b></span>
+                </div>
+
+                <div class="pick-progress">
+                    <div
+                        class="pick-progress-blue"
+                        id="underBar"
+                        style="width:50%"
+                    ></div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- 선택 확인 -->
+    <div class="pick-submit-area">
+
+        <div class="my-pick-status">
+
+            <span>MY PICK</span>
+
+            <strong id="myPickText">
+                홀짝과 언더/오버를 선택해주세요.
+            </strong>
+
+        </div>
+
+        <button
+            type="button"
+            class="pick-submit-btn"
+            id="pickSubmitBtn"
+            onclick="submitPick()"
+        >
+            PICK 등록하기
+        </button>
+
+    </div>
+
+</section>
     
     <div class="card"><div class="head">최근 결과 <span class="sub" id="state">데이터 로딩</span></div><div style="display:flex;gap:8px;padding:12px"><input id="q" placeholder="회차 검색" style="flex:1;padding:10px;border-radius:8px"><select id="f"><option value="all">전체</option><option value="odd">파워 홀</option><option value="even">파워 짝</option></select></div><div style="overflow:auto"><table class="table"><thead><tr><th>회차</th><th>일반볼</th><th>합</th><th>파워볼</th><th>홀짝</th><th>언/오버</th></tr></thead><tbody id="rows"></tbody></table></div></div></main><footer class="foot">TOVIEW V7 · 페이지 이동형 프로토타입 · © 2026 TOVIEW</footer><script>const demo=[181,180,179,178,177,176].map((r,i)=>({r,balls:[[18,8,16,13,22],[4,17,13,11,14],[9,21,27,5,26],[22,1,5,21,17],[6,16,10,23,1],[1,2,14,28,4]][i],p:[2,5,0,8,0,9][i]}));function draw(){let q=document.getElementById('q').value,f=document.getElementById('f').value,a=demo.filter(x=>(!q||String(x.r).includes(q))&&(f==='all'||(f==='odd'?x.p%2===1:x.p%2===0)));rows.innerHTML=a.map(x=>`<tr><td>${x.r}</td><td>${x.balls.join(' · ')}</td><td>${x.balls.reduce((a,b)=>a+b)}</td><td><b>${x.p}</b></td><td>${x.p%2?'홀':'짝'}</td><td>${x.p<5?'언더':'오버'}</td></tr>`).join('');state.textContent=a.length+'개 표시'}q.oninput=draw;f.onchange=draw;draw()
 
