@@ -133,7 +133,96 @@
 
 </div>
     
-<main class="wrap"><div class="notice">회차 결과 페이지입니다. 검색·필터가 실제로 동작합니다.</div><div class="card"><div class="head">최근 결과 <span class="sub" id="state">데이터 로딩</span></div><div style="display:flex;gap:8px;padding:12px"><input id="q" placeholder="회차 검색" style="flex:1;padding:10px;border-radius:8px"><select id="f"><option value="all">전체</option><option value="odd">파워 홀</option><option value="even">파워 짝</option></select></div><div style="overflow:auto"><table class="table"><thead><tr><th>회차</th><th>일반볼</th><th>합</th><th>파워볼</th><th>홀짝</th><th>언/오버</th></tr></thead><tbody id="rows"></tbody></table></div></div></main><footer class="foot">TOVIEW V7 · 페이지 이동형 프로토타입 · © 2026 TOVIEW</footer><script>const demo=[181,180,179,178,177,176].map((r,i)=>({r,balls:[[18,8,16,13,22],[4,17,13,11,14],[9,21,27,5,26],[22,1,5,21,17],[6,16,10,23,1],[1,2,14,28,4]][i],p:[2,5,0,8,0,9][i]}));function draw(){let q=document.getElementById('q').value,f=document.getElementById('f').value,a=demo.filter(x=>(!q||String(x.r).includes(q))&&(f==='all'||(f==='odd'?x.p%2===1:x.p%2===0)));rows.innerHTML=a.map(x=>`<tr><td>${x.r}</td><td>${x.balls.join(' · ')}</td><td>${x.balls.reduce((a,b)=>a+b)}</td><td><b>${x.p}</b></td><td>${x.p%2?'홀':'짝'}</td><td>${x.p<5?'언더':'오버'}</td></tr>`).join('');state.textContent=a.length+'개 표시'}q.oninput=draw;f.onchange=draw;draw()
+<main class="wrap">
+
+<!-- ========================================
+     TOVIEW GAME LIVE CENTER
+======================================== -->
+
+<section class="game-center-head">
+
+    <div class="game-center-title">
+        <div>
+            <span class="game-center-label">
+                ● LIVE GAME CENTER
+            </span>
+
+            <h1>게임 라이브 센터</h1>
+
+            <p>
+                실시간 게임 결과 · 회원 PICK · 라이브 채팅
+            </p>
+        </div>
+
+        <div class="live-status">
+            <span></span>
+            LIVE
+        </div>
+    </div>
+
+
+    <!-- 게임 선택 -->
+    <div class="game-tabs">
+
+        <button
+            class="game-tab active"
+            data-game="powerball"
+            onclick="changeGame('powerball', this)"
+        >
+            <strong>파워볼</strong>
+            <small>POWERBALL</small>
+        </button>
+
+        <button
+            class="game-tab"
+            data-game="ladder"
+            onclick="changeGame('ladder', this)"
+        >
+            <strong>사다리</strong>
+            <small>LADDER</small>
+        </button>
+
+        <button
+            class="game-tab"
+            data-game="eos"
+            onclick="changeGame('eos', this)"
+        >
+            <strong>EOS 파워볼</strong>
+            <small>EOS POWERBALL</small>
+        </button>
+
+        <button
+            class="game-tab"
+            data-game="speedkeno"
+            onclick="changeGame('speedkeno', this)"
+        >
+            <strong>스피드키노</strong>
+            <small>SPEED KENO</small>
+        </button>
+
+        <button
+            class="game-tab"
+            data-game="kenoladder"
+            onclick="changeGame('kenoladder', this)"
+        >
+            <strong>키노사다리</strong>
+            <small>KENO LADDER</small>
+        </button>
+
+        <button
+            class="game-tab"
+            data-game="more"
+            onclick="changeGame('more', this)"
+        >
+            <strong>더보기 +</strong>
+            <small>MORE GAME</small>
+        </button>
+
+    </div>
+
+</section>
+    
+    <div class="card"><div class="head">최근 결과 <span class="sub" id="state">데이터 로딩</span></div><div style="display:flex;gap:8px;padding:12px"><input id="q" placeholder="회차 검색" style="flex:1;padding:10px;border-radius:8px"><select id="f"><option value="all">전체</option><option value="odd">파워 홀</option><option value="even">파워 짝</option></select></div><div style="overflow:auto"><table class="table"><thead><tr><th>회차</th><th>일반볼</th><th>합</th><th>파워볼</th><th>홀짝</th><th>언/오버</th></tr></thead><tbody id="rows"></tbody></table></div></div></main><footer class="foot">TOVIEW V7 · 페이지 이동형 프로토타입 · © 2026 TOVIEW</footer><script>const demo=[181,180,179,178,177,176].map((r,i)=>({r,balls:[[18,8,16,13,22],[4,17,13,11,14],[9,21,27,5,26],[22,1,5,21,17],[6,16,10,23,1],[1,2,14,28,4]][i],p:[2,5,0,8,0,9][i]}));function draw(){let q=document.getElementById('q').value,f=document.getElementById('f').value,a=demo.filter(x=>(!q||String(x.r).includes(q))&&(f==='all'||(f==='odd'?x.p%2===1:x.p%2===0)));rows.innerHTML=a.map(x=>`<tr><td>${x.r}</td><td>${x.balls.join(' · ')}</td><td>${x.balls.reduce((a,b)=>a+b)}</td><td><b>${x.p}</b></td><td>${x.p%2?'홀':'짝'}</td><td>${x.p<5?'언더':'오버'}</td></tr>`).join('');state.textContent=a.length+'개 표시'}q.oninput=draw;f.onchange=draw;draw()
 
 </script>
 
