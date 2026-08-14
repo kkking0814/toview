@@ -83,28 +83,7 @@ function showRegister(){
             닉네임 중복확인이 필요합니다.
         </div>
 
-        <div style="display:flex;gap:8px;">
-            <input id="regPhone" type="tel"
-                   placeholder="휴대폰 번호 (01012345678)"
-                   style="flex:1;">
-            <button type="button" onclick="sendPhoneCode()" style="width:130px;">
-                인증번호 받기
-            </button>
-        </div>
 
-        <div style="display:flex;gap:8px;margin-top:8px;">
-            <input id="regPhoneCode"
-                   inputmode="numeric"
-                   placeholder="인증번호 6자리"
-                   style="flex:1;">
-            <button type="button" onclick="verifyPhoneCode()" style="width:130px;">
-                인증 확인
-            </button>
-        </div>
-
-        <div id="phoneVerifyStatus" class="sub" style="margin:5px 0 10px;">
-            휴대폰 인증이 필요합니다.
-        </div>
 
         <button onclick="registerAccount()">
             회원가입
@@ -120,7 +99,7 @@ function showRegister(){
 }
 let usernameChecked = false;
 let nicknameChecked = false;
-let phoneVerified = false;
+
 
 let checkedUsername = '';
 let checkedNickname = '';
@@ -187,12 +166,12 @@ async function registerAccount(){
     const password = document.getElementById('regPw').value;
     const password2 = document.getElementById('regPw2').value;
     const nickname = document.getElementById('regNickname').value.trim();
-    const phone = document.getElementById('regPhone').value.trim();
 
-    if(!username || !password || !password2 || !nickname || !phone){
-        alert('아이디, 비밀번호, 닉네임, 휴대폰 번호를 모두 입력해주세요.');
-        return;
-    }
+
+if(!username || !password || !password2 || !nickname){
+    alert('아이디, 비밀번호, 비밀번호 확인, 닉네임을 모두 입력해주세요.');
+    return;
+}
 
     if(password.length < 6){
         alert('비밀번호는 6자 이상이어야 합니다.');
@@ -209,10 +188,7 @@ async function registerAccount(){
         return;
     }
 
-    if(!nicknameChecked || checkedNickname !== nickname){
-        alert('닉네임 중복확인을 해주세요.');
-        return;
-    }
+
 
     if(!phoneVerified){
         alert('휴대폰 인증을 완료해주세요.');
@@ -228,8 +204,7 @@ async function registerAccount(){
             body:JSON.stringify({
                 username,
                 password,
-                nickname,
-                phone
+                nickname
             })
         });
 
@@ -244,7 +219,6 @@ async function registerAccount(){
 
         usernameChecked = false;
         nicknameChecked = false;
-        phoneVerified = false;
         checkedUsername = '';
         checkedNickname = '';
 
