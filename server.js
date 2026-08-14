@@ -67,6 +67,8 @@ app.post('/api/email/send-code', async (req, res) => {
         const email = String(req.body?.email || '').trim().toLowerCase();
         const ip = req.ip;
 
+        console.log('EMAIL DEBUG:', req.body, 'EMAIL:', email);
+
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             return res.status(400).json({
                 error: '올바른 이메일 주소를 입력해주세요.'
