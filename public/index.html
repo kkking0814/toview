@@ -934,6 +934,133 @@
     }
 }
     
+/* ===== 왼쪽 사이드바 ===== */
+
+.wrap{
+    position:relative;
+}
+
+.left-sidebar{
+    position:absolute;
+    top:55px;
+    right:calc(100% + 18px);
+    width:220px;
+
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+.side-card{
+    overflow:hidden;
+    border:1px solid #22314a;
+    border-radius:10px;
+    background:#0d192b;
+}
+
+.side-card .head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+
+.live-dot{
+    color:#22c55e;
+    font-size:9px;
+    font-weight:800;
+}
+
+/* 채팅창 */
+
+.chat-preview{
+    height:170px;
+    padding:10px;
+    overflow-y:auto;
+}
+
+.chat-empty{
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    color:#52627a;
+    font-size:11px;
+}
+
+.chat-input-area{
+    display:flex;
+    gap:5px;
+    padding:8px;
+
+    border-top:1px solid rgba(255,255,255,.06);
+}
+
+.chat-input-area input{
+    flex:1;
+    min-width:0;
+    padding:8px;
+
+    border:1px solid #263750;
+    border-radius:6px;
+
+    background:#091426;
+    color:#fff;
+    font-size:10px;
+}
+
+.chat-input-area button{
+    padding:0 9px;
+    border:0;
+    border-radius:6px;
+
+    background:#2563eb;
+    color:#fff;
+    font-size:10px;
+}
+
+/* 왼쪽 광고 */
+
+.side-ad{
+    height:120px;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:10px;
+
+    background:#0d192b;
+    text-decoration:none;
+}
+
+.side-ad span{
+    margin-bottom:7px;
+    color:#3b82f6;
+    font-size:8px;
+    font-weight:900;
+}
+
+.side-ad strong{
+    color:#cbd5e1;
+    font-size:13px;
+}
+
+.side-ad small{
+    margin-top:4px;
+    color:#52627a;
+    font-size:9px;
+}
+
+/* 화면이 좁을 때는 숨김 */
+@media(max-width:1450px){
+    .left-sidebar{
+        display:none;
+    }
+}
+
 </style>
 </head>
 <body>
@@ -1080,7 +1207,52 @@
 
 </div>
     
-<main class="wrap"><div class="notice">TOVIEW는 결과 데이터와 통계를 시각화하는 정보 서비스 프로토타입입니다. 베팅·충전·환전 기능은 포함하지 않습니다.</div>
+<main class="wrap">
+
+<div class="notice">
+    TOVIEW는 결과 데이터와 통계를 시각화하는 정보 서비스 프로토타입입니다. 베팅·충전·환전 기능은 포함하지 않습니다.
+</div>
+
+<div class="left-sidebar">
+
+    <div class="side-card">
+        <div class="head">
+            <span>활동 랭킹</span>
+            <span class="sub">TOP 5</span>
+        </div>
+
+        <div id="rankList"></div>
+    </div>
+
+    <div class="side-card">
+        <div class="head">
+            <span>실시간 채팅</span>
+            <span class="live-dot">LIVE</span>
+        </div>
+
+        <div class="chat-preview">
+            <div class="chat-empty">실시간 채팅 준비중</div>
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" placeholder="메시지를 입력하세요" disabled>
+            <button disabled>전송</button>
+        </div>
+    </div>
+
+    <a href="#" class="side-ad">
+        <span>AD</span>
+        <strong>제휴 배너</strong>
+        <small>광고 영역</small>
+    </a>
+
+    <a href="#" class="side-ad">
+        <span>AD</span>
+        <strong>제휴 배너</strong>
+        <small>광고 영역</small>
+    </a>
+
+</div>
     
 <section class="main-promo">
 
@@ -1303,6 +1475,113 @@
             <a href="community.html?board=분석%20토론" class="preview-row">
                 <span class="preview-title">패턴 데이터 공유합니다.</span>
                 <span class="preview-date">31분</span>
+            </a>
+
+        </div>
+    </div>
+
+</section>
+
+<section class="home-board-grid">
+
+    <div class="card">
+        <div class="head">
+            <span>새 글</span>
+            <a href="community.html" class="more-link">더보기 →</a>
+        </div>
+
+        <div class="board-preview">
+
+            <a href="community.html" class="preview-row">
+                <div class="preview-text">
+                    <span class="board-label">자유</span>
+                    <span class="preview-title">TOVIEW 커뮤니티가 오픈했습니다.</span>
+                </div>
+                <span class="preview-date">방금</span>
+            </a>
+
+            <a href="community.html" class="preview-row">
+                <div class="preview-text">
+                    <span class="board-label">분석</span>
+                    <span class="preview-title">최근 회차 흐름 같이 봅시다.</span>
+                </div>
+                <span class="preview-date">3분</span>
+            </a>
+
+            <a href="community.html" class="preview-row">
+                <div class="preview-text">
+                    <span class="board-label">자유</span>
+                    <span class="preview-title">오늘 처음 가입했습니다.</span>
+                </div>
+                <span class="preview-date">8분</span>
+            </a>
+
+            <a href="community.html" class="preview-row">
+                <div class="preview-text">
+                    <span class="board-label">분석</span>
+                    <span class="preview-title">패턴 데이터 확인해봤습니다.</span>
+                </div>
+                <span class="preview-date">12분</span>
+            </a>
+
+            <a href="community.html" class="preview-row">
+                <div class="preview-text">
+                    <span class="board-label">자유</span>
+                    <span class="preview-title">다들 반갑습니다.</span>
+                </div>
+                <span class="preview-date">21분</span>
+            </a>
+
+        </div>
+    </div>
+
+
+    <div class="card">
+        <div class="head">
+            <span>새 댓글</span>
+            <a href="community.html" class="more-link">더보기 →</a>
+        </div>
+
+        <div class="board-preview">
+
+            <a href="community.html" class="comment-row">
+                <div class="comment-content">
+                    <span class="comment-text">저도 비슷하게 보고 있습니다.</span>
+                    <span class="comment-post">최근 회차 흐름 같이 봅시다.</span>
+                </div>
+                <span class="preview-date">1분</span>
+            </a>
+
+            <a href="community.html" class="comment-row">
+                <div class="comment-content">
+                    <span class="comment-text">자료 감사합니다.</span>
+                    <span class="comment-post">패턴 데이터 확인해봤습니다.</span>
+                </div>
+                <span class="preview-date">4분</span>
+            </a>
+
+            <a href="community.html" class="comment-row">
+                <div class="comment-content">
+                    <span class="comment-text">반갑습니다!</span>
+                    <span class="comment-post">오늘 처음 가입했습니다.</span>
+                </div>
+                <span class="preview-date">7분</span>
+            </a>
+
+            <a href="community.html" class="comment-row">
+                <div class="comment-content">
+                    <span class="comment-text">확인해봐야겠네요.</span>
+                    <span class="comment-post">오늘 데이터 정리</span>
+                </div>
+                <span class="preview-date">15분</span>
+            </a>
+
+            <a href="community.html" class="comment-row">
+                <div class="comment-content">
+                    <span class="comment-text">확인했습니다.</span>
+                    <span class="comment-post">서비스 이용 안내</span>
+                </div>
+                <span class="preview-date">28분</span>
             </a>
 
         </div>
