@@ -1,5 +1,4 @@
 const express=require('express'); const session=require('express-session'); const bcrypt=require('bcryptjs'); const fs=require('fs'); const path=require('path');
-const nodemailer = require('nodemailer');
 
 const app=express(); const PORT=process.env.PORT||3000; const dbPath=path.join(__dirname,'data.json');
 
@@ -48,19 +47,6 @@ function checkEmailRateLimit(ip){
         allowed: true
     };
 }
-
-const mailTransporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD
-    },
-    connectionTimeout: 20000,
-    greetingTimeout: 20000,
-    socketTimeout: 30000
-});
 
 app.set('trust proxy', 1);
 
@@ -126,12 +112,31 @@ emailCodes.set(email, {
     verified: false
 });
 
-        await mailTransporter.sendMail({
-            from: process.env.GMAIL_USER,
-            to: email,
-            subject: '[TOVIEW] 이메일 인증번호',
-            text: `TOVIEW 이메일 인증번호는 ${code} 입니다.\n\n인증번호는 5분 동안 유효합니다.`
-        });
+const resendResponse = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        from: 'TOVIEW <onboarding@resend.dev>',
+        to: [email],
+        subject: '[TOVIEW] 이메일 인증번호',
+        text: `TOVIEW 이메일 인증번호는 ${code} 입니다.\n\n인증번호는 5분 동안 유효합니다.`
+    })
+});
+
+const resendData = await resendResponse.json();
+
+if (!resendResponse.ok) {
+    console.error('RESEND ERROR:', resendData);
+
+    emailCodes.delete(email);
+
+    return res.status(500).json({
+        error: '인증번호 이메일 발송에 실패했습니다.'
+    });
+}
 
         return res.json({
             ok: true
