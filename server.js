@@ -352,7 +352,56 @@ d.users.push({
         nickname
     });
 });
-app.post('/api/login',async(req,res)=>{let {username,password}=req.body||{};let u=db().users.find(x=>x.username===username);if(!u||!(await bcrypt.compare(password||'',u.password)))return res.status(401).json({error:'아이디 또는 비밀번호가 올바르지 않습니다.'});req.session.user=username;res.json({ok:true,username})});
+app.post('/api/login', async (req, res) => {
+
+    const { username, password } = req.body || {};
+
+    const d = db();
+
+    console.log('===== 로그인 확인 =====');
+    console.log('입력한 아이디:', username);
+    console.log('현재 저장된 회원 수:', d.users.length);
+    console.log('저장된 아이디:', d.users.map(u => u.username));
+
+    const u = d.users.find(
+        x => x.username === username
+    );
+
+    if (!u) {
+
+        console.log('로그인 실패 원인: 아이디 없음');
+
+        return res.status(401).json({
+            error: '아이디 또는 비밀번호가 올바르지 않습니다.'
+        });
+    }
+
+    const passwordOK = await bcrypt.compare(
+        password || '',
+        u.password
+    );
+
+    console.log('회원 찾음:', u.username);
+    console.log('비밀번호 일치:', passwordOK);
+
+    if (!passwordOK) {
+
+        console.log('로그인 실패 원인: 비밀번호 불일치');
+
+        return res.status(401).json({
+            error: '아이디 또는 비밀번호가 올바르지 않습니다.'
+        });
+    }
+
+    req.session.user = username;
+
+    console.log('로그인 성공:', username);
+
+    return res.json({
+        ok: true,
+        username
+    });
+});
 app.post('/api/logout',(req,res)=>req.session.destroy(()=>res.json({ok:true})));
 app.get('/api/me', (req, res) => {
     if (!req.session.user) {
