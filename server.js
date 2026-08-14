@@ -361,56 +361,78 @@ d.users.push({
         nickname
     });
 });
+
 app.post('/api/login', async (req, res) => {
+    try {
+        const username = String(req.body?.username || '').trim();
+        const password = String(req.body?.password || '');
 
-    const { username, password } = req.body || {};
+        if (!username || !password) {
+            return res.status(400).json({
+                error: '아이디와 비밀번호를 입력해주세요.'
+            });
+        }
 
-    const d = db();
+        // Neon DB에서 회원 찾기
+        const result = await pool.query(
+            `
+            SELECT
+                username,
+                password,
+                nickname,
+                email
+            FROM users
+            WHERE username = $1
+            LIMIT 1
+            `,
+            [username]
+        );
 
-    console.log('===== 로그인 확인 =====');
-    console.log('입력한 아이디:', username);
-    console.log('현재 저장된 회원 수:', d.users.length);
-    console.log('저장된 아이디:', d.users.map(u => u.username));
+        const user = result.rows[0];
 
-    const u = d.users.find(
-        x => x.username === username
-    );
+        // 아이디 없음
+        if (!user) {
+            console.log('로그인 실패: 존재하지 않는 아이디');
 
-    if (!u) {
+            return res.status(401).json({
+                error: '아이디 또는 비밀번호가 올바르지 않습니다.'
+            });
+        }
 
-        console.log('로그인 실패 원인: 아이디 없음');
+        // 비밀번호 확인
+        const passwordOK = await bcrypt.compare(
+            password,
+            user.password
+        );
 
-        return res.status(401).json({
-            error: '아이디 또는 비밀번호가 올바르지 않습니다.'
+        if (!passwordOK) {
+            console.log('로그인 실패: 비밀번호 불일치');
+
+            return res.status(401).json({
+                error: '아이디 또는 비밀번호가 올바르지 않습니다.'
+            });
+        }
+
+        // 로그인 세션 저장
+        req.session.user = user.username;
+
+        console.log('로그인 성공:', user.username);
+
+        return res.json({
+            ok: true,
+            username: user.username,
+            nickname: user.nickname
+        });
+
+    } catch (error) {
+        console.error('로그인 DB 오류:', error);
+
+        return res.status(500).json({
+            error: '로그인 처리 중 오류가 발생했습니다.'
         });
     }
-
-    const passwordOK = await bcrypt.compare(
-        password || '',
-        u.password
-    );
-
-    console.log('회원 찾음:', u.username);
-    console.log('비밀번호 일치:', passwordOK);
-
-    if (!passwordOK) {
-
-        console.log('로그인 실패 원인: 비밀번호 불일치');
-
-        return res.status(401).json({
-            error: '아이디 또는 비밀번호가 올바르지 않습니다.'
-        });
-    }
-
-    req.session.user = username;
-
-    console.log('로그인 성공:', username);
-
-    return res.json({
-        ok: true,
-        username
-    });
 });
+
 app.post('/api/logout',(req,res)=>req.session.destroy(()=>res.json({ok:true})));
 app.get('/api/me', async (req, res) => {
     try {
