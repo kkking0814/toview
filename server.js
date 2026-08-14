@@ -1,7 +1,14 @@
 const express=require('express'); const session=require('express-session'); const bcrypt=require('bcryptjs'); const fs=require('fs'); const path=require('path');
 const nodemailer = require('nodemailer');
+
 const app=express(); const PORT=process.env.PORT||3000; const dbPath=path.join(__dirname,'data.json');
-function db(){try{return JSON.parse(fs.readFileSync(dbPath,'utf8'))}catch{return {users:[],posts:[]}}} function save(x){fs.writeFileSync(dbPath,JSON.stringify(x,null,2))}
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+function db(){try{return JSON.parse(fs.readFileSync(dbPath,'utf8'))}catch{return {users:[],posts:[]}}} 
+function save(x){fs.writeFileSync(dbPath,JSON.stringify(x,null,2))}
+
 const emailCodes = new Map();
 const emailRateLimits = new Map();
 
