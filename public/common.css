@@ -1,125 +1,19 @@
 /* ========================================
-   TOVIEW 공통 상단 로그인/회원 버튼
+   TOVIEW 공통 상단 버튼
 ======================================== */
 
-#userBtn,
-#loginBtn {
-    width: 110px !important;
-    min-width: 110px !important;
-    max-width: 110px !important;
-
-    height: 40px !important;
-    min-height: 40px !important;
-
-    padding: 0 14px !important;
-    margin: 0 !important;
-
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-
-    box-sizing: border-box !important;
-
-    border: 1px solid #3b82f6 !important;
-    border-radius: 8px !important;
-
-    background: #2563eb !important;
-    color: #ffffff !important;
-
-    font-size: 13px !important;
-    font-weight: 700 !important;
-    line-height: 1 !important;
-
-    white-space: nowrap !important;
-
-    cursor: pointer !important;
-
-    flex: 0 0 110px !important;
-}
-
-/* ========================================
-   TOVIEW 공통 헤더 오른쪽 버튼 영역
-======================================== */
-
-.header-actions {
-    margin-left: auto !important;
-
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-
-    gap: 10px !important;
-
-    flex-shrink: 0 !important;
+/* 헤더를 버튼 위치의 기준으로 설정 */
+.top .bar {
+    position: relative !important;
 }
 
 /* 전체메뉴 버튼 */
-.all-menu-btn {
-    width: 110px !important;
-    height: 40px !important;
-
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-
-    padding: 0 14px !important;
-    margin: 0 !important;
-
-    box-sizing: border-box !important;
-
-    border: 1px solid #334761 !important;
-    border-radius: 8px !important;
-
-    background: #111d30 !important;
-    color: #ffffff !important;
-
-    font-size: 13px !important;
-    font-weight: 700 !important;
-    white-space: nowrap !important;
-
-    cursor: pointer !important;
-}
-
-/* 로그인 / 닉네임 버튼 */
-#userBtn,
-#loginBtn {
-    width: 110px !important;
-    height: 40px !important;
-
-    min-width: 110px !important;
-    max-width: 110px !important;
-
-    padding: 0 14px !important;
-    margin: 0 !important;
-
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-
-    box-sizing: border-box !important;
-
-    border: 1px solid #3b82f6 !important;
-    border-radius: 8px !important;
-
-    background: #2563eb !important;
-    color: #ffffff !important;
-
-    font-size: 13px !important;
-    font-weight: 700 !important;
-    line-height: 1 !important;
-
-    white-space: nowrap !important;
-    cursor: pointer !important;
-
-    flex: 0 0 110px !important;
-}
-
-/* ========================================
-   TOVIEW 공통 전체메뉴 + 회원 버튼
-======================================== */
-
-/* 전체메뉴 */
 .menu-btn {
+    position: absolute !important;
+    right: 120px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+
     width: 110px !important;
     min-width: 110px !important;
     max-width: 110px !important;
@@ -138,21 +32,30 @@
 
     box-sizing: border-box !important;
 
+    border: 1px solid #334761 !important;
     border-radius: 8px !important;
+
+    background: #111d30 !important;
+    color: #ffffff !important;
 
     font-size: 13px !important;
     font-weight: 700 !important;
     line-height: 1 !important;
 
     white-space: nowrap !important;
-    flex: 0 0 110px !important;
-
     cursor: pointer !important;
+
+    z-index: 100 !important;
 }
 
-/* 로그인 / 닉네임 */
+/* 로그인 / 닉네임 버튼 */
 #loginBtn,
 #userBtn {
+    position: absolute !important;
+    right: 0 !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+
     width: 110px !important;
     min-width: 110px !important;
     max-width: 110px !important;
@@ -170,20 +73,21 @@
 
     box-sizing: border-box !important;
 
+    border: 1px solid #3b82f6 !important;
     border-radius: 8px !important;
+
+    background: #2563eb !important;
+    color: #ffffff !important;
 
     font-size: 13px !important;
     font-weight: 700 !important;
     line-height: 1 !important;
 
     white-space: nowrap !important;
-    flex: 0 0 110px !important;
-
     cursor: pointer !important;
-}
 
-/* 배경 */
-.menu-overlay{
+    z-index: 100 !important;
+}
 
 /* 메뉴 하단 */
 .menu-panel-bottom{
