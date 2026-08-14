@@ -177,6 +177,225 @@
     }
 }
 
+/* ===== TOVIEW FULL MENU ===== */
+
+.menu-btn{
+    height:38px;
+    padding:0 14px;
+    display:flex;
+    align-items:center;
+    gap:7px;
+
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:8px;
+
+    background:rgba(255,255,255,.04);
+    color:#cbd5e1;
+
+    font-size:13px;
+    font-weight:700;
+
+    cursor:pointer;
+    transition:.2s ease;
+}
+
+.menu-btn:hover{
+    color:#fff;
+    background:rgba(255,255,255,.08);
+    border-color:rgba(255,255,255,.18);
+}
+
+.menu-icon{
+    font-size:17px;
+    line-height:1;
+}
+
+
+/* 배경 */
+.menu-overlay{
+    position:fixed;
+    inset:0;
+    z-index:2000;
+
+    display:flex;
+    justify-content:flex-end;
+
+    background:rgba(2,6,15,.68);
+    backdrop-filter:blur(4px);
+
+    opacity:0;
+    visibility:hidden;
+
+    transition:
+        opacity .22s ease,
+        visibility .22s ease;
+}
+
+.menu-overlay.on{
+    opacity:1;
+    visibility:visible;
+}
+
+
+/* 오른쪽 메뉴 패널 */
+.menu-panel{
+    width:min(520px, 92vw);
+    height:100%;
+
+    padding:0 28px;
+
+    overflow-y:auto;
+
+    background:#0b1423;
+    border-left:1px solid rgba(255,255,255,.08);
+
+    transform:translateX(100%);
+    transition:transform .25s ease;
+
+    box-shadow:-20px 0 60px rgba(0,0,0,.3);
+}
+
+.menu-overlay.on .menu-panel{
+    transform:translateX(0);
+}
+
+
+/* 메뉴 상단 */
+.menu-panel-top{
+    height:82px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.menu-panel-top > div{
+    display:flex;
+    flex-direction:column;
+}
+
+.menu-panel-top strong{
+    color:#fff;
+    font-size:20px;
+    font-weight:800;
+}
+
+.menu-panel-top span{
+    margin-top:5px;
+
+    color:#64748b;
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:1.5px;
+}
+
+.menu-close{
+    width:38px;
+    height:38px;
+
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:8px;
+
+    background:rgba(255,255,255,.04);
+    color:#94a3b8;
+
+    font-size:17px;
+    cursor:pointer;
+}
+
+.menu-close:hover{
+    color:#fff;
+    background:rgba(255,255,255,.08);
+}
+
+
+/* 메뉴 내용 */
+.menu-sections{
+    padding:25px 0 35px;
+}
+
+.menu-section{
+    margin-bottom:30px;
+}
+
+.menu-section-title{
+    margin-bottom:9px;
+
+    color:#3b82f6;
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:1.4px;
+}
+
+.menu-section a{
+    display:block;
+
+    padding:12px 13px;
+    margin-bottom:3px;
+
+    border-radius:8px;
+
+    text-decoration:none;
+
+    transition:.18s ease;
+}
+
+.menu-section a:hover{
+    background:rgba(59,130,246,.08);
+}
+
+.menu-section a b{
+    display:block;
+
+    color:#e2e8f0;
+    font-size:14px;
+    font-weight:700;
+}
+
+.menu-section a span{
+    display:block;
+
+    margin-top:4px;
+
+    color:#64748b;
+    font-size:11px;
+}
+
+
+/* 메뉴 하단 */
+.menu-panel-bottom{
+    padding:20px 0 28px;
+
+    border-top:1px solid rgba(255,255,255,.07);
+
+    color:#475569;
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:1px;
+}
+
+
+/* 모바일 */
+@media(max-width:600px){
+
+    .menu-btn span:last-child{
+        display:none;
+    }
+
+    .menu-btn{
+        width:38px;
+        padding:0;
+        justify-content:center;
+    }
+
+    .menu-panel{
+        width:100%;
+        padding:0 20px;
+    }
+}
+    
 </style>
 </head>
 <body>
@@ -204,15 +423,172 @@
         </nav>
 
         <div class="header-actions">
-            <button class="login" id="loginBtn">로그인</button>
-        </div>
+
+    <button class="menu-btn" type="button" onclick="openMainMenu()">
+        <span class="menu-icon">☰</span>
+        <span>전체메뉴</span>
+    </button>
+
+    <button class="login" id="loginBtn">로그인</button>
+
+</div>
 
     </div>
 </header>
 
+<div class="menu-overlay" id="mainMenuOverlay" onclick="closeMainMenu(event)">
+
+    <div class="menu-panel">
+
+        <div class="menu-panel-top">
+            <div>
+                <strong>전체 메뉴</strong>
+                <span>TOVIEW SERVICE</span>
+            </div>
+
+            <button type="button" class="menu-close" onclick="closeMainMenu()">
+                ✕
+            </button>
+        </div>
+
+        <div class="menu-sections">
+
+            <div class="menu-section">
+                <div class="menu-section-title">GAME</div>
+
+                <a href="index.html#live">
+                    <b>실시간 게임</b>
+                    <span>실시간 회차 및 결과</span>
+                </a>
+
+                <a href="results.html">
+                    <b>게임 결과</b>
+                    <span>최근 회차 결과 조회</span>
+                </a>
+
+                <a href="pattern.html">
+                    <b>패턴 분석</b>
+                    <span>결과 흐름 및 패턴</span>
+                </a>
+            </div>
+
+
+            <div class="menu-section">
+                <div class="menu-section-title">ANALYSIS</div>
+
+                <a href="analysis.html#daily">
+                    <b>일별 분석</b>
+                    <span>날짜별 데이터 분석</span>
+                </a>
+
+                <a href="analysis.html#range">
+                    <b>구간 분석</b>
+                    <span>구간별 결과 통계</span>
+                </a>
+
+                <a href="analysis.html#round">
+                    <b>회차 분석</b>
+                    <span>회차별 상세 데이터</span>
+                </a>
+            </div>
+
+
+            <div class="menu-section">
+                <div class="menu-section-title">COMMUNITY</div>
+
+                <a href="community.html?board=자유게시판">
+                    <b>자유게시판</b>
+                    <span>자유로운 커뮤니티</span>
+                </a>
+
+                <a href="community.html?board=분석%20토론">
+                    <b>분석 토론</b>
+                    <span>데이터 및 분석 토론</span>
+                </a>
+
+                <a href="community.html#rank">
+                    <b>활동 랭킹</b>
+                    <span>회원 활동 순위</span>
+                </a>
+            </div>
+
+
+            <div class="menu-section">
+                <div class="menu-section-title">MY TOVIEW</div>
+
+                <a href="dashboard.html">
+                    <b>대시보드</b>
+                    <span>내 활동 한눈에 보기</span>
+                </a>
+
+                <a href="javascript:void(0)" onclick="openAlerts(); closeMainMenu();">
+                    <b>알림센터</b>
+                    <span>새로운 알림 확인</span>
+                </a>
+
+                <a href="javascript:void(0)" onclick="document.getElementById('loginBtn').click(); closeMainMenu();">
+                    <b>내 계정</b>
+                    <span>로그인 및 계정 관리</span>
+                </a>
+            </div>
+
+        </div>
+
+        <div class="menu-panel-bottom">
+            TOVIEW · DATA & COMMUNITY PLATFORM
+        </div>
+
+    </div>
+
+</div>
+    
 <main class="wrap"><div class="notice">TOVIEW는 결과 데이터와 통계를 시각화하는 정보 서비스 프로토타입입니다. 베팅·충전·환전 기능은 포함하지 않습니다.</div><section class="hero" id="live"><div class="card"><div class="head"><span class="status"><i class="pulse"></i> 실시간 결과</span><span class="sub" id="clock">--:--:--</span></div><div class="live"><div class="round">TOVIEW POWER · <b id="round">데이터 불러오는 중</b></div><div class="timer" id="timer">--:--</div><div class="sub">다음 5분 회차까지</div><div class="balls" id="balls"><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball power">-</span></div><div class="tags" id="tags"></div><div id="apiState" class="sub" style="margin-top:14px">API 연결 확인 중…</div></div></div><div class="card"><div class="head">최근 통계 <span class="sub" id="sampleN">-</span></div><div class="stats"><div class="stat">파워볼 홀<strong id="sOdd">-</strong></div><div class="stat">파워볼 짝<strong id="sEven">-</strong></div><div class="stat">파워볼 언더<strong id="sUnder">-</strong></div><div class="stat">파워볼 오버<strong id="sOver">-</strong></div></div></div></section><section class="grid"><div><div class="card" id="results"><div class="head">최근 결과 <span class="sub">최신순</span></div><div style="display:flex;gap:8px;padding:12px 14px;flex-wrap:wrap"><input id="roundSearch" placeholder="회차 검색" style="flex:1;min-width:120px;padding:9px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff"><select id="resultFilter" style="padding:9px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff"><option value="all">전체</option><option value="odd">파워 홀</option><option value="even">파워 짝</option><option value="under">언더</option><option value="over">오버</option></select><button onclick="exportCSV()" style="padding:9px 12px;border:0;border-radius:8px;background:#2563eb;color:white;cursor:pointer">CSV 저장</button><button onclick="toggleTheme()" style="padding:9px 12px;border:1px solid #2b3d5c;border-radius:8px;background:#17243a;color:white;cursor:pointer">화면 전환</button></div><div style="overflow:auto"><table class="table"><thead><tr><th>회차</th><th>일반볼</th><th>합</th><th>일반 홀짝</th><th>파워볼</th><th>파워 홀짝</th><th>언/오버</th></tr></thead><tbody id="rows"></tbody></table></div></div><div class="card" id="pattern" style="margin-top:18px"><div class="head">패턴 시각화 <span class="sub">최근 결과 기반</span></div><div class="pattern"><b>파워볼 홀/짝</b><div class="patternrow" id="p1"></div><br><b>파워볼 언더/오버</b><div class="patternrow" id="p2"></div></div></div></div><aside><div class="card" id="analysis"><div class="head">분석 메뉴</div><div class="sideitem" onclick="location.href='analysis.html#daily'">📊 일별 분석</div><div class="sideitem" onclick="location.href='analysis.html#range'">📈 구간 분석</div><div class="sideitem" onclick="location.href='analysis.html#round'">🔢 회차 분석</div><div class="sideitem" onclick="location.href='pattern.html'">🧩 패턴 분석</div></div><div class="card" id="community" style="margin-top:18px"><div class="head">커뮤니티 <span class="sub">준비중</span></div><div class="sideitem" onclick="location.href='community.html?board=자유게시판'">💬 자유게시판</div><div class="sideitem" onclick="location.href='community.html?board=분석%20토론'">🔥 분석 토론</div><div class="sideitem" onclick="location.href='community.html?board=공지사항'">📢 공지사항</div></div><div class="card" id="rank" style="margin-top:18px"><div class="head">활동 랭킹 <span class="sub">이 브라우저 기준</span></div><div id="rankList"></div></div><div class="card" id="dashboard" style="margin-top:18px"><div class="head">내 대시보드 <span class="sub">브라우저 저장</span></div><div class="sideitem" onclick="toggleFavorite()">⭐ <span id="favText">실시간 결과 즐겨찾기</span></div><div class="sideitem" onclick="openAlerts()">🔔 알림센터 <span class="sub" id="alertCount" style="float:right">0</span></div><div class="sideitem" onclick="openDetailedStats()">🧮 상세 통계</div></div><div class="card" style="margin-top:18px"><div class="head">안내</div><div class="sideitem" style="cursor:default;color:#93a4c0;line-height:1.6">통계는 과거 결과를 요약한 값이며 미래 결과를 보장하지 않습니다.</div></div></aside></section></main><footer class="foot">TOVIEW · 독립적인 데이터 시각화 프로토타입 · 임시 로고<br>V7 · 실제 페이지 이동형 프로토타입<br>© 2026 TOVIEW</footer>
 <div class="modal" id="modal"><div class="modalbox"><div class="close" onclick="modal.classList.remove('on')">✕</div><h2 id="modalTitle">로그인</h2><div id="modalBody"><input id="uid" placeholder="아이디"><input id="pw" type="password" placeholder="비밀번호"><button onclick="demoLogin()">데모 로그인</button><div class="sub" style="margin-top:10px">현재 버전은 서버 계정 시스템 없이 브라우저에만 로그인 상태를 저장합니다.</div></div></div></div>
 <script>
+
+function openMainMenu(){
+    const menu = document.getElementById('mainMenuOverlay');
+
+    if(!menu) return;
+
+    menu.classList.add('on');
+    document.body.style.overflow = 'hidden';
+}
+
+
+function closeMainMenu(event){
+
+    const menu = document.getElementById('mainMenuOverlay');
+
+    if(!menu) return;
+
+    if(
+        event &&
+        event.target !== menu
+    ){
+        return;
+    }
+
+    menu.classList.remove('on');
+    document.body.style.overflow = '';
+}
+
+
+/* ESC 키로 메뉴 닫기 */
+document.addEventListener('keydown', function(event){
+
+    if(event.key === 'Escape'){
+
+        const menu = document.getElementById('mainMenuOverlay');
+
+        if(menu && menu.classList.contains('on')){
+            menu.classList.remove('on');
+            document.body.style.overflow = '';
+        }
+
+    }
+
+});
 const API='/api/results'; let records=[];
 const demo=[{AllRound:181,PowerBall:{nBall1:18,nBall2:8,nBall3:16,nBall4:13,nBall5:22,nBallSum:77,nOddEven:1,pBall:2,pOddEven:2,pUnderOver:1}},{AllRound:180,PowerBall:{nBall1:4,nBall2:17,nBall3:13,nBall4:11,nBall5:14,nBallSum:59,nOddEven:1,pBall:5,pOddEven:1,pUnderOver:2}},{AllRound:179,PowerBall:{nBall1:9,nBall2:21,nBall3:27,nBall4:5,nBall5:26,nBallSum:88,nOddEven:2,pBall:0,pOddEven:2,pUnderOver:1}},{AllRound:178,PowerBall:{nBall1:22,nBall2:1,nBall3:5,nBall4:21,nBall5:17,nBallSum:66,nOddEven:2,pBall:8,pOddEven:2,pUnderOver:2}},{AllRound:177,PowerBall:{nBall1:6,nBall2:16,nBall3:10,nBall4:23,nBall5:1,nBallSum:56,nOddEven:2,pBall:0,pOddEven:2,pUnderOver:1}},{AllRound:176,PowerBall:{nBall1:1,nBall2:2,nBall3:14,nBall4:28,nBall5:4,nBallSum:49,nOddEven:1,pBall:9,pOddEven:1,pUnderOver:2}}];
 function normalize(j){
