@@ -250,7 +250,24 @@ function closeMainMenu(event) {
     document.body.style.overflow = '';
 }
 </script>
+
+<script>
+function changeGame(game, button) {
+
+    document
+        .querySelectorAll('.game-tab')
+        .forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+    button.classList.add('active');
+
+    console.log('선택 게임:', game);
+}
+</script>
     
-<script src="auth.js"></script>
+<script src="auth.js">
+    
+</script>
 </body>
 </html>
