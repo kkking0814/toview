@@ -1,0 +1,38 @@
+/* ========================================
+   TOVIEW 공통 상단 로그인/회원 버튼
+======================================== */
+
+#userBtn,
+#loginBtn {
+    width: 110px !important;
+    min-width: 110px !important;
+    max-width: 110px !important;
+
+    height: 40px !important;
+    min-height: 40px !important;
+
+    padding: 0 14px !important;
+    margin: 0 !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    box-sizing: border-box !important;
+
+    border: 1px solid #3b82f6 !important;
+    border-radius: 8px !important;
+
+    background: #2563eb !important;
+    color: #ffffff !important;
+
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+
+    white-space: nowrap !important;
+
+    cursor: pointer !important;
+
+    flex: 0 0 110px !important;
+}
