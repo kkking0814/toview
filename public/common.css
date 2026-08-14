@@ -181,3 +181,39 @@
 
     cursor: pointer !important;
 }
+
+/* 배경 */
+.menu-overlay{
+
+/* 메뉴 하단 */
+.menu-panel-bottom{
+    padding:20px 0 28px;
+
+    border-top:1px solid rgba(255,255,255,.07);
+
+    color:#475569;
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:1px;
+}
+
+@media(max-width:600px){
+
+    .menu-btn span:last-child{
+        display:none;
+    }
+
+    .menu-btn{
+        width:38px !important;
+        min-width:38px !important;
+        max-width:38px !important;
+        padding:0 !important;
+        justify-content:center !important;
+        flex:0 0 38px !important;
+    }
+
+    .menu-panel{
+        width:100%;
+        padding:0 20px;
+    }
+}
