@@ -300,12 +300,16 @@ async function sendEmailCode(){
         return;
     }
 
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if(!emailPattern.test(email)){
-        status.textContent = '올바른 이메일 주소를 입력해주세요.';
-        return;
-    }
+if (
+    !email ||
+    !email.includes('@') ||
+    email.startsWith('@') ||
+    email.endsWith('@') ||
+    !email.substring(email.indexOf('@') + 1).includes('.')
+) {
+    status.textContent = '올바른 이메일 주소를 입력해주세요.';
+    return;
+}
 
     emailVerified = false;
     verifiedEmail = '';
