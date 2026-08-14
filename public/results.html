@@ -221,6 +221,172 @@
     </div>
 
 </section>
+
+    <!-- ========================================
+         LIVE GAME + CHAT
+     ======================================== -->
+
+<section class="live-center-grid">
+
+    <!-- 왼쪽 : 게임 LIVE -->
+    <div class="live-game-card">
+
+        <div class="live-card-head">
+            <div class="live-game-name">
+                <strong id="liveGameName">파워볼</strong>
+                <span class="live-badge">LIVE</span>
+            </div>
+
+            <div class="auto-update">
+                <i></i>
+                자동 업데이트
+            </div>
+        </div>
+
+
+        <!-- 게임 영상 / 중계 영역 -->
+        <div class="game-screen">
+
+            <div class="round-info-panel">
+
+                <div class="power-preview">
+                    <span id="previewPower">-</span>
+                </div>
+
+                <small>POWERBALL</small>
+
+                <strong id="liveRound">
+                    회차 확인 중
+                </strong>
+
+                <span class="drawing-status">
+                    추첨 진행 중
+                </span>
+
+                <p>남은 시간</p>
+
+                <b id="liveCountdown">
+                    --:--
+                </b>
+
+            </div>
+
+
+            <div class="game-video-area" id="gameVideoArea">
+
+                <div class="video-placeholder">
+
+                    <div class="machine-icon">
+                        ◉
+                    </div>
+
+                    <strong>
+                        LIVE GAME
+                    </strong>
+
+                    <span>
+                        게임 영상 연결 영역
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- 영상 아래 최근 결과 -->
+        <div class="live-result-bar">
+
+            <div class="draw-ready">
+                <i></i>
+                추첨 준비 중
+            </div>
+
+            <div class="last-result-title">
+                최근 당첨 결과
+            </div>
+
+            <div class="last-result-balls" id="liveResultBalls">
+                <span class="mini-ball">-</span>
+                <span class="mini-ball">-</span>
+                <span class="mini-ball">-</span>
+                <span class="mini-ball">-</span>
+                <span class="mini-ball">-</span>
+
+                <b>+</b>
+
+                <span class="mini-ball power-mini">-</span>
+            </div>
+
+            <button
+                type="button"
+                class="previous-result-btn"
+                onclick="location.href='#results'"
+            >
+                지난 회차 보기
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- 오른쪽 : 실시간 채팅 -->
+    <aside class="live-chat-card">
+
+        <div class="chat-head">
+
+            <div>
+                <strong>실시간 채팅</strong>
+                <span class="chat-live-dot"></span>
+            </div>
+
+            <span class="chat-users">
+                👤 <b id="chatUserCount">0</b>명 접속중
+            </span>
+
+        </div>
+
+
+        <div class="chat-notice">
+            📌 공지&nbsp;&nbsp; 비방/도배/광고 시 제재될 수 있습니다.
+        </div>
+
+
+        <div class="chat-messages" id="chatMessages">
+
+            <div class="chat-empty">
+                <strong>LIVE CHAT</strong>
+                <span>첫 메시지를 남겨보세요.</span>
+            </div>
+
+        </div>
+
+
+        <div class="chat-input-area">
+
+            <input
+                type="text"
+                id="chatInput"
+                maxlength="100"
+                placeholder="메시지를 입력하세요..."
+                autocomplete="off"
+            >
+
+            <button
+                type="button"
+                id="chatSendBtn"
+                onclick="sendChat()"
+            >
+                전송
+            </button>
+
+        </div>
+
+    </aside>
+
+</section>
     
     <div class="card"><div class="head">최근 결과 <span class="sub" id="state">데이터 로딩</span></div><div style="display:flex;gap:8px;padding:12px"><input id="q" placeholder="회차 검색" style="flex:1;padding:10px;border-radius:8px"><select id="f"><option value="all">전체</option><option value="odd">파워 홀</option><option value="even">파워 짝</option></select></div><div style="overflow:auto"><table class="table"><thead><tr><th>회차</th><th>일반볼</th><th>합</th><th>파워볼</th><th>홀짝</th><th>언/오버</th></tr></thead><tbody id="rows"></tbody></table></div></div></main><footer class="foot">TOVIEW V7 · 페이지 이동형 프로토타입 · © 2026 TOVIEW</footer><script>const demo=[181,180,179,178,177,176].map((r,i)=>({r,balls:[[18,8,16,13,22],[4,17,13,11,14],[9,21,27,5,26],[22,1,5,21,17],[6,16,10,23,1],[1,2,14,28,4]][i],p:[2,5,0,8,0,9][i]}));function draw(){let q=document.getElementById('q').value,f=document.getElementById('f').value,a=demo.filter(x=>(!q||String(x.r).includes(q))&&(f==='all'||(f==='odd'?x.p%2===1:x.p%2===0)));rows.innerHTML=a.map(x=>`<tr><td>${x.r}</td><td>${x.balls.join(' · ')}</td><td>${x.balls.reduce((a,b)=>a+b)}</td><td><b>${x.p}</b></td><td>${x.p%2?'홀':'짝'}</td><td>${x.p<5?'언더':'오버'}</td></tr>`).join('');state.textContent=a.length+'개 표시'}q.oninput=draw;f.onchange=draw;draw()
 
