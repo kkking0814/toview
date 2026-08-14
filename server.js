@@ -1,5 +1,14 @@
 const express=require('express'); const session=require('express-session'); const bcrypt=require('bcryptjs'); const fs=require('fs'); const path=require('path');
 
+const { Pool } = require('pg');
+
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
+    }
+});
+
 const app=express(); const PORT=process.env.PORT||3000; const dbPath=path.join(__dirname,'data.json');
 
 app.use(express.json());
@@ -549,6 +558,26 @@ app.get('/api/posts', (req, res) => {
         ok: true,
         posts
     });
+});
+
+app.get('/api/db-test', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT NOW() AS now');
+
+        res.json({
+            ok: true,
+            message: 'Neon DB 연결 성공',
+            time: result.rows[0].now
+        });
+
+    } catch (error) {
+        console.error('NEON DB ERROR:', error);
+
+        res.status(500).json({
+            ok: false,
+            message: 'Neon DB 연결 실패'
+        });
+    }
 });
 
 app.listen(PORT,()=>console.log(`TOVIEW http://localhost:${PORT}`));
