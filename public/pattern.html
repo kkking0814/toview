@@ -6,7 +6,41 @@
 
 </head>
 <body>
-<header class="top"><div class="bar"><a class="logo" href="index.html">TO<b>VIEW</b> <span class="badge">V7</span></a><nav class="nav"><a href="index.html">실시간</a><a href="results.html">결과</a><a href="analysis.html">분석</a><a href="pattern.html">패턴</a><a href="community.html">커뮤니티</a><a href="dashboard.html">대시보드</a></nav><button class="login" onclick="location.href='account.html'" id="userBtn">로그인</button></div></header><main class="wrap"><div class="notice">패턴 종류를 바꾸면 화면이 실제로 변경됩니다.</div><div class="card"><div class="head">🧩 패턴 분석 <select id="kind"><option>홀/짝</option><option>언더/오버</option></select></div><div class="pattern"><div class="patternrow" id="dots"></div><p class="sub">과거 결과 시각화이며 미래 결과를 보장하지 않습니다.</p></div></div></main><footer class="foot">TOVIEW V7 · 페이지 이동형 프로토타입 · © 2026 TOVIEW</footer><script>function draw(){let a=kind.value==='홀/짝'?['홀','짝','짝','홀','짝','홀','홀','짝','홀','짝']:['U','O','U','O','O','U','U','O','U','O'];dots.innerHTML=a.map((x,i)=>`<span class="dot ${i%3===1?'r':''}">${x}</span>`).join('')}kind.onchange=draw;draw()
+
+<header class="top">
+    <div class="bar">
+
+        <a href="index.html" class="brand">
+            <div class="brand-mark">T</div>
+            <div class="brand-name">
+                <strong>TO<span>VIEW</span></strong>
+                <small>DATA & COMMUNITY</small>
+            </div>
+        </a>
+
+        <nav class="nav">
+            <a href="index.html">실시간</a>
+            <a href="results.html">결과</a>
+            <a href="analysis.html">분석</a>
+            <a href="pattern.html">패턴</a>
+            <a href="community.html">커뮤니티</a>
+            <a href="dashboard.html">대시보드</a>
+        </nav>
+
+        <button class="menu-btn" type="button" onclick="openMainMenu()">
+            <span class="menu-icon">☰</span>
+            <span>전체메뉴</span>
+        </button>
+
+        <button class="login" id="loginBtn"
+                onclick="location.href='account.html'">
+            로그인
+        </button>
+
+    </div>
+</header>  
+  
+<main class="wrap"><div class="notice">패턴 종류를 바꾸면 화면이 실제로 변경됩니다.</div><div class="card"><div class="head">🧩 패턴 분석 <select id="kind"><option>홀/짝</option><option>언더/오버</option></select></div><div class="pattern"><div class="patternrow" id="dots"></div><p class="sub">과거 결과 시각화이며 미래 결과를 보장하지 않습니다.</p></div></div></main><footer class="foot">TOVIEW V7 · 페이지 이동형 프로토타입 · © 2026 TOVIEW</footer><script>function draw(){let a=kind.value==='홀/짝'?['홀','짝','짝','홀','짝','홀','홀','짝','홀','짝']:['U','O','U','O','O','U','U','O','U','O'];dots.innerHTML=a.map((x,i)=>`<span class="dot ${i%3===1?'r':''}">${x}</span>`).join('')}kind.onchange=draw;draw()
 </script>
 
 <script src="auth.js"></script>
