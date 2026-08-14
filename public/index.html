@@ -487,7 +487,7 @@ async function realLogin(){
 
     }catch(e){
         console.error(e);
-        alert('서버 연결에 실패했습니다.');
+        alert('로그인 오류: ' + e.message);
     }
 }
 
