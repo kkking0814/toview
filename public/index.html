@@ -48,31 +48,11 @@ loginBtn.onclick=async()=>{
         </div>
       `;
     }
-    document.getElementById('regUid').addEventListener('input', () => {
-        usernameChecked = false;
-        checkedUsername = '';
-
-        const status = document.getElementById('usernameStatus');
-        status.textContent = '아이디 중복확인이 필요합니다.';
-    });
-
-    document.getElementById('regNickname').addEventListener('input', () => {
-        nicknameChecked = false;
-        checkedNickname = '';
-
-        const status = document.getElementById('nicknameStatus');
-        status.textContent = '닉네임 중복확인이 필요합니다.';
-    });
-    document.getElementById('regEmail').addEventListener('input', () => {
-    emailVerified = false;
-    verifiedEmail = '';
-
-    const status = document.getElementById('emailVerifyStatus');
-    status.textContent = '이메일 인증이 필요합니다.';
-});
+   
     modal.classList.add('on');
+    
   }catch(e){
-    alert('로그인 오류: ' + e.message);
+    alert('서버 연결에 실패했습니다.');
   }
 };
 function showRegister(){
@@ -154,6 +134,36 @@ function showRegister(){
             로그인으로 돌아가기
         </button>
     `;
+
+      document.getElementById('regUid').addEventListener('input', () => {
+        usernameChecked = false;
+        checkedUsername = '';
+
+        const status = document.getElementById('usernameStatus');
+        if(status){
+            status.textContent = '아이디 중복확인이 필요합니다.';
+        }
+    });
+
+    document.getElementById('regNickname').addEventListener('input', () => {
+        nicknameChecked = false;
+        checkedNickname = '';
+
+        const status = document.getElementById('nicknameStatus');
+        if(status){
+            status.textContent = '닉네임 중복확인이 필요합니다.';
+        }
+    });
+
+    document.getElementById('regEmail').addEventListener('input', () => {
+        emailVerified = false;
+        verifiedEmail = '';
+
+        const status = document.getElementById('emailVerifyStatus');
+        if(status){
+            status.textContent = '이메일 인증이 필요합니다.';
+        }
+    });
 
     modal.classList.add('on');
 }
@@ -487,7 +497,7 @@ async function realLogin(){
 
     }catch(e){
         console.error(e);
-        alert('로그인 오류: ' + e.message);
+        alert('서버 연결에 실패했습니다.');
     }
 }
 
