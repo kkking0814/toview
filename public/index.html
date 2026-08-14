@@ -97,6 +97,49 @@ function showRegister(){
 
     modal.classList.add('on');
 }
+function validateUsername(username){
+    if(!/^[A-Za-z]{5,}$/.test(username)){
+        return '아이디는 영문으로만 5자 이상 입력해주세요.';
+    }
+
+    if(/([A-Za-z])\1\1/i.test(username)){
+        return '아이디에 같은 영문자를 3번 이상 연속 사용할 수 없습니다.';
+    }
+
+    return null;
+}
+
+function validatePassword(password){
+    if(password.length < 8){
+        return '비밀번호는 8자 이상 입력해주세요.';
+    }
+
+    if(!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)){
+        return '비밀번호에는 영문과 숫자가 모두 포함되어야 합니다.';
+    }
+
+    if(!/^[A-Za-z0-9]+$/.test(password)){
+        return '비밀번호는 영문과 숫자만 사용할 수 있습니다.';
+    }
+
+    if(/(.)\1\1/.test(password)){
+        return '비밀번호에 같은 문자를 3번 이상 연속 사용할 수 없습니다.';
+    }
+
+    return null;
+}
+
+function validateNickname(nickname){
+    if(!/^[가-힣]{2,}$/.test(nickname)){
+        return '닉네임은 완성된 한글로 2글자 이상 입력해주세요.';
+    }
+
+    if(/(.)\1\1/.test(nickname)){
+        return '닉네임에 같은 글자를 3번 이상 연속 사용할 수 없습니다.';
+    }
+
+    return null;
+}
 let usernameChecked = false;
 let nicknameChecked = false;
 
@@ -114,6 +157,15 @@ async function checkUsername(){
         return;
     }
 
+const usernameError = validateUsername(username);
+
+if(usernameError){
+    status.textContent = usernameError;
+    usernameChecked = false;
+    checkedUsername = '';
+    return;
+}
+  
     try{
         const r = await fetch('/api/check-username?username=' + encodeURIComponent(username));
         const data = await r.json();
@@ -142,7 +194,14 @@ async function checkNickname(){
         nicknameChecked = false;
         return;
     }
+const nicknameError = validateNickname(nickname);
 
+if(nicknameError){
+    status.textContent = nicknameError;
+    nicknameChecked = false;
+    checkedNickname = '';
+    return;
+}
     try{
         const r = await fetch('/api/check-nickname?nickname=' + encodeURIComponent(nickname));
         const data = await r.json();
@@ -172,10 +231,12 @@ async function registerAccount(){
         return;
     }
 
-    if(password.length < 6){
-        alert('비밀번호는 6자 이상 입력해주세요.');
-        return;
-    }
+const passwordError = validatePassword(password);
+
+if(passwordError){
+    alert(passwordError);
+    return;
+}
 
     if(password !== password2){
         alert('비밀번호가 서로 일치하지 않습니다.');
