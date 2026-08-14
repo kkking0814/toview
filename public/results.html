@@ -125,6 +125,31 @@
 
 </script>
 
+<script>
+function openMainMenu() {
+    const menu = document.getElementById('mainMenuOverlay');
+
+    if (!menu) return;
+
+    menu.classList.add('on');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeMainMenu(event) {
+    const menu = document.getElementById('mainMenuOverlay');
+
+    if (!menu) return;
+
+    // 메뉴 바깥쪽 배경을 눌렀을 때만 닫기
+    if (event && event.target !== menu) {
+        return;
+    }
+
+    menu.classList.remove('on');
+    document.body.style.overflow = '';
+}
+</script>
+    
 <script src="auth.js"></script>
 </body>
 </html>
