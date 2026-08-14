@@ -898,6 +898,41 @@
         grid-template-columns:1fr;
     }
 }
+
+/* 최근 결과 + 패턴 시각화 */
+.data-grid{
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:18px;
+    margin-top:18px;
+}
+
+.data-grid > div{
+    display:contents;
+}
+
+.data-grid #results{
+    min-width:0;
+}
+
+.data-grid #pattern{
+    margin-top:0 !important;
+    min-width:0;
+}
+
+@media(max-width:900px){
+    .data-grid{
+        grid-template-columns:1fr;
+    }
+
+    .data-grid > div{
+        display:block;
+    }
+
+    .data-grid #pattern{
+        margin-top:18px !important;
+    }
+}
     
 </style>
 </head>
@@ -1195,167 +1230,85 @@
     </div>
 
 </section>
-    
-<section class="grid"><div><div class="card" id="results"><div class="head">최근 결과 <span class="sub">최신순</span></div><div style="display:flex;gap:8px;padding:12px 14px;flex-wrap:wrap"><input id="roundSearch" placeholder="회차 검색" style="flex:1;min-width:120px;padding:9px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff"><select id="resultFilter" style="padding:9px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff"><option value="all">전체</option><option value="odd">파워 홀</option><option value="even">파워 짝</option><option value="under">언더</option><option value="over">오버</option></select><button onclick="exportCSV()" style="padding:9px 12px;border:0;border-radius:8px;background:#2563eb;color:white;cursor:pointer">CSV 저장</button><button onclick="toggleTheme()" style="padding:9px 12px;border:1px solid #2b3d5c;border-radius:8px;background:#17243a;color:white;cursor:pointer">화면 전환</button></div><div class="results-scroll"><table class="table"><thead><tr><th>회차</th><th>일반볼</th><th>합</th><th>일반 홀짝</th><th>파워볼</th><th>파워 홀짝</th><th>언/오버</th></tr></thead><tbody id="rows"></tbody></table></div></div><div class="card" id="pattern" style="margin-top:18px"><div class="head">패턴 시각화 <span class="sub">최근 결과 기반</span></div><div class="pattern"><b>파워볼 홀/짝</b><div class="patternrow" id="p1"></div><br><b>파워볼 언더/오버</b><div class="patternrow" id="p2"></div></div></div></div><aside><div class="card notice-card" id="community">
 
-    <div class="head">
-        <span>공지사항</span>
+<section class="home-board-grid">
 
-        <a href="community.html?board=공지사항" class="more-link">
-            더보기 →
-        </a>
-    </div>
+    <div class="card">
+        <div class="head">
+            <span>자유게시판</span>
+            <a href="community.html?board=자유게시판" class="more-link">더보기 →</a>
+        </div>
 
-    <div class="board-preview">
+        <div class="board-preview">
 
-        <a href="community.html?board=공지사항" class="preview-row">
-            <div class="preview-text">
-                <span class="notice-label">공지</span>
-                <span class="preview-title">TOVIEW 서비스 이용 안내</span>
-            </div>
-            <span class="preview-date">08.14</span>
-        </a>
-
-        <a href="community.html?board=공지사항" class="preview-row">
-            <div class="preview-text">
-                <span class="notice-label">공지</span>
-                <span class="preview-title">회원가입 및 계정 이용 안내</span>
-            </div>
-            <span class="preview-date">08.14</span>
-        </a>
-
-        <a href="community.html?board=공지사항" class="preview-row">
-            <div class="preview-text">
-                <span class="preview-title">TOVIEW 베타 서비스 운영 안내</span>
-            </div>
-            <span class="preview-date">08.14</span>
-        </a>
-
-        <a href="community.html?board=공지사항" class="preview-row">
-            <div class="preview-text">
-                <span class="preview-title">커뮤니티 이용수칙 안내</span>
-            </div>
-            <span class="preview-date">08.14</span>
-        </a>
-
-        <a href="community.html?board=공지사항" class="preview-row">
-            <div class="preview-text">
-                <span class="preview-title">서비스 업데이트 안내</span>
-            </div>
-            <span class="preview-date">08.14</span>
-        </a>
-
-    </div>
-
-</div><div class="card" id="rank" style="margin-top:18px"><div class="head">활동 랭킹 <span class="sub">이 브라우저 기준</span></div><div id="rankList"></div></div><div class="card latest-post-card" style="margin-top:18px">
-
-    <div class="head">
-        <span>새 글</span>
-
-        <a href="community.html" class="more-link">
-            더보기 →
-        </a>
-    </div>
-
-    <div class="board-preview">
-
-        <a href="community.html" class="preview-row">
-            <div class="preview-text">
-                <span class="board-label">자유</span>
-                <span class="preview-title">TOVIEW 커뮤니티가 오픈했습니다.</span>
-            </div>
-            <span class="preview-date">방금</span>
-        </a>
-
-        <a href="community.html" class="preview-row">
-            <div class="preview-text">
-                <span class="board-label">분석</span>
-                <span class="preview-title">최근 회차 흐름 같이 봅시다.</span>
-            </div>
-            <span class="preview-date">3분</span>
-        </a>
-
-        <a href="community.html" class="preview-row">
-            <div class="preview-text">
-                <span class="board-label">자유</span>
+            <a href="community.html?board=자유게시판" class="preview-row">
                 <span class="preview-title">오늘 처음 가입했습니다.</span>
-            </div>
-            <span class="preview-date">8분</span>
-        </a>
+                <span class="preview-date">방금</span>
+            </a>
 
-        <a href="community.html" class="preview-row">
-            <div class="preview-text">
-                <span class="board-label">분석</span>
-                <span class="preview-title">패턴 데이터 확인해봤습니다.</span>
-            </div>
-            <span class="preview-date">12분</span>
-        </a>
-
-        <a href="community.html" class="preview-row">
-            <div class="preview-text">
-                <span class="board-label">자유</span>
+            <a href="community.html?board=자유게시판" class="preview-row">
                 <span class="preview-title">다들 반갑습니다.</span>
-            </div>
-            <span class="preview-date">21분</span>
-        </a>
+                <span class="preview-date">5분</span>
+            </a>
 
+            <a href="community.html?board=자유게시판" class="preview-row">
+                <span class="preview-title">TOVIEW 사용해보니 괜찮네요.</span>
+                <span class="preview-date">12분</span>
+            </a>
+
+            <a href="community.html?board=자유게시판" class="preview-row">
+                <span class="preview-title">오늘도 좋은 하루 보내세요.</span>
+                <span class="preview-date">18분</span>
+            </a>
+
+            <a href="community.html?board=자유게시판" class="preview-row">
+                <span class="preview-title">새로 들어왔습니다.</span>
+                <span class="preview-date">25분</span>
+            </a>
+
+        </div>
     </div>
 
-</div><div class="card latest-comment-card" style="margin-top:18px">
 
-    <div class="head">
-        <span>새 댓글</span>
+    <div class="card">
+        <div class="head">
+            <span>분석게시판</span>
+            <a href="community.html?board=분석%20토론" class="more-link">더보기 →</a>
+        </div>
 
-        <a href="community.html" class="more-link">
-            더보기 →
-        </a>
+        <div class="board-preview">
+
+            <a href="community.html?board=분석%20토론" class="preview-row">
+                <span class="preview-title">최근 회차 흐름 정리</span>
+                <span class="preview-date">3분</span>
+            </a>
+
+            <a href="community.html?board=분석%20토론" class="preview-row">
+                <span class="preview-title">오늘 홀짝 데이터 분석</span>
+                <span class="preview-date">7분</span>
+            </a>
+
+            <a href="community.html?board=분석%20토론" class="preview-row">
+                <span class="preview-title">최근 30회 결과 비교</span>
+                <span class="preview-date">11분</span>
+            </a>
+
+            <a href="community.html?board=분석%20토론" class="preview-row">
+                <span class="preview-title">언더 오버 흐름 확인</span>
+                <span class="preview-date">19분</span>
+            </a>
+
+            <a href="community.html?board=분석%20토론" class="preview-row">
+                <span class="preview-title">패턴 데이터 공유합니다.</span>
+                <span class="preview-date">31분</span>
+            </a>
+
+        </div>
     </div>
 
-    <div class="board-preview">
-
-        <a href="community.html" class="comment-row">
-            <div class="comment-content">
-                <span class="comment-text">저도 비슷하게 보고 있습니다.</span>
-                <span class="comment-post">최근 회차 흐름 같이 봅시다.</span>
-            </div>
-            <span class="preview-date">1분</span>
-        </a>
-
-        <a href="community.html" class="comment-row">
-            <div class="comment-content">
-                <span class="comment-text">자료 감사합니다.</span>
-                <span class="comment-post">패턴 데이터 확인해봤습니다.</span>
-            </div>
-            <span class="preview-date">4분</span>
-        </a>
-
-        <a href="community.html" class="comment-row">
-            <div class="comment-content">
-                <span class="comment-text">반갑습니다!</span>
-                <span class="comment-post">오늘 처음 가입했습니다.</span>
-            </div>
-            <span class="preview-date">7분</span>
-        </a>
-
-        <a href="community.html" class="comment-row">
-            <div class="comment-content">
-                <span class="comment-text">이 부분은 조금 더 봐야겠네요.</span>
-                <span class="comment-post">오늘 데이터 정리</span>
-            </div>
-            <span class="preview-date">15분</span>
-        </a>
-
-        <a href="community.html" class="comment-row">
-            <div class="comment-content">
-                <span class="comment-text">확인했습니다.</span>
-                <span class="comment-post">TOVIEW 서비스 이용 안내</span>
-            </div>
-            <span class="preview-date">28분</span>
-        </a>
-
-    </div>
-
-</div></aside></section></main><footer class="foot">TOVIEW · 독립적인 데이터 시각화 프로토타입 · 임시 로고<br>V7 · 실제 페이지 이동형 프로토타입<br>© 2026 TOVIEW</footer>
+</section>
+    
+<section class="data-grid"><div><div class="card" id="results"><div class="head">최근 결과 <span class="sub">최신순</span></div><div style="display:flex;gap:8px;padding:12px 14px;flex-wrap:wrap"><input id="roundSearch" placeholder="회차 검색" style="flex:1;min-width:120px;padding:9px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff"><select id="resultFilter" style="padding:9px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff"><option value="all">전체</option><option value="odd">파워 홀</option><option value="even">파워 짝</option><option value="under">언더</option><option value="over">오버</option></select><button onclick="exportCSV()" style="padding:9px 12px;border:0;border-radius:8px;background:#2563eb;color:white;cursor:pointer">CSV 저장</button><button onclick="toggleTheme()" style="padding:9px 12px;border:1px solid #2b3d5c;border-radius:8px;background:#17243a;color:white;cursor:pointer">화면 전환</button></div><div class="results-scroll"><table class="table"><thead><tr><th>회차</th><th>일반볼</th><th>합</th><th>일반 홀짝</th><th>파워볼</th><th>파워 홀짝</th><th>언/오버</th></tr></thead><tbody id="rows"></tbody></table></div></div><div class="card" id="pattern" style="margin-top:18px"><div class="head">패턴 시각화 <span class="sub">최근 결과 기반</span></div><div class="pattern"><b>파워볼 홀/짝</b><div class="patternrow" id="p1"></div><br><b>파워볼 언더/오버</b><div class="patternrow" id="p2"></div></div></div></div></section></main><footer class="foot">TOVIEW · 독립적인 데이터 시각화 프로토타입 · 임시 로고<br>V7 · 실제 페이지 이동형 프로토타입<br>© 2026 TOVIEW</footer>
 <div class="modal" id="modal"><div class="modalbox"><div class="close" onclick="modal.classList.remove('on')">✕</div><h2 id="modalTitle">로그인</h2><div id="modalBody"><input id="uid" placeholder="아이디"><input id="pw" type="password" placeholder="비밀번호"><button onclick="demoLogin()">데모 로그인</button><div class="sub" style="margin-top:10px">현재 버전은 서버 계정 시스템 없이 브라우저에만 로그인 상태를 저장합니다.</div></div></div></div>
 <script>
 
