@@ -292,7 +292,8 @@ if(nicknameError){
     }
 }
 async function sendEmailCode(){
-    const email = document.getElementById('regEmail').value.trim();
+    const email = document.getElementById('regEmail').value.trim().toLowerCase();
+alert('실제로 읽은 이메일: [' + email + ']');
     const status = document.getElementById('emailVerifyStatus');
 
     if(!email){
@@ -394,9 +395,13 @@ if(!username || !password || !password2 || !nickname || !email){
     alert('아이디, 비밀번호, 비밀번호 확인, 닉네임, 이메일을 모두 입력해주세요.');
     return;
 }
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-if(!emailPattern.test(email)){
+if (
+    !email ||
+    !email.includes('@') ||
+    email.startsWith('@') ||
+    email.endsWith('@') ||
+    !email.substring(email.indexOf('@') + 1).includes('.')
+) {
     alert('올바른 이메일 주소를 입력해주세요.');
     return;
 }
