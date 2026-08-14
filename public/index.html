@@ -885,6 +885,19 @@
         display:none;
     }
 }
+
+.home-board-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+    margin:18px 0;
+}
+
+@media(max-width:750px){
+    .home-board-grid{
+        grid-template-columns:1fr;
+    }
+}
     
 </style>
 </head>
@@ -1126,6 +1139,59 @@
 
         </a>
 
+    </div>
+
+</section>
+
+<section class="home-board-grid">
+
+    <div class="card">
+        <div class="head">
+            <span>공지사항</span>
+            <a href="community.html?board=공지사항" class="more-link">더보기 →</a>
+        </div>
+
+        <div class="board-preview">
+            <div class="preview-row">
+                <span class="preview-title">TOVIEW 서비스 이용 안내</span>
+                <span class="preview-date">08.14</span>
+            </div>
+
+            <div class="preview-row">
+                <span class="preview-title">회원가입 및 계정 이용 안내</span>
+                <span class="preview-date">08.14</span>
+            </div>
+
+            <div class="preview-row">
+                <span class="preview-title">커뮤니티 이용수칙 안내</span>
+                <span class="preview-date">08.14</span>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="card">
+        <div class="head">
+            <span>이벤트</span>
+            <a href="community.html?board=이벤트" class="more-link">더보기 →</a>
+        </div>
+
+        <div class="board-preview">
+            <div class="preview-row">
+                <span class="preview-title">TOVIEW 오픈 이벤트</span>
+                <span class="preview-date">진행중</span>
+            </div>
+
+            <div class="preview-row">
+                <span class="preview-title">신규 회원 이벤트</span>
+                <span class="preview-date">진행중</span>
+            </div>
+
+            <div class="preview-row">
+                <span class="preview-title">커뮤니티 활동 이벤트</span>
+                <span class="preview-date">예정</span>
+            </div>
+        </div>
     </div>
 
 </section>
