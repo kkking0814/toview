@@ -441,10 +441,11 @@ if(passwordError){
                 'Content-Type':'application/json'
             },
             body:JSON.stringify({
-                username: username,
-                password: password,
-                nickname: nickname
-            })
+    username: username,
+    password: password,
+    nickname: nickname,
+    email: email
+})
         });
 
         const data = await r.json();
