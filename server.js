@@ -459,136 +459,239 @@ app.get('/api/me', async (req, res) => {
         });
     }
 });
-app.get('/api/posts',(req,res)=>res.json(db().posts.slice().reverse()));
-app.post('/api/posts',(req,res)=>{if(!req.session.user)return res.status(401).json({error:'로그인이 필요합니다.'});let {title,content,board='자유게시판'}=req.body||{};if(!title||!content)return res.status(400).json({error:'제목과 내용을 입력하세요.'});let d=db();let p={id:Date.now(),title,content,board,author:req.session.user,createdAt:new Date().toISOString()};d.posts.push(p);save(d);res.json(p)});
+
+return res.status(401).json({error:'로그인이 필요합니다.'});let {title,content,board='자유게시판'}=req.body||{};if(!title||!content)return res.status(400).json({error:'제목과 내용을 입력하세요.'});let d=db();let p={id:Date.now(),title,content,board,author:req.session.user,createdAt:new Date().toISOString()};d.posts.push(p);save(d);res.json(p)});
 app.get('/api/results',async(req,res)=>{try{let r=await fetch('https://api.bepick.io/eth/get/'); if(!r.ok)throw Error('upstream');res.type('json').send(await r.text())}catch(e){res.status(502).json({error:'외부 결과 API 연결 실패'})}});
 app.use(express.static(path.join(__dirname,'public')));
 
 // ========================================
-// 게시글 작성 API
+// 게시글 목록 - Neon DB
 // ========================================
 
-app.post('/api/posts', (req, res) => {
+app.get('/api/posts', async (req, res) => {
+    try {
 
-    // 로그인 확인
-    if (!req.session || !req.session.user) {
-        return res.status(401).json({
-            error: '로그인이 필요합니다.'
+        const board = String(req.query.board || '').trim();
+
+        let result;
+
+        if (board) {
+
+            result = await pool.query(
+                `
+                SELECT
+                    p.id,
+                    p.board,
+                    p.title,
+                    p.content,
+                    p.username,
+                    u.nickname,
+                    p.views,
+                    p.likes,
+                    p.created_at
+                FROM posts p
+                JOIN users u
+                    ON u.username = p.username
+                WHERE p.board = $1
+                ORDER BY p.created_at DESC
+                `,
+                [board]
+            );
+
+        } else {
+
+            result = await pool.query(
+                `
+                SELECT
+                    p.id,
+                    p.board,
+                    p.title,
+                    p.content,
+                    p.username,
+                    u.nickname,
+                    p.views,
+                    p.likes,
+                    p.created_at
+                FROM posts p
+                JOIN users u
+                    ON u.username = p.username
+                ORDER BY p.created_at DESC
+                `
+            );
+
+        }
+
+        const posts = result.rows.map(post => ({
+            id: post.id,
+            board: post.board,
+            title: post.title,
+            content: post.content,
+
+            username: post.username,
+            nickname: post.nickname,
+
+            views: post.views,
+            likes: post.likes,
+
+            createdAt: post.created_at
+        }));
+
+        return res.json({
+            ok: true,
+            posts
+        });
+
+    } catch (error) {
+
+        console.error('게시글 목록 DB 오류:', error);
+
+        return res.status(500).json({
+            error: '게시글을 불러오지 못했습니다.'
         });
     }
-
-    const title = String(req.body?.title || '').trim();
-    const content = String(req.body?.content || '').trim();
-    const board = String(req.body?.board || '자유게시판').trim();
-
-    // 제목 확인
-    if (!title) {
-        return res.status(400).json({
-            error: '제목을 입력해주세요.'
-        });
-    }
-
-    // 내용 확인
-    if (!content) {
-        return res.status(400).json({
-            error: '내용을 입력해주세요.'
-        });
-    }
-
-    // 제목 길이 제한
-    if (title.length > 100) {
-        return res.status(400).json({
-            error: '제목은 100자 이하로 입력해주세요.'
-        });
-    }
-
-    // 허용된 게시판만 사용
-    const allowedBoards = [
-        '자유게시판',
-        '분석게시판'
-    ];
-
-    if (!allowedBoards.includes(board)) {
-        return res.status(400).json({
-            error: '올바르지 않은 게시판입니다.'
-        });
-    }
-
-    const d = db();
-
-    // 기존 data.json에 posts가 없더라도 자동 생성
-    if (!Array.isArray(d.posts)) {
-        d.posts = [];
-    }
-
-    // 현재 로그인 회원 찾기
-    const user = d.users.find(
-        u => u.username === req.session.user
-    );
-
-    if (!user) {
-        return res.status(401).json({
-            error: '사용자 정보를 찾을 수 없습니다.'
-        });
-    }
-
-    // 게시글 생성
-    const post = {
-        id: Date.now(),
-
-        board,
-        title,
-        content,
-
-        username: user.username,
-        nickname: user.nickname,
-
-        views: 0,
-        likes: 0,
-        comments: [],
-
-        createdAt: new Date().toISOString()
-    };
-
-    // 최신 글을 맨 앞에 추가
-    d.posts.unshift(post);
-
-    // data.json 저장
-    save(d);
-
-    return res.json({
-        ok: true,
-        post
-    });
 });
 
+
 // ========================================
-// 게시글 목록 API
+// 게시글 작성 - Neon DB
 // ========================================
 
-app.get('/api/posts', (req, res) => {
+app.post('/api/posts', async (req, res) => {
+    try {
 
-    const d = db();
+        // 로그인 확인
+        if (!req.session.user) {
+            return res.status(401).json({
+                error: '로그인이 필요합니다.'
+            });
+        }
 
-    if (!Array.isArray(d.posts)) {
-        d.posts = [];
-    }
+        const board =
+            String(req.body?.board || '자유게시판').trim();
 
-    const board = String(req.query.board || '').trim();
+        const title =
+            String(req.body?.title || '').trim();
 
-    let posts = d.posts;
+        const content =
+            String(req.body?.content || '').trim();
 
-    // 특정 게시판을 요청했으면 해당 게시판 글만
-    if (board) {
-        posts = posts.filter(
-            post => post.board === board
+
+        // 제목 확인
+        if (!title) {
+            return res.status(400).json({
+                error: '제목을 입력해주세요.'
+            });
+        }
+
+
+        // 내용 확인
+        if (!content) {
+            return res.status(400).json({
+                error: '내용을 입력해주세요.'
+            });
+        }
+
+
+        // 제목 최대 100자
+        if (title.length > 100) {
+            return res.status(400).json({
+                error: '제목은 100자 이하로 입력해주세요.'
+            });
+        }
+
+
+        // 허용 게시판
+        const allowedBoards = [
+            '자유게시판',
+            '분석게시판'
+        ];
+
+        if (!allowedBoards.includes(board)) {
+            return res.status(400).json({
+                error: '올바르지 않은 게시판입니다.'
+            });
+        }
+
+
+        // 현재 로그인 회원이 실제 Neon에 있는지 확인
+        const userResult = await pool.query(
+            `
+            SELECT username, nickname
+            FROM users
+            WHERE username = $1
+            LIMIT 1
+            `,
+            [req.session.user]
         );
-    }
 
-    return res.json({
-        ok: true,
-        posts
-    });
+        const user = userResult.rows[0];
+
+
+        if (!user) {
+            return res.status(401).json({
+                error: '사용자 정보를 찾을 수 없습니다.'
+            });
+        }
+
+
+        // Neon posts 테이블에 글 저장
+        const result = await pool.query(
+            `
+            INSERT INTO posts
+                (board, title, content, username)
+            VALUES
+                ($1, $2, $3, $4)
+
+            RETURNING
+                id,
+                board,
+                title,
+                content,
+                username,
+                views,
+                likes,
+                created_at
+            `,
+            [
+                board,
+                title,
+                content,
+                user.username
+            ]
+        );
+
+
+        const saved = result.rows[0];
+
+
+        return res.json({
+            ok: true,
+
+            post: {
+                id: saved.id,
+                board: saved.board,
+                title: saved.title,
+                content: saved.content,
+
+                username: saved.username,
+                nickname: user.nickname,
+
+                views: saved.views,
+                likes: saved.likes,
+
+                createdAt: saved.created_at
+            }
+        });
+
+
+    } catch (error) {
+
+        console.error('게시글 작성 DB 오류:', error);
+
+        return res.status(500).json({
+            error: '게시글 등록 중 오류가 발생했습니다.'
+        });
+    }
 });
 
 app.get('/api/db-test', async (req, res) => {
