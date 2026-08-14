@@ -1108,6 +1108,70 @@
     background:#3b82f6;
 }
     
+/* ===== 왼쪽 제휴 광고 ===== */
+
+.left-sidebar{
+    position:absolute;
+    top:55px;
+
+    /* 본문 바로 왼쪽 */
+    right:calc(100% + 12px);
+
+    width:270px;
+
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+
+    z-index:10;
+}
+
+.left-sidebar .side-ad{
+    width:270px;
+    height:480px;
+    min-height:480px;
+
+    box-sizing:border-box;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    border:1px solid #22314a;
+    border-radius:10px;
+
+    background:#0d192b;
+
+    text-decoration:none;
+    overflow:hidden;
+}
+
+.left-sidebar .side-ad span{
+    margin-bottom:7px;
+    color:#3b82f6;
+    font-size:9px;
+    font-weight:900;
+}
+
+.left-sidebar .side-ad strong{
+    color:#cbd5e1;
+    font-size:14px;
+}
+
+.left-sidebar .side-ad small{
+    margin-top:5px;
+    color:#52627a;
+    font-size:10px;
+}
+
+.left-sidebar .side-ad img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+}
+
 </style>
 </head>
 <body>
@@ -1273,6 +1337,22 @@
     </a>
 
 </div>
+
+</div>
+    
+<div class="left-sidebar">
+
+    <a href="#" class="side-ad" target="_blank" rel="noopener noreferrer sponsored">
+        <span>AD</span>
+        <strong>제휴 배너</strong>
+        <small>광고 영역</small>
+    </a>
+
+    <a href="#" class="side-ad" target="_blank" rel="noopener noreferrer sponsored">
+        <span>AD</span>
+        <strong>제휴 배너</strong>
+        <small>광고 영역</small>
+    </a>
 
 </div>
     
