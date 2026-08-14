@@ -6,7 +6,42 @@
 
 </head>
 <body>
-<header class="top"><div class="bar"><a class="logo" href="index.html">TO<b>VIEW</b> <span class="badge">V7</span></a><nav class="nav"><a href="index.html">실시간</a><a href="results.html">결과</a><a href="analysis.html">분석</a><a href="pattern.html">패턴</a><a href="community.html">커뮤니티</a><a href="dashboard.html">대시보드</a></nav><button class="login" onclick="location.href='account.html'" id="userBtn">로그인</button></div></header><main class="wrap"><div class="grid"><div class="card"><div class="head"><span id="boardName">자유게시판</span><button class="login" onclick="writePost()">글쓰기</button></div><div id="posts"></div></div><aside><div class="card"><div class="head">게시판</div><div class="sideitem" onclick="setBoard('자유게시판')">💬 자유게시판</div><div class="sideitem" onclick="setBoard('분석게시판')">🔥 분석 토론</div><div class="sideitem" onclick="setBoard('공지사항')">📢 공지사항</div></div><div class="card" id="rank" style="margin-top:18px"><div class="head">활동 랭킹</div><div id="ranking"></div></div></aside></div></main><footer class="foot">TOVIEW V7 · 페이지 이동형 프로토타입 · © 2026 TOVIEW</footer><script>function user(){let u=localStorage.getItem('toviewUser');if(u)document.getElementById('userBtn').textContent=u+' 님'};function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}window.addEventListener('DOMContentLoaded',user)</script><script>let board =
+
+<header class="top">
+    <div class="bar">
+
+        <a href="index.html" class="brand">
+            <div class="brand-mark">T</div>
+            <div class="brand-name">
+                <strong>TO<span>VIEW</span></strong>
+                <small>DATA & COMMUNITY</small>
+            </div>
+        </a>
+
+        <nav class="nav">
+            <a href="index.html">실시간</a>
+            <a href="results.html">결과</a>
+            <a href="analysis.html">분석</a>
+            <a href="pattern.html">패턴</a>
+            <a href="community.html">커뮤니티</a>
+            <a href="dashboard.html">대시보드</a>
+        </nav>
+
+        <button class="menu-btn" type="button" onclick="openMainMenu()">
+            <span class="menu-icon">☰</span>
+            <span>전체메뉴</span>
+        </button>
+
+        <button class="login"
+                id="loginBtn"
+                onclick="location.href='account.html'">
+            로그인
+        </button>
+
+    </div>
+</header>
+    
+<main class="wrap"><div class="grid"><div class="card"><div class="head"><span id="boardName">자유게시판</span><button class="login" onclick="writePost()">글쓰기</button></div><div id="posts"></div></div><aside><div class="card"><div class="head">게시판</div><div class="sideitem" onclick="setBoard('자유게시판')">💬 자유게시판</div><div class="sideitem" onclick="setBoard('분석게시판')">🔥 분석 토론</div><div class="sideitem" onclick="setBoard('공지사항')">📢 공지사항</div></div><div class="card" id="rank" style="margin-top:18px"><div class="head">활동 랭킹</div><div id="ranking"></div></div></aside></div></main><footer class="foot">TOVIEW V7 · 페이지 이동형 프로토타입 · © 2026 TOVIEW</footer><script>function user(){let u=localStorage.getItem('toviewUser');if(u)document.getElementById('userBtn').textContent=u+' 님'};function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}window.addEventListener('DOMContentLoaded',user)</script><script>let board =
     new URLSearchParams(location.search).get('board')
     || '자유게시판';
 
