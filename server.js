@@ -412,21 +412,52 @@ app.post('/api/login', async (req, res) => {
     });
 });
 app.post('/api/logout',(req,res)=>req.session.destroy(()=>res.json({ok:true})));
-app.get('/api/me', (req, res) => {
-    if (!req.session.user) {
+app.get('/api/me', async (req, res) => {
+    try {
+
+        // 로그인하지 않은 상태
+        if (!req.session.user) {
+            return res.json({
+                username: null,
+                nickname: null
+            });
+        }
+
+        // Neon에서 현재 로그인 회원 찾기
+        const result = await pool.query(
+            `SELECT username, nickname
+             FROM users
+             WHERE username = $1
+             LIMIT 1`,
+            [req.session.user]
+        );
+
+        const user = result.rows[0];
+
+        // DB에 회원이 없는 경우
+        if (!user) {
+            req.session.user = null;
+
+            return res.json({
+                username: null,
+                nickname: null
+            });
+        }
+
+        // 회원정보 반환
         return res.json({
-            username: null,
-            nickname: null
+            username: user.username,
+            nickname: user.nickname
+        });
+
+    } catch (error) {
+
+        console.error('회원정보 조회 DB 오류:', error);
+
+        return res.status(500).json({
+            error: '회원정보를 불러오지 못했습니다.'
         });
     }
-
-    const d = db();
-    const user = d.users.find(u => u.username === req.session.user);
-
-    res.json({
-        username: req.session.user,
-        nickname: user?.nickname || req.session.user
-    });
 });
 app.get('/api/posts',(req,res)=>res.json(db().posts.slice().reverse()));
 app.post('/api/posts',(req,res)=>{if(!req.session.user)return res.status(401).json({error:'로그인이 필요합니다.'});let {title,content,board='자유게시판'}=req.body||{};if(!title||!content)return res.status(400).json({error:'제목과 내용을 입력하세요.'});let d=db();let p={id:Date.now(),title,content,board,author:req.session.user,createdAt:new Date().toISOString()};d.posts.push(p);save(d);res.json(p)});
