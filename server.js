@@ -460,8 +460,6 @@ app.get('/api/me', async (req, res) => {
     }
 });
 
-return res.status(401).json({error:'로그인이 필요합니다.'});let {title,content,board='자유게시판'}=req.body||{};if(!title||!content)return res.status(400).json({error:'제목과 내용을 입력하세요.'});let d=db();let p={id:Date.now(),title,content,board,author:req.session.user,createdAt:new Date().toISOString()};d.posts.push(p);save(d);res.json(p)});
-app.get('/api/results',async(req,res)=>{try{let r=await fetch('https://api.bepick.io/eth/get/'); if(!r.ok)throw Error('upstream');res.type('json').send(await r.text())}catch(e){res.status(502).json({error:'외부 결과 API 연결 실패'})}});
 app.use(express.static(path.join(__dirname,'public')));
 
 // ========================================
