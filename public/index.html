@@ -940,21 +940,41 @@
     position:relative;
 }
 
+/* ===== 왼쪽 고정 사이드바 ===== */
+
 .left-sidebar{
-    position:absolute;
-    top:55px;
-    right:calc(100% + 18px);
-    width:220px;
+    position:fixed;
+
+    /* 화면 기준 위치 */
+    top:90px;
+    left:20px;
+
+    /* 기존 220px → 270px */
+    width:270px;
 
     display:flex;
     flex-direction:column;
     gap:12px;
+
+    /* 항상 메인보다 위에 */
+    z-index:100;
+
+    /* 별도 스크롤 만들지 않음 */
+    overflow:visible;
 }
 
+
+/* ===== 활동 랭킹 / 실시간 채팅 카드 ===== */
+
 .side-card{
+    width:100%;
+    box-sizing:border-box;
+
     overflow:hidden;
+
     border:1px solid #22314a;
     border-radius:10px;
+
     background:#0d192b;
 }
 
@@ -970,16 +990,20 @@
     font-weight:800;
 }
 
-/* 채팅창 */
+
+/* ===== 실시간 채팅 ===== */
 
 .chat-preview{
     height:170px;
     padding:10px;
+
     overflow-y:auto;
+    box-sizing:border-box;
 }
 
 .chat-empty{
     height:100%;
+
     display:flex;
     align-items:center;
     justify-content:center;
@@ -991,14 +1015,18 @@
 .chat-input-area{
     display:flex;
     gap:5px;
+
     padding:8px;
 
     border-top:1px solid rgba(255,255,255,.06);
+
+    box-sizing:border-box;
 }
 
 .chat-input-area input{
     flex:1;
     min-width:0;
+
     padding:8px;
 
     border:1px solid #263750;
@@ -1006,23 +1034,35 @@
 
     background:#091426;
     color:#fff;
+
     font-size:10px;
 }
 
 .chat-input-area button{
     padding:0 9px;
+
     border:0;
     border-radius:6px;
 
     background:#2563eb;
     color:#fff;
+
     font-size:10px;
 }
 
-/* 왼쪽 광고 */
+
+/* ===== 왼쪽 세로 광고 ===== */
 
 .side-ad{
-    height:120px;
+    width:100%;
+
+    /* 기존 120px → 480px */
+    height:480px;
+
+    /* 높이가 줄어드는 것 방지 */
+    flex-shrink:0;
+
+    box-sizing:border-box;
 
     display:flex;
     flex-direction:column;
@@ -1033,12 +1073,30 @@
     border-radius:10px;
 
     background:#0d192b;
+
     text-decoration:none;
+    overflow:hidden;
 }
+
+
+/* 나중에 실제 광고 이미지 넣을 때 사용 */
+.side-ad img{
+    width:100%;
+    height:100%;
+
+    display:block;
+
+    object-fit:cover;
+}
+
+
+/* 임시 광고 글자 */
 
 .side-ad span{
     margin-bottom:7px;
+
     color:#3b82f6;
+
     font-size:8px;
     font-weight:900;
 }
@@ -1050,6 +1108,7 @@
 
 .side-ad small{
     margin-top:4px;
+
     color:#52627a;
     font-size:9px;
 }
