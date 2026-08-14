@@ -6,7 +6,49 @@
 
 </head>
 <body>
-<header class="top"><div class="bar"><a class="logo" href="index.html">TO<b>VIEW</b> <span class="badge">V7</span></a><nav class="nav"><a href="index.html">실시간</a><a href="results.html">결과</a><a href="analysis.html">분석</a><a href="pattern.html">패턴</a><a href="community.html">커뮤니티</a><a href="dashboard.html">대시보드</a></nav><button class="login" onclick="location.href='account.html'" id="userBtn">로그인</button></div></header><main class="wrap"><div class="notice">분석 메뉴를 눌러 실제 섹션으로 이동할 수 있습니다.</div><div class="hero"><div class="card" id="daily"><div class="head">📊 일별 분석</div><div class="stats"><div class="stat">파워 홀<strong>50%</strong></div><div class="stat">파워 짝<strong>50%</strong></div><div class="stat">언더<strong>50%</strong></div><div class="stat">오버<strong>50%</strong></div></div></div><div class="card" id="range"><div class="head">📈 구간 분석</div><div class="pattern"><p>최근 구간의 분포를 요약하는 화면입니다.</p><div class="patternrow"><span class="dot">홀</span><span class="dot r">짝</span><span class="dot r">짝</span><span class="dot">홀</span><span class="dot r">짝</span></div></div></div></div><div class="card" id="round" style="margin-top:18px"><div class="head">🔢 회차 분석</div><div class="pattern"><input id="roundInput" placeholder="예: 181" style="padding:11px;width:180px"><button class="login" onclick="calc()">분석하기</button><div id="result" style="margin-top:18px"></div></div></div></main><footer class="foot">TOVIEW V7 · 페이지 이동형 프로토타입 · © 2026 TOVIEW</footer><script>function calc(){let v=roundInput.value.trim();result.innerHTML=v?`<div class="stat">${esc(v)}회차 분석<strong>결과 페이지와 연동 준비 완료</strong></div>`:'회차를 입력하세요.'}
+<header class="top">
+    <div class="bar">
+
+        <a href="index.html" class="brand">
+            <div class="brand-mark">T</div>
+
+            <div class="brand-name">
+                <strong>TO<span>VIEW</span></strong>
+                <small>DATA & COMMUNITY</small>
+            </div>
+        </a>
+
+        <nav class="nav">
+            <a href="index.html">실시간</a>
+            <a href="results.html">결과</a>
+            <a href="analysis.html">분석</a>
+            <a href="pattern.html">패턴</a>
+            <a href="community.html">커뮤니티</a>
+            <a href="dashboard.html">대시보드</a>
+        </nav>
+
+        <button class="menu-btn" type="button" onclick="openMainMenu()">
+            <span class="menu-icon">☰</span>
+            <span>전체메뉴</span>
+        </button>
+
+        <button
+            class="login"
+            id="loginBtn"
+            type="button"
+            onclick="location.href='account.html'"
+        >
+            로그인
+        </button>
+
+    </div>
+</header>
+
+  <div class="menu-overlay" id="mainMenuOverlay" onclick="closeMainMenu(event)">
+    홈에서 쓰는 전체메뉴 내용 전부
+</div>
+  
+  <main class="wrap"><div class="notice">분석 메뉴를 눌러 실제 섹션으로 이동할 수 있습니다.</div><div class="hero"><div class="card" id="daily"><div class="head">📊 일별 분석</div><div class="stats"><div class="stat">파워 홀<strong>50%</strong></div><div class="stat">파워 짝<strong>50%</strong></div><div class="stat">언더<strong>50%</strong></div><div class="stat">오버<strong>50%</strong></div></div></div><div class="card" id="range"><div class="head">📈 구간 분석</div><div class="pattern"><p>최근 구간의 분포를 요약하는 화면입니다.</p><div class="patternrow"><span class="dot">홀</span><span class="dot r">짝</span><span class="dot r">짝</span><span class="dot">홀</span><span class="dot r">짝</span></div></div></div></div><div class="card" id="round" style="margin-top:18px"><div class="head">🔢 회차 분석</div><div class="pattern"><input id="roundInput" placeholder="예: 181" style="padding:11px;width:180px"><button class="login" onclick="calc()">분석하기</button><div id="result" style="margin-top:18px"></div></div></div></main><footer class="foot">TOVIEW V7 · 페이지 이동형 프로토타입 · © 2026 TOVIEW</footer><script>function calc(){let v=roundInput.value.trim();result.innerHTML=v?`<div class="stat">${esc(v)}회차 분석<strong>결과 페이지와 연동 준비 완료</strong></div>`:'회차를 입력하세요.'}
 </script>
 
 <script src="auth.js"></script>
