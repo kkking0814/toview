@@ -508,3 +508,68 @@
         padding-right: 20px !important;
     }
 }
+
+/* ========================================
+   TOVIEW 공통 로고
+======================================== */
+
+.brand {
+    display: flex !important;
+    align-items: center !important;
+    gap: 11px !important;
+
+    text-decoration: none !important;
+    flex-shrink: 0 !important;
+}
+
+.brand-mark {
+    width: 38px !important;
+    height: 38px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    flex: 0 0 38px !important;
+
+    border-radius: 10px !important;
+
+    background: #2563eb !important;
+    color: #fff !important;
+
+    font-size: 21px !important;
+    font-weight: 900 !important;
+
+    box-shadow: 0 6px 20px rgba(37,99,235,.25) !important;
+}
+
+.brand-name {
+    display: flex !important;
+    flex-direction: column !important;
+
+    line-height: 1 !important;
+}
+
+.brand-name strong {
+    color: #fff !important;
+
+    font-size: 20px !important;
+    font-weight: 800 !important;
+
+    letter-spacing: -.5px !important;
+}
+
+.brand-name strong span {
+    color: #60a5fa !important;
+}
+
+.brand-name small {
+    margin-top: 5px !important;
+
+    color: #64748b !important;
+
+    font-size: 8px !important;
+    font-weight: 700 !important;
+
+    letter-spacing: 1.3px !important;
+}
