@@ -1022,6 +1022,91 @@
     display:block;
     object-fit:cover;
 }
+
+/* ===== 왼쪽 실시간 채팅 크기 ===== */
+
+.left-sidebar .side-card{
+    width:100%;
+    box-sizing:border-box;
+}
+
+/* 활동랭킹을 지웠으므로 남은 side-card = 실시간 채팅 */
+.left-sidebar .side-card{
+    height:480px;
+    min-height:480px;
+
+    display:flex;
+    flex-direction:column;
+}
+
+/* 채팅 내용 부분이 남는 공간을 전부 차지 */
+.left-sidebar .chat-preview{
+    flex:1;
+    height:auto;
+    min-height:0;
+
+    overflow-y:auto;
+}
+
+/* 메시지 입력창은 맨 아래 고정 */
+.left-sidebar .chat-input-area{
+    flex-shrink:0;
+}
+
+/* ===== 실시간 채팅 내부 ===== */
+
+.chat-system{
+    padding:10px;
+    margin-bottom:8px;
+
+    border-radius:7px;
+    background:rgba(37,99,235,.08);
+
+    color:#7da7e8;
+    font-size:10px;
+    text-align:center;
+}
+
+.chat-message{
+    padding:8px 4px;
+
+    border-bottom:1px solid rgba(255,255,255,.05);
+
+    font-size:11px;
+    line-height:1.5;
+}
+
+.chat-message:last-child{
+    border-bottom:0;
+}
+
+.chat-user{
+    margin-right:6px;
+
+    color:#60a5fa;
+    font-weight:700;
+}
+
+.chat-text{
+    color:#cbd5e1;
+}
+
+.chat-time{
+    display:block;
+
+    margin-top:2px;
+
+    color:#475569;
+    font-size:8px;
+}
+
+#chatSendBtn{
+    cursor:pointer;
+}
+
+#chatSendBtn:hover{
+    background:#3b82f6;
+}
     
 </style>
 </head>
@@ -1179,28 +1264,37 @@
 
     <div class="side-card">
         <div class="head">
-            <span>활동 랭킹</span>
-            <span class="sub">TOP 5</span>
-        </div>
-
-        <div id="rankList"></div>
-    </div>
-
-    <div class="side-card">
-        <div class="head">
             <span>실시간 채팅</span>
             <span class="live-dot">LIVE</span>
         </div>
 
-        <div class="chat-preview">
-            <div class="chat-empty">실시간 채팅 준비중</div>
-        </div>
+       <div class="chat-preview" id="chatMessages">
 
-        <div class="chat-input-area">
-            <input type="text" placeholder="메시지를 입력하세요" disabled>
-            <button disabled>전송</button>
-        </div>
+    <div class="chat-system">
+        TOVIEW 실시간 채팅에 참여해보세요.
     </div>
+
+</div>
+
+<div class="chat-input-area">
+
+    <input
+        type="text"
+        id="chatInput"
+        placeholder="메시지를 입력하세요"
+        maxlength="100"
+        autocomplete="off"
+    >
+
+    <button
+        type="button"
+        id="chatSendBtn"
+        onclick="sendChatMessage()"
+    >
+        전송
+    </button>
+
+</div>
 
     <a href="#" class="side-ad">
         <span>AD</span>
@@ -2151,4 +2245,58 @@ function addAlert(text){let a=getAlerts();a.push({text,time:new Date().toLocaleS
 function renderAlertCount(){let e=document.getElementById('alertCount');if(e)e.textContent=getAlerts().length}renderAlertCount();
 function openAlerts(){let a=getAlerts().slice().reverse();modalTitle.textContent='알림센터';modalBody.innerHTML=`<div style="max-height:300px;overflow:auto">${a.length?a.map(x=>`<div style="padding:10px;border-bottom:1px solid #22334e">${esc(x.text)}<div class="sub">${x.time}</div></div>`).join(''):'<div class="sub">알림이 없습니다.</div>'}</div><button onclick="localStorage.removeItem('toviewAlerts');renderAlertCount();openAlerts()">알림 비우기</button>`;modal.classList.add('on')}
 function openDetailedStats(){if(!records.length)return;let n=records.length, sums=records.map(x=>Number(x.PowerBall.nBallSum)||0), pbs=records.map(x=>Number(x.PowerBall.pBall)||0);let avg=(sums.reduce((a,b)=>a+b,0)/n).toFixed(1),pavg=(pbs.reduce((a,b)=>a+b,0)/n).toFixed(1);let streak=(key,val)=>{let m=0,c=0;for(let x of records){if(x.PowerBall[key]===val)c++;else c=0;m=Math.max(m,c)}return m};modalTitle.textContent='상세 통계';modalBody.innerHTML=`<div class="stats" style="padding:0"><div class="stat">일반볼 평균 합<strong>${avg}</strong></div><div class="stat">파워볼 평균<strong>${pavg}</strong></div><div class="stat">최장 파워 홀 연속<strong>${streak('pOddEven',1)}회</strong></div><div class="stat">최장 파워 짝 연속<strong>${streak('pOddEven',2)}회</strong></div><div class="stat">최장 언더 연속<strong>${streak('pUnderOver',1)}회</strong></div><div class="stat">최장 오버 연속<strong>${streak('pUnderOver',2)}회</strong></div></div><div class="sub" style="margin-top:12px">현재 불러온 ${n}개 결과를 단순 집계한 통계입니다.</div><button onclick="modal.classList.remove('on')">확인</button>`;modal.classList.add('on')}
+function sendChatMessage(){
+
+    const input = document.getElementById('chatInput');
+    const messages = document.getElementById('chatMessages');
+
+    if(!input || !messages) return;
+
+    const text = input.value.trim();
+
+    if(!text) return;
+
+    const message = document.createElement('div');
+    message.className = 'chat-message';
+
+    const now = new Date();
+
+    const time = now.toLocaleTimeString('ko-KR',{
+        hour:'2-digit',
+        minute:'2-digit'
+    });
+
+    message.innerHTML = `
+        <span class="chat-user">나</span>
+        <span class="chat-text"></span>
+        <span class="chat-time">${time}</span>
+    `;
+
+    message.querySelector('.chat-text').textContent = text;
+
+    messages.appendChild(message);
+
+    input.value = '';
+
+    messages.scrollTop = messages.scrollHeight;
+}
+
+
+/* Enter 키로 전송 */
+document.addEventListener('DOMContentLoaded',()=>{
+
+    const input = document.getElementById('chatInput');
+
+    if(!input) return;
+
+    input.addEventListener('keydown',(e)=>{
+
+        if(e.key === 'Enter'){
+            e.preventDefault();
+            sendChatMessage();
+        }
+
+    });
+
+});
 </script></body></html>
