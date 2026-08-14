@@ -1,6 +1,13 @@
 const express=require('express'); const session=require('express-session'); const bcrypt=require('bcryptjs'); const fs=require('fs'); const path=require('path');
 const app=express(); const PORT=process.env.PORT||3000; const dbPath=path.join(__dirname,'data.json');
 function db(){try{return JSON.parse(fs.readFileSync(dbPath,'utf8'))}catch{return {users:[],posts:[]}}} function save(x){fs.writeFileSync(dbPath,JSON.stringify(x,null,2))}
+const emailCodes = new Map();
+
+function createEmailCode(){
+    return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+const EMAIL_CODE_EXPIRE_MS = 5 * 60 * 1000;
 app.set('trust proxy', 1);
 
 app.use(session({
