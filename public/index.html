@@ -188,13 +188,6 @@ if(!username || !password || !password2 || !nickname){
         return;
     }
 
-
-
-    if(!phoneVerified){
-        alert('휴대폰 인증을 완료해주세요.');
-        return;
-    }
-
     try{
         const r = await fetch('/api/register',{
             method:'POST',
@@ -251,7 +244,7 @@ async function realLogin(){
       return;
     }
 
-    loginBtn.textContent=username+' 님';
+await checkLogin();
     modal.classList.remove('on');
   }catch(e){
     alert('서버 연결에 실패했습니다.');
@@ -265,16 +258,18 @@ async function logout(){
 }
 
 async function checkLogin(){
-  try{
-    const r=await fetch('/api/me');
-    const me=await r.json();
+    try{
+        const r = await fetch('/api/me');
+        const me = await r.json();
 
-    if(me.username){
-      loginBtn.textContent=me.username+' 님';
-    }else{
-      loginBtn.textContent='로그인';
+        if(me.username){
+            loginBtn.textContent = (me.nickname || me.username) + ' 님';
+        }else{
+            loginBtn.textContent = '로그인';
+        }
+    }catch(e){
+        loginBtn.textContent = '로그인';
     }
-  }catch(e){}
 }
 
 checkLogin();
