@@ -452,34 +452,42 @@ if(passwordError){
         alert('서버 연결 중 오류가 발생했습니다.');
     }
 }
+
 async function realLogin(){
-  const username=document.getElementById('uid').value.trim();
-  const password=document.getElementById('pw').value;
+    const username = document.getElementById('uid').value.trim();
+    const password = document.getElementById('pw').value;
 
-  if(!username || !password){
-    alert('아이디와 비밀번호를 입력해주세요.');
-    return;
-  }
-
-  try{
-    const r=await fetch('/api/login',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({username,password})
-    });
-
-    const data=await r.json();
-
-    if(!r.ok){
-      alert(data.error || '로그인에 실패했습니다.');
-      return;
+    if(!username || !password){
+        alert('아이디와 비밀번호를 입력해주세요.');
+        return;
     }
 
-await checkLogin();
-    modal.classList.remove('on');
-  }catch(e){
-    alert('서버 연결에 실패했습니다.');
-  }
+    try{
+        const r = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: username,
+                password: password
+            })
+        });
+
+        const data = await r.json();
+
+        if(!r.ok){
+            alert(data.error || '아이디 또는 비밀번호를 확인해주세요.');
+            return;
+        }
+
+        modal.classList.remove('on');
+        await checkLogin();
+
+    }catch(error){
+        console.error('로그인 오류:', error);
+        alert('서버 연결에 실패했습니다.');
+    }
 }
 
 async function logout(){
