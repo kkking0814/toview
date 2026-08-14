@@ -391,8 +391,6 @@ async function verifyEmailCode(){
     const nickname = document.getElementById('regNickname').value.trim();
     const email = document.getElementById('regEmail').value.trim().toLowerCase();
 
-    alert('회원가입 이메일 확인: [' + email + ']');
-
 if(!username || !password || !password2 || !nickname || !email){
     alert('아이디, 비밀번호, 비밀번호 확인, 닉네임, 이메일을 모두 입력해주세요.');
     return;
