@@ -14,6 +14,41 @@ app.use(session({
     sameSite: 'lax'
   }
 }));
+app.get('/api/check-username', (req, res) => {
+    const username = String(req.query.username || '').trim();
+
+    if (!username) {
+        return res.status(400).json({
+            available: false,
+            error: '아이디를 입력해주세요.'
+        });
+    }
+
+    const d = db();
+    const exists = d.users.some(u => u.username === username);
+
+    res.json({
+        available: !exists
+    });
+});
+
+app.get('/api/check-nickname', (req, res) => {
+    const nickname = String(req.query.nickname || '').trim();
+
+    if (!nickname) {
+        return res.status(400).json({
+            available: false,
+            error: '닉네임을 입력해주세요.'
+        });
+    }
+
+    const d = db();
+    const exists = d.users.some(u => u.nickname === nickname);
+
+    res.json({
+        available: !exists
+    });
+});
 app.post('/api/register', async (req, res) => {
     const { username, password, nickname } = req.body || {};
 
