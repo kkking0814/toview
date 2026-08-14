@@ -430,10 +430,141 @@ function changeGame(game, button) {
 
     console.log('선택 게임:', game);
 }
+    function sendChat() {
+
+    // 채팅 입력창 찾기
+    const input = document.getElementById('chatInput');
+
+    // 채팅 메시지가 표시될 영역 찾기
+    const messages = document.getElementById('chatMessages');
+
+    // 둘 중 하나라도 없으면 중단
+    if (!input || !messages) {
+        return;
+    }
+
+
+    // 입력한 내용 가져오기
+    const text = input.value.trim();
+
+    // 아무것도 입력하지 않았으면 전송하지 않음
+    if (!text) {
+        return;
+    }
+
+
+    // 상단 로그인/닉네임 버튼의 글자를 가져옴
+    const loginButton = document.getElementById('loginBtn');
+
+    let nickname = '회원';
+
+    if (loginButton) {
+        nickname = loginButton.textContent.trim();
+    }
+
+
+    // 처음 표시되어 있는
+    // "첫 메시지를 남겨보세요" 문구 제거
+    const empty = messages.querySelector('.chat-empty');
+
+    if (empty) {
+        empty.remove();
+    }
+
+
+    // 현재 시간 만들기
+    const now = new Date();
+
+    const hour =
+        String(now.getHours()).padStart(2, '0');
+
+    const minute =
+        String(now.getMinutes()).padStart(2, '0');
+
+    const time = hour + ':' + minute;
+
+
+    // 새로운 채팅 한 줄 생성
+    const row = document.createElement('div');
+
+    row.className = 'chat-message';
+
+
+    // 채팅 기본 구조
+    row.innerHTML = `
+        <div class="chat-avatar">
+            T
+        </div>
+
+        <div class="chat-content">
+
+            <div class="chat-user-line">
+
+                <span class="chat-nickname"></span>
+
+                <span class="chat-time">
+                    ${time}
+                </span>
+
+            </div>
+
+            <div class="chat-text"></div>
+
+        </div>
+    `;
+
+
+    // 닉네임 넣기
+    row.querySelector('.chat-nickname').textContent =
+        nickname;
+
+
+    // 메시지 넣기
+    row.querySelector('.chat-text').textContent =
+        text;
+
+
+    // 채팅창에 추가
+    messages.appendChild(row);
+
+
+    // 입력창 비우기
+    input.value = '';
+
+
+    // 새 메시지가 생기면 맨 아래로 자동 스크롤
+    messages.scrollTop =
+        messages.scrollHeight;
+}
+    
 </script>
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    const chatInput =
+        document.getElementById('chatInput');
+
+    if (!chatInput) {
+        return;
+    }
+
+    chatInput.addEventListener('keydown', function(event) {
+
+        if (event.key === 'Enter') {
+
+            event.preventDefault();
+
+            sendChat();
+
+        }
+
+    });
+
+});
     
 <script src="auth.js">
     
 </script>
+    
 </body>
 </html>
