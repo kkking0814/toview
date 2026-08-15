@@ -789,6 +789,179 @@ function updateMyPick() {
         `홀짝 ${oddEvenText} · 언오버 ${underOverText}`;
 }
 
+async function loadPickStats() {
+
+    const pickRound =
+        document.getElementById('pickRound');
+
+    if (!pickRound) {
+        return;
+    }
+
+
+    const roundNumber =
+        Number(
+            pickRound.textContent
+                .replace(/[^0-9]/g, '')
+        );
+
+
+    // 아직 회차를 못 불러온 상태
+    if (
+        !Number.isInteger(roundNumber) ||
+        roundNumber <= 0
+    ) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `/api/picks/${roundNumber}/stats`
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok || !data.ok) {
+
+            console.error(
+                'PICK 통계 불러오기 실패:',
+                data
+            );
+
+            return;
+        }
+
+
+        // ==============================
+        // 참여자 수
+        // ==============================
+
+        const oddEvenParticipants =
+            document.getElementById(
+                'oddEvenParticipants'
+            );
+
+        const underOverParticipants =
+            document.getElementById(
+                'underOverParticipants'
+            );
+
+
+        if (oddEvenParticipants) {
+
+            oddEvenParticipants.textContent =
+                `참여 ${data.participants}명`;
+
+        }
+
+
+        if (underOverParticipants) {
+
+            underOverParticipants.textContent =
+                `참여 ${data.participants}명`;
+
+        }
+
+
+        // ==============================
+        // 홀 / 짝 %
+        // ==============================
+
+        const oddPercent =
+            document.getElementById('oddPercent');
+
+        const evenPercent =
+            document.getElementById('evenPercent');
+
+        const oddBar =
+            document.getElementById('oddBar');
+
+
+        if (oddPercent) {
+
+            oddPercent.textContent =
+                data.oddEven.oddPercent + '%';
+
+        }
+
+
+        if (evenPercent) {
+
+            evenPercent.textContent =
+                data.oddEven.evenPercent + '%';
+
+        }
+
+
+        if (oddBar) {
+
+            oddBar.style.width =
+                data.oddEven.oddPercent + '%';
+
+        }
+
+
+        // ==============================
+        // 언더 / 오버 %
+        // ==============================
+
+        const underPercent =
+            document.getElementById(
+                'underPercent'
+            );
+
+        const overPercent =
+            document.getElementById(
+                'overPercent'
+            );
+
+        const underBar =
+            document.getElementById(
+                'underBar'
+            );
+
+
+        if (underPercent) {
+
+            underPercent.textContent =
+                data.underOver.underPercent + '%';
+
+        }
+
+
+        if (overPercent) {
+
+            overPercent.textContent =
+                data.underOver.overPercent + '%';
+
+        }
+
+
+        if (underBar) {
+
+            underBar.style.width =
+                data.underOver.underPercent + '%';
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            'PICK 통계 서버 연결 오류:',
+            error
+        );
+
+    }
+
+}
+    
 async function submitPick() {
 
     // 홀짝 / 언오버 모두 선택했는지 확인
