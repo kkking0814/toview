@@ -1,176 +1,167 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>대시보드 | TOVIEW</title><style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,'Noto Sans KR',sans-serif;background:#07101f;color:#eef4ff}button,input{font:inherit}a{color:inherit;text-decoration:none}.top{position:sticky;top:0;z-index:10;background:#08111fee;border-bottom:1px solid #24324a;backdrop-filter:blur(10px)}.bar{max-width:1200px;margin:auto;height:68px;display:flex;align-items:center;gap:26px;padding:0 18px}.logo{font-size:26px;font-weight:900}.logo b{color:#4f9cff}.badge{font-size:10px;background:#15345e;color:#8fc3ff;padding:3px 6px;border-radius:5px}.nav{display:flex;gap:18px;color:#aebbd1;font-size:14px}.nav a:hover{color:#fff}.login{margin-left:auto;background:#2563eb;color:#fff;border:0;padding:10px 16px;border-radius:9px;cursor:pointer}.wrap{max-width:1200px;margin:22px auto;padding:0 18px}.notice{padding:11px 14px;background:#0c1a30;border:1px solid #213655;border-radius:10px;color:#9fb3d2;font-size:13px;margin-bottom:16px}.hero{display:grid;grid-template-columns:1.55fr 1fr;gap:18px}.card{background:#0e192b;border:1px solid #22334e;border-radius:14px;overflow:hidden}.head{padding:14px 16px;border-bottom:1px solid #22334e;font-weight:700;display:flex;justify-content:space-between;align-items:center}.sub{font-size:12px;color:#8294b1}.live{padding:23px;text-align:center}.round{color:#92a4c2;font-size:14px}.timer{font-size:42px;font-weight:900;margin:8px}.balls{display:flex;justify-content:center;gap:9px;margin:20px 0}.ball{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#334155;font-weight:900;box-shadow:inset 0 -5px 10px #0003}.power{background:#2563eb}.tags{display:flex;justify-content:center;gap:7px;flex-wrap:wrap}.tag{padding:7px 11px;border-radius:20px;background:#17243a;font-size:13px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}.stat{background:#091426;border-radius:10px;padding:15px;color:#9badc9}.stat strong{display:block;font-size:25px;color:#fff;margin-top:5px}.grid{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-top:18px}.table{width:100%;border-collapse:collapse;font-size:13px}.table th,.table td{padding:11px;text-align:center;border-bottom:1px solid #1c2a40}.table th{color:#899ab6;background:#091426}.blue{color:#60a5fa}.red{color:#fb7185}.sideitem{padding:13px 16px;border-bottom:1px solid #1c2a40;font-size:14px;cursor:pointer}.sideitem:hover{background:#132039}.pattern{padding:16px}.patternrow{display:flex;gap:5px;flex-wrap:wrap;margin:9px 0}.dot{min-width:28px;height:28px;border-radius:6px;background:#2563eb;display:grid;place-items:center;font-size:11px}.dot.r{background:#d9465f}.status{display:inline-flex;align-items:center;gap:6px}.pulse{width:8px;height:8px;border-radius:50%;background:#22c55e}.foot{text-align:center;color:#63748f;padding:35px;font-size:12px}.modal{display:none;position:fixed;inset:0;background:#0009;z-index:20;place-items:center}.modal.on{display:grid}.modalbox{width:min(390px,90vw);background:#0e192b;border:1px solid #2b3d5c;border-radius:14px;padding:22px}.modalbox input{width:100%;margin:7px 0;padding:12px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff}.modalbox button{width:100%;margin-top:8px;padding:11px;border:0;border-radius:8px;background:#2563eb;color:#fff}.close{text-align:right;color:#93a4c0;cursor:pointer}.err{color:#fda4af;font-size:12px;margin-top:10px}.apiok{color:#86efac}.apifail{color:#fbbf24}body.light{background:#eef3f9;color:#172033}body.light .top{background:#ffffffee}body.light .card,body.light .modalbox{background:#fff;border-color:#d5deea}body.light .notice,body.light .stat,body.light .table th,body.light .modalbox input{background:#f5f8fc;color:#334155}body.light .head,body.light .table th,body.light .table td,body.light .sideitem{border-color:#e2e8f0}body.light .stat strong{color:#172033}body.light .nav{color:#64748b}body.light .nav a:hover{color:#111827}@media(max-width:800px){.nav{display:none}.hero,.grid{grid-template-columns:1fr}.balls{gap:5px}.ball{width:40px;height:40px}.timer{font-size:34px}.table th:nth-child(2),.table td:nth-child(2){font-size:11px}}
-</style>
-
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>대시보드 | TOVIEW</title>
 <link rel="stylesheet" href="common.css">
-
+<style>
+body{margin:0;font-family:Arial,"Noto Sans KR",sans-serif;background:#07101f;color:#eef4ff}
+.dashboard-wrap{max-width:1200px;margin:22px auto;padding:0 18px 50px}
+.dashboard-title{margin-bottom:16px}.dashboard-title small{color:#5b9dff;font-size:10px;font-weight:900;letter-spacing:1.4px}.dashboard-title h1{margin:5px 0 3px;font-size:25px}.dashboard-title p{margin:0;color:#7185a5;font-size:11px}
+.dashboard-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:16px}
+.card{background:#0e192b;border:1px solid #22334e;border-radius:12px;overflow:hidden}
+.head{padding:14px 16px;border-bottom:1px solid #22334e;font-weight:800;display:flex;justify-content:space-between;align-items:center}.head span{color:#657895;font-size:9px}
+.sideitem{padding:14px 16px;border-bottom:1px solid #1c2a40;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px}.sideitem:last-child{border-bottom:0}.sideitem:hover{background:#132039}.sideitem small{color:#657895}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px}.stat{background:#091426;border:1px solid #1c304c;border-radius:9px;padding:14px;color:#7185a5;font-size:10px}.stat strong{display:block;font-size:20px;color:#fff;margin-top:5px}
+.game-card{margin-top:16px}.game-status{padding:16px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.game-stat{padding:12px;background:#091426;border:1px solid #1c304c;border-radius:8px;color:#7185a5;font-size:10px}.game-stat b{display:block;margin-top:4px;color:#fff;font-size:15px;font-variant-numeric:tabular-nums}
+.actions{display:flex;gap:8px;padding:0 16px 16px}.actions a,.actions button{flex:1;height:40px;border:1px solid #2b3d5c;border-radius:8px;background:#101c30;color:#d7e1ef;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;cursor:pointer}.actions .primary{border-color:#3b82f6;background:#2563eb;color:#fff}
+.login-required{padding:20px;color:#8fa4c4;font-size:12px;line-height:1.7}.login-required a{color:#60a5fa;font-weight:800}
+.foot{text-align:center;color:#52627a;padding:28px;font-size:10px}
+@media(max-width:850px){.dashboard-grid{grid-template-columns:1fr}.game-status{grid-template-columns:1fr 1fr}}
+</style>
 </head>
 <body>
 
 <header class="top">
-    <div class="bar">
-
-        <a href="index.html" class="brand">
-            <div class="brand-mark">T</div>
-            <div class="brand-name">
-                <strong>TO<span>VIEW</span></strong>
-                <small>DATA & COMMUNITY</small>
-            </div>
-        </a>
-
-        <nav class="nav">
-            <a href="index.html">실시간</a>
-            <a href="results.html">결과</a>
-            <a href="analysis.html">분석</a>
-            <a href="pattern.html">패턴</a>
-            <a href="community.html">커뮤니티</a>
-            <a href="dashboard.html">대시보드</a>
-        </nav>
-
-        <button class="menu-btn" type="button" onclick="openMainMenu()">
-            <span class="menu-icon">☰</span>
-            <span>전체메뉴</span>
-        </button>
-
-        <button class="login"
-                id="loginBtn"
-                onclick="location.href='account.html'">
-            로그인
-        </button>
-
-    </div>
-</header>  
+<div class="bar">
+<a href="index.html" class="brand"><div class="brand-mark">T</div><div class="brand-name"><strong>TO<span>VIEW</span></strong><small>DATA & COMMUNITY</small></div></a>
+<nav class="nav"><a href="index.html#live">실시간</a><a href="results.html">결과</a><a href="analysis.html">분석</a><a href="pattern.html">패턴</a><a href="community.html">커뮤니티</a><a href="dashboard.html">대시보드</a></nav>
+<button class="menu-btn" type="button" onclick="openMainMenu()"><span class="menu-icon">☰</span><span>전체메뉴</span></button>
+<button id="loginBtn" type="button" onclick="location.href='account.html'">로그인</button>
+<button id="userBtn" type="button" hidden onclick="location.href='dashboard.html'">내 계정</button>
+</div>
+</header>
 
 <div class="menu-overlay" id="mainMenuOverlay" onclick="closeMainMenu(event)">
-
-    <div class="menu-panel">
-
-        <div class="menu-panel-top">
-            <div>
-                <strong>전체 메뉴</strong>
-                <span>TOVIEW SERVICE</span>
-            </div>
-
-            <button type="button" class="menu-close" onclick="closeMainMenu()">
-                ✕
-            </button>
-        </div>
-
-        <div class="menu-sections">
-
-            <div class="menu-section">
-                <div class="menu-section-title">GAME</div>
-
-                <a href="index.html#live">
-                    <b>실시간 게임</b>
-                    <span>실시간 회차 및 결과</span>
-                </a>
-
-                <a href="results.html">
-                    <b>게임 결과</b>
-                    <span>최근 회차 결과 조회</span>
-                </a>
-
-                <a href="pattern.html">
-                    <b>패턴 분석</b>
-                    <span>결과 흐름 및 패턴</span>
-                </a>
-            </div>
-
-            <div class="menu-section">
-                <div class="menu-section-title">ANALYSIS</div>
-
-                <a href="analysis.html#daily">
-                    <b>일별 분석</b>
-                    <span>날짜별 데이터 분석</span>
-                </a>
-
-                <a href="analysis.html#range">
-                    <b>구간 분석</b>
-                    <span>구간별 결과 통계</span>
-                </a>
-
-                <a href="analysis.html#round">
-                    <b>회차 분석</b>
-                    <span>회차별 상세 데이터</span>
-                </a>
-            </div>
-
-            <div class="menu-section">
-                <div class="menu-section-title">COMMUNITY</div>
-
-                <a href="community.html?board=자유게시판">
-                    <b>자유게시판</b>
-                    <span>자유로운 커뮤니티</span>
-                </a>
-
-                <a href="community.html?board=분석%20토론">
-                    <b>분석 토론</b>
-                    <span>데이터 및 분석 토론</span>
-                </a>
-
-                <a href="community.html#rank">
-                    <b>활동 랭킹</b>
-                    <span>회원 활동 순위</span>
-                </a>
-            </div>
-
-            <div class="menu-section">
-                <div class="menu-section-title">MY TOVIEW</div>
-
-                <a href="dashboard.html">
-                    <b>대시보드</b>
-                    <span>내 활동 한눈에 보기</span>
-                </a>
-
-                <a href="javascript:void(0)" onclick="openAlerts(); closeMainMenu();">
-                    <b>알림센터</b>
-                    <span>새로운 알림 확인</span>
-                </a>
-
-                <a href="javascript:void(0)" onclick="document.getElementById('loginBtn').click(); closeMainMenu();">
-                    <b>내 계정</b>
-                    <span>로그인 및 계정 관리</span>
-                </a>
-            </div>
-
-        </div>
-
-        <div class="menu-panel-bottom">
-            TOVIEW · DATA & COMMUNITY PLATFORM
-        </div>
-
-    </div>
-
+<div class="menu-panel">
+<div class="menu-panel-top"><div><strong>전체 메뉴</strong><span>TOVIEW SERVICE</span></div><button type="button" class="menu-close" onclick="closeMainMenu()">✕</button></div>
+<div class="menu-sections">
+<div class="menu-section"><div class="menu-section-title">GAME</div><a href="index.html#live"><b>실시간 게임</b><span>실시간 회차 및 결과</span></a><a href="results.html"><b>게임 결과</b><span>최근 회차 결과 조회</span></a><a href="pattern.html"><b>패턴 분석</b><span>결과 흐름 및 패턴</span></a></div>
+<div class="menu-section"><div class="menu-section-title">ANALYSIS</div><a href="analysis.html#daily"><b>일별 분석</b><span>날짜별 데이터 분석</span></a><a href="analysis.html#range"><b>구간 분석</b><span>구간별 결과 통계</span></a><a href="analysis.html#round"><b>회차 분석</b><span>회차별 상세 데이터</span></a></div>
+<div class="menu-section"><div class="menu-section-title">COMMUNITY</div><a href="community.html?board=자유게시판"><b>자유게시판</b><span>자유로운 커뮤니티</span></a><a href="community.html?board=분석%20토론"><b>분석 토론</b><span>데이터 및 분석 토론</span></a><a href="community.html#rank"><b>활동 랭킹</b><span>회원 활동 순위</span></a></div>
+<div class="menu-section"><div class="menu-section-title">MY TOVIEW</div><a href="dashboard.html"><b>대시보드</b><span>내 활동 한눈에 보기</span></a><a href="javascript:void(0)" onclick="openAlerts();closeMainMenu();"><b>알림센터</b><span>새로운 알림 확인</span></a><a href="account.html"><b>내 계정</b><span>로그인 및 계정 관리</span></a></div>
 </div>
-  
-<main class="wrap"><div class="hero"><div class="card"><div class="head">내 대시보드</div><div class="sideitem" onclick="fav()">⭐ <span id="favText">즐겨찾기</span></div><div class="sideitem" onclick="location.href='results.html'">📋 최근 결과 보기</div><div class="sideitem" onclick="location.href='community.html'">💬 내가 쓰는 커뮤니티</div></div><div class="card"><div class="head">계정</div><div class="stats"><div class="stat">로그인 사용자<strong id="who">비회원</strong></div><div class="stat">내 게시글<strong id="cnt">0</strong></div></div></div></div></main><footer class="foot">TOVIEW V7 · 페이지 이동형 프로토타입 · © 2026 TOVIEW</footer><script>function r(){let u=localStorage.getItem('toviewUser');who.textContent=u||'비회원';let a=JSON.parse(localStorage.getItem('toviewPosts')||'[]');cnt.textContent=u?a.filter(x=>x.user===u).length:0;favText.textContent=localStorage.getItem('toviewFav')==='1'?'실시간 결과 즐겨찾기됨':'실시간 결과 즐겨찾기'}function fav(){localStorage.setItem('toviewFav',localStorage.getItem('toviewFav')==='1'?'0':'1');r()}r()
-</script>
+<div class="menu-panel-bottom">TOVIEW · DATA & COMMUNITY PLATFORM</div>
+</div>
+</div>
 
-<script>
-function openMainMenu() {
-    const menu = document.getElementById('mainMenuOverlay');
+<main class="dashboard-wrap">
+<div class="dashboard-title"><small>MY TOVIEW</small><h1>대시보드</h1><p>계정과 TOVIEW 활동을 한곳에서 확인합니다.</p></div>
 
-    if (!menu) return;
+<div class="dashboard-grid">
+<section class="card">
+<div class="head">내 TOVIEW <span>QUICK MENU</span></div>
+<div class="sideitem" id="favoriteItem" onclick="toggleFavorite()"><span>⭐ <b id="favText">실시간 결과 즐겨찾기</b></span><small id="favState">OFF</small></div>
+<div class="sideitem" onclick="location.href='results.html'"><span>📋 최근 결과 보기</span><small>RESULTS</small></div>
+<div class="sideitem" onclick="location.href='community.html'"><span>💬 커뮤니티</span><small>COMMUNITY</small></div>
+<div class="sideitem" onclick="location.href='analysis.html'"><span>📊 데이터 분석</span><small>ANALYSIS</small></div>
+</section>
 
-    menu.classList.add('on');
-    document.body.style.overflow = 'hidden';
-}
+<section class="card">
+<div class="head">계정 <span>ACCOUNT</span></div>
+<div id="accountStats" class="stats">
+<div class="stat">로그인 사용자<strong id="who">확인 중</strong></div>
+<div class="stat">계정 상태<strong id="accountState">-</strong></div>
+</div>
+<div class="actions" id="accountActions">
+<a href="account.html" id="accountLink">계정</a>
+<button type="button" id="logoutBtn" onclick="logoutUser()" style="display:none">로그아웃</button>
+</div>
+</section>
+</div>
 
-function closeMainMenu(event) {
-    const menu = document.getElementById('mainMenuOverlay');
+<section class="card game-card">
+<div class="head">동행파워볼(랜덤볼) <span>LIVE GAME STATE</span></div>
+<div class="game-status">
+<div class="game-stat">현재 회차<b id="currentRound">-</b></div>
+<div class="game-stat">남은 시간<b id="remaining">--:--</b></div>
+<div class="game-stat">최근 확정<b id="lastRound">-</b></div>
+<div class="game-stat">데이터 상태<b id="dataSource">확인 중</b></div>
+</div>
+<div class="actions">
+<a class="primary" href="results.html?game=dh_randomball">결과/PICK 보기</a>
+<a href="analysis.html">분석 보기</a>
+</div>
+</section>
+</main>
 
-    if (!menu) return;
+<footer class="foot">TOVIEW · DATA & COMMUNITY PLATFORM · © 2026 TOVIEW</footer>
 
-    if (event && event.target !== menu) {
-        return;
-    }
-
-    menu.classList.remove('on');
-    document.body.style.overflow = '';
-}
-</script>
-  
 <script src="auth.js"></script>
+<script>
+(function(){
+'use strict';
+let state=null;
+const $=id=>document.getElementById(id);
+function mmss(s){s=Math.max(0,Number(s)||0);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+
+function renderFavorite(){
+ const on=localStorage.getItem('toviewFav')==='1';
+ $('favText').textContent=on?'실시간 결과 즐겨찾기됨':'실시간 결과 즐겨찾기';
+ $('favState').textContent=on?'ON':'OFF';
+}
+window.toggleFavorite=function(){
+ localStorage.setItem('toviewFav',localStorage.getItem('toviewFav')==='1'?'0':'1');
+ renderFavorite();
+};
+
+async function loadAccount(){
+ try{
+  const r=await fetch('/api/me',{credentials:'include',cache:'no-store'});
+  if(r.status===401||r.status===403){
+    $('who').textContent='비회원'; $('accountState').textContent='로그인 필요';
+    $('accountLink').textContent='로그인'; $('accountLink').href='account.html?next='+encodeURIComponent(location.pathname);
+    $('logoutBtn').style.display='none'; return;
+  }
+  if(!r.ok)throw new Error('회원정보 확인 실패');
+  const u=await r.json();
+  if(u?.username){
+    $('who').textContent=u.nickname||u.username;
+    $('accountState').textContent='로그인';
+    $('accountLink').textContent='내 계정';
+    $('accountLink').href='account.html';
+    $('logoutBtn').style.display='';
+  }else{
+    $('who').textContent='비회원'; $('accountState').textContent='로그인 필요';
+  }
+ }catch(e){
+  console.error('대시보드 계정 오류:',e);
+  $('who').textContent='확인 실패'; $('accountState').textContent='서버 오류';
+ }
+}
+
+async function loadGameState(){
+ try{
+  const r=await fetch('/api/game-state/dh_randomball',{credentials:'include',cache:'no-store'});
+  const d=await r.json(); if(!r.ok)throw new Error(d.error||'게임 상태 요청 실패');
+  state=d;
+  $('currentRound').textContent=(d.currentRound||'-')+'회차';
+  $('remaining').textContent=mmss(d.remainingSeconds);
+  $('lastRound').textContent=d.lastCompletedRound?(d.lastCompletedRound+'회차'):'-';
+  $('dataSource').textContent=d.ok?(d.source||'LIVE'):'연결 대기';
+ }catch(e){
+  console.error('대시보드 게임 상태 오류:',e);
+  $('dataSource').textContent='연결 오류';
+ }
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+ renderFavorite(); loadAccount(); loadGameState();
+ setInterval(loadGameState,5000);
+ setInterval(function(){
+  if(!state)return;
+  state.remainingSeconds=Math.max(0,state.remainingSeconds-1);
+  $('remaining').textContent=mmss(state.remainingSeconds);
+  if(state.remainingSeconds===0)loadGameState();
+ },1000);
+});
+})();
+
+function openMainMenu(){const m=document.getElementById('mainMenuOverlay');if(!m)return;m.classList.add('on');document.body.style.overflow='hidden'}
+function closeMainMenu(e){const m=document.getElementById('mainMenuOverlay');if(!m)return;if(e&&e.target!==m)return;m.classList.remove('on');document.body.style.overflow=''}
+function openAlerts(){alert('알림센터는 준비 중입니다.')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMainMenu()});
+</script>
 </body>
 </html>
