@@ -1097,6 +1097,145 @@ app.post('/api/picks', async (req, res) => {
 });
 
 // ========================================
+// TOVIEW MEMBER PICK 회차별 통계
+// ========================================
+
+app.get('/api/picks/:round/stats', async (req, res) => {
+
+    try {
+
+        const roundNumber =
+            Number(req.params.round);
+
+
+        // 회차 검증
+        if (
+            !Number.isInteger(roundNumber) ||
+            roundNumber <= 0
+        ) {
+
+            return res.status(400).json({
+                error: '올바른 회차가 아닙니다.'
+            });
+
+        }
+
+
+        // 해당 회차 PICK 집계
+        const result = await pool.query(
+            `
+            SELECT
+
+                COUNT(*)::int AS total,
+
+                COUNT(*) FILTER (
+                    WHERE odd_even = 'odd'
+                )::int AS odd,
+
+                COUNT(*) FILTER (
+                    WHERE odd_even = 'even'
+                )::int AS even,
+
+                COUNT(*) FILTER (
+                    WHERE under_over = 'under'
+                )::int AS under,
+
+                COUNT(*) FILTER (
+                    WHERE under_over = 'over'
+                )::int AS over
+
+            FROM member_picks
+
+            WHERE round_number = $1
+            `,
+            [roundNumber]
+        );
+
+
+        const stats = result.rows[0];
+
+
+        const total =
+            Number(stats.total) || 0;
+
+        const odd =
+            Number(stats.odd) || 0;
+
+        const even =
+            Number(stats.even) || 0;
+
+        const under =
+            Number(stats.under) || 0;
+
+        const over =
+            Number(stats.over) || 0;
+
+
+        // 퍼센트 계산
+        const oddPercent =
+            total > 0
+                ? Math.round((odd / total) * 100)
+                : 50;
+
+        const evenPercent =
+            total > 0
+                ? 100 - oddPercent
+                : 50;
+
+
+        const underPercent =
+            total > 0
+                ? Math.round((under / total) * 100)
+                : 50;
+
+        const overPercent =
+            total > 0
+                ? 100 - underPercent
+                : 50;
+
+
+        return res.json({
+
+            ok: true,
+
+            roundNumber: roundNumber,
+
+            participants: total,
+
+            oddEven: {
+                odd: odd,
+                even: even,
+                oddPercent: oddPercent,
+                evenPercent: evenPercent
+            },
+
+            underOver: {
+                under: under,
+                over: over,
+                underPercent: underPercent,
+                overPercent: overPercent
+            }
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            'PICK 통계 조회 오류:',
+            error
+        );
+
+
+        return res.status(500).json({
+            error: 'PICK 통계를 불러오지 못했습니다.'
+        });
+
+    }
+
+});
+
+// ========================================
 // TOVIEW GAME DATA API
 // ========================================
 
