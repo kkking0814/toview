@@ -629,6 +629,81 @@ function changeGame(game, button) {
     console.log('선택 게임:', game);
 }
 
+async function loadPowerballLive() {
+
+    try {
+
+        const response =
+            await fetch('/api/games/powerball/live');
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok || !data.ok) {
+
+            console.error(
+                '파워볼 LIVE 불러오기 실패:',
+                data
+            );
+
+            return;
+        }
+
+
+        const roundNumber =
+            Number(data.roundNumber);
+
+
+        if (
+            !Number.isInteger(roundNumber) ||
+            roundNumber <= 0
+        ) {
+
+            console.error(
+                '잘못된 회차 정보:',
+                data.roundNumber
+            );
+
+            return;
+        }
+
+
+        // LIVE 화면 회차 표시
+        const liveRound =
+            document.getElementById('liveRound');
+
+        if (liveRound) {
+
+            liveRound.textContent =
+                roundNumber + '회차';
+
+        }
+
+
+        // PICK 화면 회차 표시
+        const pickRound =
+            document.getElementById('pickRound');
+
+        if (pickRound) {
+
+            pickRound.textContent =
+                roundNumber;
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            '파워볼 LIVE 서버 연결 오류:',
+            error
+        );
+
+    }
+
+}
+    
 function syncPickRound() {
 
     // 게임 화면에 표시되는 실제 회차
@@ -1075,6 +1150,21 @@ document.addEventListener('DOMContentLoaded', function() {
 // 공용 채팅 자동 불러오기
 // ========================================
 
+// ========================================
+// 실제 파워볼 LIVE 데이터
+// ========================================
+
+// 페이지 접속 즉시 불러오기
+loadPowerballLive();
+
+
+// 5초마다 최신 회차 확인
+setInterval(function() {
+
+    loadPowerballLive();
+
+}, 5000);
+    
 // 페이지 접속 즉시 채팅 불러오기
 loadChat();
 
