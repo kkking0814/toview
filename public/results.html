@@ -631,45 +631,30 @@ function changeGame(game, button) {
 
 function syncPickRound() {
 
-    // 기존 파워볼 API가 실제 회차를 넣는 곳
-    const apiRound =
-        document.getElementById('round');
-
-    // 새 LIVE 화면 회차
+    // 게임 화면에 표시되는 실제 회차
     const liveRound =
         document.getElementById('liveRound');
 
-    // MEMBER PICK 회차
+    // MEMBER PICK에 표시할 회차
     const pickRound =
         document.getElementById('pickRound');
 
-
-    if (!apiRound || !pickRound) {
+    if (!liveRound || !pickRound) {
         return;
     }
 
-
-    // 기존 API 회차에서 숫자만 가져오기
+    // liveRound에서 숫자만 추출
     const roundNumber =
-        String(apiRound.textContent || '')
+        String(liveRound.textContent || '')
             .replace(/[^0-9]/g, '');
 
-
-    // API 회차가 아직 없으면 중단
+    // 아직 "회차 확인 중"이면 숫자가 없으므로 기다림
     if (!roundNumber) {
         return;
     }
 
-
-    // PICK 회차 넣기
+    // PICK 영역에 같은 회차 표시
     pickRound.textContent = roundNumber;
-
-
-    // 새 LIVE 화면에도 같은 회차 표시
-    if (liveRound) {
-        liveRound.textContent =
-            roundNumber + '회차';
-    }
 }
 
 const currentPick = {
