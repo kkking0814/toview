@@ -631,44 +631,46 @@ function changeGame(game, button) {
 
 function syncPickRound() {
 
+    // 기존 파워볼 API가 실제 회차를 넣는 곳
+    const apiRound =
+        document.getElementById('round');
+
+    // 새 LIVE 화면 회차
     const liveRound =
         document.getElementById('liveRound');
 
+    // MEMBER PICK 회차
     const pickRound =
         document.getElementById('pickRound');
 
-    if (!liveRound || !pickRound) {
+
+    if (!apiRound || !pickRound) {
         return;
     }
 
 
-    // LIVE 영역에서 숫자만 추출
+    // 기존 API 회차에서 숫자만 가져오기
     const roundNumber =
-        String(liveRound.textContent)
+        String(apiRound.textContent || '')
             .replace(/[^0-9]/g, '');
 
 
-    // 아직 회차 정보가 없으면 변경하지 않음
+    // API 회차가 아직 없으면 중단
     if (!roundNumber) {
         return;
     }
 
 
+    // PICK 회차 넣기
     pickRound.textContent = roundNumber;
+
+
+    // 새 LIVE 화면에도 같은 회차 표시
+    if (liveRound) {
+        liveRound.textContent =
+            roundNumber + '회차';
+    }
 }
-
-// LIVE 회차와 PICK 회차 자동 동기화
-setInterval(function() {
-
-    syncPickRound();
-
-}, 1000);
-    
-const currentPick = {
-    oddEven: null,
-    underOver: null
-};
-
 
 function selectPick(button) {
 
