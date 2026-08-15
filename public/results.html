@@ -166,47 +166,47 @@
 
         <button
             class="game-tab active"
-            data-game="powerball"
+            data-game="dh_randomball"
             onclick="changeGame('powerball', this)"
         >
-            <strong>파워볼</strong>
-            <small>POWERBALL</small>
+            <strong>동행파워볼(랜덤볼)</strong>
+            <small>RANDOM BALL</small>
         </button>
 
         <button
             class="game-tab"
-            data-game="ladder"
+            data-game="dh_speedkeno"
             onclick="changeGame('ladder', this)"
         >
-            <strong>사다리</strong>
-            <small>LADDER</small>
+            <strong>동행스피드키노</strong>
+            <small>DONGHAENG SPEED KENO</small>
         </button>
 
         <button
             class="game-tab"
-            data-game="eos"
+            data-game="speedkeno_ladder"
             onclick="changeGame('eos', this)"
         >
-            <strong>EOS 파워볼</strong>
-            <small>EOS POWERBALL</small>
+            <strong>스피드키노사다리</strong>
+            <small>SPEED KENO LADDER</small>
         </button>
 
         <button
             class="game-tab"
-            data-game="speedkeno"
+            data-game="bubble_powerball"
             onclick="changeGame('speedkeno', this)"
         >
-            <strong>스피드키노</strong>
-            <small>SPEED KENO</small>
+            <strong>보글파워볼</strong>
+            <small>BOGGLE POWERBALL</small>
         </button>
 
         <button
             class="game-tab"
-            data-game="kenoladder"
+            data-game="bubble_ladder"
             onclick="changeGame('kenoladder', this)"
         >
-            <strong>키노사다리</strong>
-            <small>KENO LADDER</small>
+            <strong>보글사다리</strong>
+            <small>BOGGLE LADDER</small>
         </button>
 
         <button
@@ -233,7 +233,7 @@
 
         <div class="live-card-head">
             <div class="live-game-name">
-                <strong id="liveGameName">파워볼</strong>
+                <strong id="liveGameName">동행파워볼(랜덤볼)</strong>
                 <span class="live-badge">LIVE</span>
             </div>
 
@@ -253,7 +253,7 @@
                     <span id="previewPower">-</span>
                 </div>
 
-                <small>POWERBALL</small>
+                <small>RANDOM BALL</small>
 
                 <strong id="liveRound">
                     회차 확인 중
@@ -1368,202 +1368,48 @@ setInterval(function() {
 </script>
     
 
-<style id="toview-results-sync-v2">
-/* server.js 동기화 보정 */
-.live-center-grid{display:grid!important;grid-template-columns:minmax(0,2fr) minmax(320px,1fr)!important;gap:16px!important;align-items:stretch!important}
-.results-left-stack{display:grid;grid-template-rows:auto auto;gap:16px;min-width:0}
-.live-chat-card{height:100%!important;max-height:none!important;min-height:0!important;display:grid!important;grid-template-rows:auto auto minmax(0,1fr) auto!important}
-.chat-messages{min-height:0!important;overflow-y:auto!important}
-.game-video-area iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#07101f}
-.game-video-area{position:relative;overflow:hidden}
-.game-api-error{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:25px;color:#91a5c2;background:#07101f}
-.game-api-error strong{display:block;color:#fff;margin-bottom:7px}
-.game-tab.api-error{opacity:.72}
+<style id="toview-results-sync-v5">
+.live-center-grid{display:grid!important;grid-template-columns:minmax(0,2fr) minmax(320px,1fr)!important;gap:16px!important;align-items:stretch}
+.results-left-stack{display:grid;grid-template-rows:auto auto;gap:16px;min-width:0}.live-chat-card{height:100%!important;min-height:0!important;display:grid!important;grid-template-rows:auto auto minmax(0,1fr) auto!important}.chat-messages{min-height:0!important;overflow:auto!important}
+.game-video-area{position:relative;overflow:hidden;background:radial-gradient(circle at 50% 42%,#12345b,#06101e 72%)}
+.tv-stage{position:absolute;inset:0;overflow:hidden;display:grid;place-items:center}.tv-water{position:absolute;top:14px;left:16px;color:#5aa5ff;font-size:11px;font-weight:900;letter-spacing:1px}.tv-live{position:absolute;top:12px;right:14px;background:#e83242;padding:5px 8px;border-radius:5px;font-size:10px;font-weight:900}
+.tv-machine{width:min(300px,58%);aspect-ratio:1;border:12px solid #93c8e944;border-radius:50%;position:relative;box-shadow:0 0 55px #1377e655,inset 0 0 45px #0e6bb344}.tv-machine:after{content:"";position:absolute;inset:11%;border:2px solid #6bbdff55;border-radius:50%;animation:tvspin 6s linear infinite}
+.tv-ball{position:absolute;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:900;box-shadow:inset 0 -6px 10px #0005;animation:tvfloat 2.2s ease-in-out infinite}.tv-ball:nth-child(1){left:22%;top:58%;background:#e7a91c}.tv-ball:nth-child(2){left:40%;top:67%;background:#e53a48;animation-delay:.2s}.tv-ball:nth-child(3){left:60%;top:55%;background:#278a55;animation-delay:.4s}.tv-ball:nth-child(4){left:34%;top:39%;background:#2871d5;animation-delay:.6s}.tv-ball:nth-child(5){left:62%;top:34%;background:#8050b3;animation-delay:.8s}.tv-ball.power{left:46%;top:18%;background:#e32f40}
+.tv-ladder{width:min(520px,82%);height:78%;position:relative}.tv-v{position:absolute;top:7%;bottom:10%;width:4px;background:#7db8ed}.tv-v.a{left:28%}.tv-v.b{right:28%}.tv-h{position:absolute;left:28%;right:28%;height:4px;background:#5ca7e9}.tv-h.h1{top:25%}.tv-h.h2{top:43%}.tv-h.h3{top:61%}.tv-h.h4{top:78%}.tv-run{position:absolute;width:18px;height:18px;border-radius:50%;background:#ffd12d;box-shadow:0 0 18px #ffd12d;left:calc(28% - 7px);top:6%;animation:tvrun 4s ease-in-out infinite}
+.tv-caption{position:absolute;bottom:15px;left:10px;right:10px;text-align:center}.tv-caption strong{display:block;font-size:18px}.tv-caption span{font-size:11px;color:#86a0c0}.tv-error{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#8ca4c4}.tv-error strong{display:block;color:#fff;margin-bottom:8px}
+@keyframes tvspin{to{transform:rotate(360deg)}}@keyframes tvfloat{50%{transform:translate(8px,-12px) rotate(14deg)}}@keyframes tvrun{0%{left:calc(28% - 7px);top:6%}45%{left:calc(28% - 7px);top:43%}55%{left:calc(72% - 7px);top:43%}100%{left:calc(72% - 7px);top:86%}}
 @media(max-width:900px){.live-center-grid{grid-template-columns:1fr!important}.live-chat-card{height:500px!important}}
 </style>
 <script>
-/* =========================================================
-   TOVIEW RESULTS SYNC V2
-   게임 버튼 → server.js 게임 API → 실제 회차/중계/결과 → 게임별 PICK
-   ========================================================= */
 (function(){
-'use strict';
-
-const GAME={
- powerball:{name:'파워볼',eng:'POWERBALL',mode:'powerball'},
- ladder:{name:'사다리',eng:'LADDER',mode:'ladder'},
- eos:{name:'EOS 파워볼',eng:'EOS POWERBALL',mode:'powerball'},
- speedkeno:{name:'스피드키노',eng:'SPEED KENO',mode:'keno'},
- kenoladder:{name:'키노사다리',eng:'KENO LADDER',mode:'ladder'}
+const G={
+ dh_randomball:{name:'동행파워볼(랜덤볼)',eng:'RANDOM BALL',type:'powerball'},
+ dh_speedkeno:{name:'동행스피드키노',eng:'DONGHAENG SPEED KENO',type:'keno'},
+ speedkeno_ladder:{name:'스피드키노사다리',eng:'SPEED KENO LADDER',type:'ladder'},
+ bubble_powerball:{name:'보글파워볼',eng:'BOGGLE POWERBALL',type:'powerball',cycle:120},
+ bubble_ladder:{name:'보글사다리',eng:'BOGGLE LADDER',type:'ladder'}
 };
-let activeGame='powerball';
-let activeLive=null;
-let activeRecords=[];
-let syncPick={oddEven:null,underOver:null};
-
-const el=id=>document.getElementById(id);
-const safe=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-
-async function json(url,opt={}){
- const r=await fetch(url,{credentials:'include',...opt});
- let d={};try{d=await r.json()}catch{}
- if(!r.ok)throw Object.assign(new Error(d.error||('HTTP '+r.status)),{status:r.status,data:d});
- return d;
-}
-function fixLayout(){
- const grid=document.querySelector('.live-center-grid');
- const live=document.querySelector('.live-game-card');
- const chat=document.querySelector('.live-chat-card');
- const pick=document.querySelector('.pick-center');
- if(!grid||!live||!chat||!pick||grid.querySelector('.results-left-stack'))return;
- const left=document.createElement('div');left.className='results-left-stack';
- grid.insertBefore(left,live);left.appendChild(live);left.appendChild(pick);grid.appendChild(chat);
-}
-function gameTab(game){return document.querySelector('.game-tab[data-game="'+game+'"]')}
-function setText(id,v){const n=el(id);if(n)n.textContent=v}
-function setPickLabels(){
- const cfg=GAME[activeGame]; if(!cfg)return;
- const cats=document.querySelectorAll('.pick-category-title strong');
- if(cats[0])cats[0].textContent=cfg.mode==='ladder'?'사다리 결과 홀짝':cfg.mode==='keno'?'숫자합 홀짝':cfg.name+' 홀짝';
- if(cats[1])cats[1].textContent=cfg.mode==='ladder'?'출발 방향 (좌/우)':cfg.mode==='keno'?'숫자합 언더 / 오버':cfg.name+' 언더 / 오버';
- const u=document.querySelector('.pick-option[data-type="underOver"][data-value="under"]');
- const o=document.querySelector('.pick-option[data-type="underOver"][data-value="over"]');
- if(u){u.querySelector('strong').textContent=cfg.mode==='ladder'?'좌':'언더';u.querySelector('small').textContent=cfg.mode==='ladder'?'LEFT':'UNDER'}
- if(o){o.querySelector('strong').textContent=cfg.mode==='ladder'?'우':'오버';o.querySelector('small').textContent=cfg.mode==='ladder'?'RIGHT':'OVER'}
-}
-function clearPick(){
- syncPick={oddEven:null,underOver:null};
- if(window.currentPick){window.currentPick.oddEven=null;window.currentPick.underOver=null}
- document.querySelectorAll('.pick-option').forEach(b=>b.classList.remove('selected'));
- const t=el('myPickText');if(t)t.textContent='홀짝과 두 번째 PICK 항목을 선택해주세요.';
-}
-window.selectPick=function(button){
- const type=button.dataset.type,value=button.dataset.value;
- document.querySelectorAll('.pick-option[data-type="'+type+'"]').forEach(b=>b.classList.remove('selected'));
- button.classList.add('selected');syncPick[type]=value;
- const a=syncPick.oddEven==='odd'?'홀':syncPick.oddEven==='even'?'짝':'미선택';
- const cfg=GAME[activeGame], b=syncPick.underOver==='under'?(cfg.mode==='ladder'?'좌':'언더'):syncPick.underOver==='over'?(cfg.mode==='ladder'?'우':'오버'):'미선택';
- setText('myPickText','홀짝 '+a+' · '+(cfg.mode==='ladder'?'출발 ':'언오버 ')+b);
-};
-
-function renderVideo(url){
- const area=el('gameVideoArea');if(!area)return;
- if(!url){area.innerHTML='<div class="game-api-error"><div><strong>중계 URL 없음</strong><span>서버에서 중계 URL을 받지 못했습니다.</span></div></div>';return}
- area.innerHTML='<iframe src="'+safe(url)+'" title="'+safe(GAME[activeGame].name)+' LIVE" allow="autoplay; fullscreen" referrerpolicy="no-referrer-when-downgrade"></iframe>';
-}
-function renderLive(d){
- activeLive=d;
- setText('liveGameName',d.name||GAME[activeGame].name);
- setText('liveRound',(d.roundNumber||d.todayRound||'-')+'회차');
- setText('pickRound',d.roundNumber||d.todayRound||'---');
- const small=document.querySelector('.round-info-panel small');if(small)small.textContent=GAME[activeGame].eng;
- const x=d.data||d.result||{};
- const p=x.PowerBall??x.powerball??x.sourceFirstNumber??'-';setText('previewPower',p);
- renderVideo(d.videoUrl);
- const balls=el('liveResultBalls');if(balls){
-   if(activeGame==='powerball'||activeGame==='eos'){
-     const ns=[x.nBall1,x.nBall2,x.nBall3,x.nBall4,x.nBall5];
-     balls.innerHTML=ns.map(n=>'<span class="mini-ball">'+safe(n??'-')+'</span>').join('')+'<b>+</b><span class="mini-ball power-mini">'+safe(x.PowerBall??'-')+'</span>';
-   }else if(activeGame==='speedkeno'){
-     const ns=Array.isArray(x.numbers)?x.numbers.slice(0,10):[];
-     balls.innerHTML=(ns.length?ns.map(n=>'<span class="mini-ball">'+safe(n)+'</span>').join(''):'<span>결과 확인 중</span>');
-   }else{
-     const l=x.ladder||{};
-     balls.innerHTML='<span class="mini-ball">'+(l.start==='left'?'좌':'우')+'</span><span class="mini-ball">'+safe(l.lines||'-')+'줄</span><span class="mini-ball power-mini">'+(l.result==='odd'?'홀':'짝')+'</span>';
-   }
- }
- loadPickStats();
-}
-function renderApiError(error){
- const area=el('gameVideoArea');if(area)area.innerHTML='<div class="game-api-error"><div><strong>'+safe(GAME[activeGame].name)+' API 연결 실패</strong><span>'+safe(error.message||'외부 API를 확인해주세요.')+'</span></div></div>';
- setText('liveRound','연결 실패');setText('pickRound','---');
- gameTab(activeGame)?.classList.add('api-error');
-}
-async function loadGameLive(){
- try{
-   const d=await json('/api/games/'+activeGame+'/live');
-   gameTab(activeGame)?.classList.remove('api-error');renderLive(d);
- }catch(e){console.error(activeGame+' LIVE',e);renderApiError(e)}
-}
-window.loadPowerballLive=loadGameLive;
-
-async function loadGameResults(){
- try{
-  let d;
-  if(activeGame==='powerball')d=await json('/api/results');
-  else d=await json('/api/games/'+activeGame+'/results');
-  activeRecords=Array.isArray(d)?d:(Array.isArray(d.records)?d.records:[]);
-  renderResultTable();
- }catch(e){console.error('결과 API',e);activeRecords=[];renderResultTable()}
-}
-function recordOE(r){return (r.pOddEven??r.oddEven)===1?'홀':'짝'}
-function recordUO(r){return r.pUnderOver===1?'언더':'오버'}
-function renderResultTable(){
- const body=el('rows');if(!body)return;
- const q=String(el('q')?.value||'').trim(), f=el('f')?.value||'all';
- let arr=activeRecords.filter(r=>{
-   const round=String(r.Round??r.AllRound??'');
-   const oe=(r.pOddEven??r.oddEven)===1?'odd':'even';
-   return (!q||round.includes(q))&&(f==='all'||f===oe);
- }).slice(0,100);
- body.innerHTML=arr.map(r=>{
-   const round=r.AllRound??r.Round??'-';
-   if(activeGame==='powerball'||activeGame==='eos'){
-    const b=[r.nBall1,r.nBall2,r.nBall3,r.nBall4,r.nBall5].filter(v=>v!==undefined);
-    return '<tr><td>'+safe(round)+'</td><td>'+safe(b.join(' · '))+'</td><td>'+safe(r.nBallSum??'-')+'</td><td><b>'+safe(r.PowerBall??'-')+'</b></td><td>'+recordOE(r)+'</td><td>'+recordUO(r)+'</td></tr>';
-   }
-   if(activeGame==='speedkeno')return '<tr><td>'+safe(round)+'</td><td colspan="2">'+safe((r.numbers||[]).join(' · '))+'</td><td><b>'+safe(r.nBallSum??'-')+'</b></td><td>'+((r.oddEven===1)?'홀':'짝')+'</td><td>'+recordUO(r)+'</td></tr>';
-   const l=r.ladder||{};return '<tr><td>'+safe(round)+'</td><td colspan="2">출발 '+(l.start==='left'?'좌':'우')+'</td><td><b>'+safe(l.lines??'-')+'줄</b></td><td>'+(l.result==='odd'?'홀':'짝')+'</td><td>-</td></tr>';
- }).join('')||'<tr><td colspan="6">표시할 결과가 없습니다.</td></tr>';
- setText('state',arr.length+'개 표시');
-}
-if(el('q'))el('q').addEventListener('input',renderResultTable);
-if(el('f'))el('f').addEventListener('change',renderResultTable);
-
-window.loadPickStats=async function(){
- const round=Number(String(el('pickRound')?.textContent||'').replace(/\D/g,''));
- if(!round)return;
- try{
-  const d=await json('/api/picks/'+round+'/stats?game='+encodeURIComponent(activeGame));
-  setText('oddEvenParticipants','참여 '+d.participants+'명');setText('underOverParticipants','참여 '+d.participants+'명');
-  setText('oddPercent',d.oddEven.oddPercent+'%');setText('evenPercent',d.oddEven.evenPercent+'%');
-  setText('underPercent',d.underOver.underPercent+'%');setText('overPercent',d.underOver.overPercent+'%');
-  if(el('oddBar'))el('oddBar').style.width=d.oddEven.oddPercent+'%';
-  if(el('underBar'))el('underBar').style.width=d.underOver.underPercent+'%';
- }catch(e){console.warn('PICK stats',e)}
-};
-window.submitPick=async function(){
- const round=Number(String(el('pickRound')?.textContent||'').replace(/\D/g,''));
- if(!round)return alert('현재 회차를 먼저 불러와야 합니다.');
- if(!syncPick.oddEven||!syncPick.underOver)return alert('PICK 항목을 모두 선택해주세요.');
- const btn=el('pickSubmitBtn');if(btn){btn.disabled=true;btn.textContent='등록 중...'}
- try{
-  await json('/api/picks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gameId:activeGame,roundNumber:round,oddEven:syncPick.oddEven,underOver:syncPick.underOver})});
-  if(btn)btn.textContent='PICK 등록완료';await loadPickStats();alert('PICK이 등록되었습니다.');
- }catch(e){alert(e.status===401?'로그인 후 PICK을 등록할 수 있습니다.':e.message)}
- finally{if(btn){btn.disabled=false;if(btn.textContent!=='PICK 등록완료')btn.textContent='PICK 등록하기'}}
-};
-
-window.changeGame=async function(game,button){
- if(game==='more'){alert('추가 게임은 server.js에 API를 등록하면 같은 방식으로 연결됩니다.');return}
- if(!GAME[game])return;
- activeGame=game;document.querySelectorAll('.game-tab').forEach(b=>b.classList.remove('active'));button?.classList.add('active');
- clearPick();setPickLabels();setText('liveGameName',GAME[game].name);setText('liveRound','회차 확인 중');setText('pickRound','---');
- await Promise.allSettled([loadGameLive(),loadGameResults()]);
-};
-
-async function checkGames(){
- try{
-  const d=await json('/api/games');
-  (d.games||[]).forEach(g=>{const b=gameTab(g.id);if(b)b.title=g.enabled===false?'API 연결 준비 중':''});
- }catch(e){console.warn('/api/games',e)}
-}
-
-document.addEventListener('DOMContentLoaded',async()=>{
- fixLayout();setPickLabels();await checkGames();
- await Promise.allSettled([loadGameLive(),loadGameResults()]);
- setInterval(loadGameLive,5000);setInterval(loadGameResults,15000);
-});
+let game=(new URLSearchParams(location.search).get('game')||'dh_randomball'),live=null,recs=[],pick={oddEven:null,underOver:null};
+if(!G[game])game='dh_randomball';
+const $=id=>document.getElementById(id),safe=x=>String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+async function J(url,opt={}){const r=await fetch(url,{credentials:'include',...opt});let d={};try{d=await r.json()}catch{}if(!r.ok)throw Object.assign(new Error(d.error||`HTTP ${r.status}`),{status:r.status});return d}
+function layout(){const g=document.querySelector('.live-center-grid'),l=document.querySelector('.live-game-card'),p=document.querySelector('.pick-center'),c=document.querySelector('.live-chat-card');if(!g||!l||!p||!c||g.querySelector('.results-left-stack'))return;const w=document.createElement('div');w.className='results-left-stack';g.insertBefore(w,l);w.append(l,p);g.append(c)}
+function text(id,v){if($(id))$(id).textContent=v}
+function labels(){const cfg=G[game],heads=document.querySelectorAll('.pick-category-title strong');if(heads[0])heads[0].textContent=cfg.type==='ladder'?'결과 홀짝':cfg.name+' 홀짝';if(heads[1])heads[1].textContent=cfg.type==='ladder'?'출발 좌 / 우':cfg.name+' 언더 / 오버';const u=document.querySelector('[data-type="underOver"][data-value="under"]'),o=document.querySelector('[data-type="underOver"][data-value="over"]');if(u){u.querySelector('strong').textContent=cfg.type==='ladder'?'좌':'언더';u.querySelector('small').textContent=cfg.type==='ladder'?'LEFT':'UNDER'}if(o){o.querySelector('strong').textContent=cfg.type==='ladder'?'우':'오버';o.querySelector('small').textContent=cfg.type==='ladder'?'RIGHT':'OVER'}}
+function stage(d){const a=$('gameVideoArea'),x=d.data||{},cfg=G[game];if(!a)return;if(cfg.type==='ladder'){const l=x.ladder||{};a.innerHTML=`<div class="tv-stage"><b class="tv-water">TOVIEW LIVE</b><b class="tv-live">LIVE</b><div class="tv-ladder"><i class="tv-v a"></i><i class="tv-v b"></i><i class="tv-h h1"></i><i class="tv-h h2"></i><i class="tv-h h3"></i><i class="tv-h h4"></i><i class="tv-run"></i></div><div class="tv-caption"><strong>${safe(cfg.name)} 자체 중계</strong><span>${l.start==='left'?'좌':l.start==='right'?'우':'-'} · ${safe(l.lines||'-')}줄 · ${l.result==='odd'?'홀':l.result==='even'?'짝':'결과 대기'}</span></div></div>`}else{let ns=cfg.type==='keno'?(x.numbers||[]).slice(0,5):[x.nBall1,x.nBall2,x.nBall3,x.nBall4,x.nBall5];let power=cfg.type==='keno'?(x.numbers||[])[5]:x.PowerBall;a.innerHTML=`<div class="tv-stage"><b class="tv-water">TOVIEW LIVE</b><b class="tv-live">LIVE</b><div class="tv-machine">${ns.map(n=>`<i class="tv-ball">${safe(n??'?')}</i>`).join('')}<i class="tv-ball power">${safe(power??'?')}</i></div><div class="tv-caption"><strong>${safe(cfg.name)} 자체 중계</strong><span>실제 결과 데이터와 동기화되는 TOVIEW 애니메이션</span></div></div>`}}
+function show(d){live=d;const x=d.data||{},cfg=G[game];text('liveGameName',cfg.name);text('liveRound',(d.roundNumber||d.todayRound||'-')+'회차');text('pickRound',d.roundNumber||d.todayRound||'---');const sm=document.querySelector('.round-info-panel small');if(sm)sm.textContent=cfg.eng;text('previewPower',cfg.type==='ladder'?(x.ladder?.lines||'-'):(x.PowerBall??(x.numbers||[])[0]??'-'));stage(d);const b=$('liveResultBalls');if(b){if(cfg.type==='ladder'){const l=x.ladder||{};b.innerHTML=`<span class="mini-ball">${l.start==='left'?'좌':l.start==='right'?'우':'-'}</span><span class="mini-ball">${safe(l.lines||'-')}줄</span><span class="mini-ball power-mini">${l.result==='odd'?'홀':l.result==='even'?'짝':'-'}</span>`}else{const ns=cfg.type==='keno'?(x.numbers||[]).slice(0,5):[x.nBall1,x.nBall2,x.nBall3,x.nBall4,x.nBall5];const p=cfg.type==='keno'?(x.numbers||[])[5]:x.PowerBall;b.innerHTML=ns.map(n=>`<span class="mini-ball">${safe(n??'-')}</span>`).join('')+`<b>+</b><span class="mini-ball power-mini">${safe(p??'-')}</span>`}}stats()}
+function fail(e){const a=$('gameVideoArea');if(a)a.innerHTML=`<div class="tv-error"><div><strong>${safe(G[game].name)} 결과 데이터 연결 대기</strong><span>${safe(e.message)}</span></div></div>`;text('liveRound','연결 대기');text('pickRound','---')}
+async function liveLoad(){try{show(await J('/api/games/'+game+'/live'))}catch(e){console.error(e);fail(e)}}
+async function resultLoad(){try{const d=await J('/api/games/'+game+'/results');recs=d.records||[];renderRows()}catch(e){recs=[];renderRows()}}
+function renderRows(){const body=$('rows');if(!body)return;const cfg=G[game],q=String($('q')?.value||'');body.innerHTML=recs.filter(r=>!q||String(r.Round??r.AllRound).includes(q)).map(r=>{if(cfg.type==='ladder'){const l=r.ladder||{};return `<tr><td>${safe(r.AllRound??r.Round)}</td><td>${safe(r.Time||'-')}</td><td>${l.start==='left'?'좌':'우'}</td><td>${safe(l.lines)}줄</td><td>${l.result==='odd'?'홀':'짝'}</td><td>-</td></tr>`}const ns=cfg.type==='keno'?(r.numbers||[]):[r.nBall1,r.nBall2,r.nBall3,r.nBall4,r.nBall5];return `<tr><td>${safe(r.AllRound??r.Round)}</td><td>${safe(r.Time||'-')}</td><td>${safe(ns.slice(0,5).join(' · '))}</td><td>${safe(r.nBallSum??'-')}</td><td>${r.pOddEven===1?'홀':'짝'}</td><td>${r.pUnderOver===1?'언더':'오버'}</td></tr>`}).join('')||'<tr><td colspan="6">표시할 결과가 없습니다.</td></tr>'}
+window.selectPick=function(b){const t=b.dataset.type;document.querySelectorAll(`[data-type="${t}"]`).forEach(x=>x.classList.remove('selected'));b.classList.add('selected');pick[t]=b.dataset.value}
+async function stats(){const r=Number(String($('pickRound')?.textContent||'').replace(/\D/g,''));if(!r)return;try{const d=await J(`/api/picks/${r}/stats?game=${game}`);text('oddEvenParticipants','참여 '+d.participants+'명');text('underOverParticipants','참여 '+d.participants+'명');text('oddPercent',d.oddEven.oddPercent+'%');text('evenPercent',d.oddEven.evenPercent+'%');text('underPercent',d.underOver.underPercent+'%');text('overPercent',d.underOver.overPercent+'%');if($('oddBar'))$('oddBar').style.width=d.oddEven.oddPercent+'%';if($('underBar'))$('underBar').style.width=d.underOver.underPercent+'%'}catch{}}
+window.submitPick=async function(){const r=Number(String($('pickRound')?.textContent||'').replace(/\D/g,''));if(!r)return alert('현재 회차를 불러와주세요.');if(!pick.oddEven||!pick.underOver)return alert('PICK을 모두 선택해주세요.');try{await J('/api/picks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gameId:game,roundNumber:r,...pick})});alert('PICK이 등록되었습니다.');stats()}catch(e){alert(e.status===401?'로그인이 필요합니다.':e.message)}}
+window.changeGame=async function(id,b){if(id==='more')return;game=id;document.querySelectorAll('.game-tab').forEach(x=>x.classList.remove('active'));b?.classList.add('active');pick={oddEven:null,underOver:null};document.querySelectorAll('.pick-option').forEach(x=>x.classList.remove('selected'));labels();text('liveGameName',G[id].name);text('liveRound','회차 확인 중');await Promise.allSettled([liveLoad(),resultLoad()])}
+document.addEventListener('DOMContentLoaded',async()=>{layout();
+const initial=document.querySelector('.game-tab[data-game="'+game+'"]');
+document.querySelectorAll('.game-tab').forEach(x=>x.classList.remove('active'));if(initial)initial.classList.add('active');
+labels();await Promise.allSettled([liveLoad(),resultLoad()]);setInterval(liveLoad,5000);setInterval(resultLoad,15000)});
 })();
 </script>
 
