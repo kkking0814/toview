@@ -1380,8 +1380,26 @@ setInterval(function() {
 .tv-caption{position:absolute;bottom:15px;left:10px;right:10px;text-align:center}.tv-caption strong{display:block;font-size:18px}.tv-caption span{font-size:11px;color:#86a0c0}.tv-wait{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#8ca4c4}.tv-wait strong{display:block;color:#fff;margin-bottom:8px}
 @keyframes tvspin{to{transform:rotate(360deg)}}@keyframes tvfloat{50%{transform:translate(8px,-12px) rotate(14deg)}}@keyframes tvrun{0%{left:calc(28% - 7px);top:6%}45%{left:calc(28% - 7px);top:43%}55%{left:calc(72% - 7px);top:43%}100%{left:calc(72% - 7px);top:86%}}
 @media(max-width:900px){.live-center-grid{grid-template-columns:1fr!important}.live-chat-card{height:500px!important}}
+
+/* TOVIEW SIMPLE WAITING ANIMATION - 장식 전용, 데이터 로딩과 완전 분리 */
+.simple-wait{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden}
+.simple-wait-box{width:min(430px,88%);padding:22px 18px}
+.simple-wait-title{font-size:18px;font-weight:900;color:#f3f8ff;margin-bottom:7px}
+.simple-wait-sub{font-size:12px;color:#7f9abb;margin-bottom:24px}
+.simple-balls{height:72px;display:flex;align-items:center;justify-content:center;gap:12px}
+.simple-ball{width:44px;height:44px;border-radius:50%;background:#1767e8;border:1px solid #55a0ff;box-shadow:inset 0 -7px 12px #001b54aa,0 8px 20px #006cff20;animation:simpleBounce 1.25s ease-in-out infinite}
+.simple-ball:nth-child(2){animation-delay:.12s}.simple-ball:nth-child(3){animation-delay:.24s}.simple-ball:nth-child(4){animation-delay:.36s}.simple-ball:nth-child(5){animation-delay:.48s}
+.simple-ball.power{background:#e53a4d;border-color:#ff7785;animation-delay:.60s}
+.simple-ladder{position:relative;width:210px;height:115px;margin:0 auto 12px}
+.simple-ladder:before,.simple-ladder:after{content:"";position:absolute;top:0;bottom:0;width:3px;background:#3986d7}
+.simple-ladder:before{left:40px}.simple-ladder:after{right:40px}
+.simple-step{position:absolute;left:40px;right:40px;height:3px;background:#3986d7}.simple-step.s1{top:22px}.simple-step.s2{top:55px}.simple-step.s3{top:88px}
+.simple-runner{position:absolute;left:34px;top:-3px;width:15px;height:15px;border-radius:50%;background:#ffd43b;box-shadow:0 0 12px #ffd43b;animation:simpleLadder 2.2s linear infinite}
+@keyframes simpleBounce{0%,100%{transform:translateY(5px)}50%{transform:translateY(-10px)}}
+@keyframes simpleLadder{0%{left:34px;top:-3px}30%{left:34px;top:48px}55%{left:161px;top:48px}100%{left:161px;top:101px}}
+@media(prefers-reduced-motion:reduce){.simple-ball,.simple-runner{animation:none}}
 </style>
-<script id="toview-results-sync-v7-script">
+<script id="toview-results-sync-v7-script>
 (function(){
 'use strict';
 const G={
@@ -1401,7 +1419,13 @@ function labels(){const cfg=G[game],heads=document.querySelectorAll('.pick-categ
 function decorate(){const a=$('gameVideoArea');if(!a||!state)return;let rb=a.querySelector('.tv-round-badge'),cd=a.querySelector('.tv-countdown');if(!rb){rb=document.createElement('div');rb.className='tv-round-badge';a.appendChild(rb)}if(!cd){cd=document.createElement('div');cd.className='tv-countdown';a.appendChild(cd)}rb.textContent=state.currentRound+'회차';cd.textContent=mmss(state.remainingSeconds);text('liveRound',state.currentRound+'회차');text('pickRound',state.currentRound);text('liveCountdown',mmss(state.remainingSeconds));text('pickCountdown',mmss(state.remainingSeconds))}
 function stage(){
  const a=$('gameVideoArea'),cfg=G[game],x=state?.lastResult;if(!a)return;
- if(!x){a.innerHTML=`<div class="tv-wait"><div><strong>${safe(cfg.name)} 결과 대기</strong><span>확정 결과가 저장되면 TOVIEW 애니메이션에 자동 반영됩니다.</span></div></div>`;decorate();return}
+ if(!x){
+   const visual=cfg.type==='ladder'
+    ?`<div class="simple-ladder"><i class="simple-step s1"></i><i class="simple-step s2"></i><i class="simple-step s3"></i><i class="simple-runner"></i></div>`
+    :`<div class="simple-balls"><i class="simple-ball"></i><i class="simple-ball"></i><i class="simple-ball"></i><i class="simple-ball"></i><i class="simple-ball"></i><i class="simple-ball power"></i></div>`;
+   a.innerHTML=`<div class="simple-wait"><div class="simple-wait-box"><div class="simple-wait-title">${safe(cfg.name)} 추첨 진행 중</div><div class="simple-wait-sub">결과 확정 대기 · 자동 업데이트</div>${visual}</div></div>`;
+   decorate();return
+ }
  if(cfg.type==='ladder'){const l=x.ladder||{};a.innerHTML=`<div class="tv-stage"><b class="tv-water">TOVIEW LIVE</b><b class="tv-live">LIVE</b><div class="tv-ladder"><i class="tv-v a"></i><i class="tv-v b"></i><i class="tv-h h1"></i><i class="tv-h h2"></i><i class="tv-h h3"></i><i class="tv-h h4"></i><i class="tv-run"></i></div><div class="tv-caption"><strong>${safe(cfg.name)} 자체 중계</strong><span>최근 확정 ${safe(state.lastCompletedRound)}회 · ${l.start==='left'?'좌':'우'} · ${safe(l.lines)}줄 · ${l.result==='odd'?'홀':'짝'}</span></div></div>`}
  else{const ns=cfg.type==='keno'?(x.numbers||[]).slice(0,5):[x.nBall1,x.nBall2,x.nBall3,x.nBall4,x.nBall5],power=cfg.type==='keno'?(x.numbers||[])[5]:x.PowerBall;a.innerHTML=`<div class="tv-stage"><b class="tv-water">TOVIEW LIVE</b><b class="tv-live">LIVE</b><div class="tv-machine">${ns.map(n=>`<i class="tv-ball">${safe(n??'?')}</i>`).join('')}<i class="tv-ball power">${safe(power??'?')}</i></div><div class="tv-caption"><strong>${safe(cfg.name)} 자체 중계</strong><span>최근 확정 ${safe(state.lastCompletedRound)}회 결과 · 다음 ${safe(state.currentRound)}회차 진행 중</span></div></div>`}
  decorate();
