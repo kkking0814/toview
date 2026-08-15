@@ -1,16 +1,258 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>계정 | TOVIEW</title><style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,'Noto Sans KR',sans-serif;background:#07101f;color:#eef4ff}button,input{font:inherit}a{color:inherit;text-decoration:none}.top{position:sticky;top:0;z-index:10;background:#08111fee;border-bottom:1px solid #24324a;backdrop-filter:blur(10px)}.bar{max-width:1200px;margin:auto;height:68px;display:flex;align-items:center;gap:26px;padding:0 18px}.logo{font-size:26px;font-weight:900}.logo b{color:#4f9cff}.badge{font-size:10px;background:#15345e;color:#8fc3ff;padding:3px 6px;border-radius:5px}.nav{display:flex;gap:18px;color:#aebbd1;font-size:14px}.nav a:hover{color:#fff}.login{margin-left:auto;background:#2563eb;color:#fff;border:0;padding:10px 16px;border-radius:9px;cursor:pointer}.wrap{max-width:1200px;margin:22px auto;padding:0 18px}.notice{padding:11px 14px;background:#0c1a30;border:1px solid #213655;border-radius:10px;color:#9fb3d2;font-size:13px;margin-bottom:16px}.hero{display:grid;grid-template-columns:1.55fr 1fr;gap:18px}.card{background:#0e192b;border:1px solid #22334e;border-radius:14px;overflow:hidden}.head{padding:14px 16px;border-bottom:1px solid #22334e;font-weight:700;display:flex;justify-content:space-between;align-items:center}.sub{font-size:12px;color:#8294b1}.live{padding:23px;text-align:center}.round{color:#92a4c2;font-size:14px}.timer{font-size:42px;font-weight:900;margin:8px}.balls{display:flex;justify-content:center;gap:9px;margin:20px 0}.ball{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#334155;font-weight:900;box-shadow:inset 0 -5px 10px #0003}.power{background:#2563eb}.tags{display:flex;justify-content:center;gap:7px;flex-wrap:wrap}.tag{padding:7px 11px;border-radius:20px;background:#17243a;font-size:13px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}.stat{background:#091426;border-radius:10px;padding:15px;color:#9badc9}.stat strong{display:block;font-size:25px;color:#fff;margin-top:5px}.grid{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-top:18px}.table{width:100%;border-collapse:collapse;font-size:13px}.table th,.table td{padding:11px;text-align:center;border-bottom:1px solid #1c2a40}.table th{color:#899ab6;background:#091426}.blue{color:#60a5fa}.red{color:#fb7185}.sideitem{padding:13px 16px;border-bottom:1px solid #1c2a40;font-size:14px;cursor:pointer}.sideitem:hover{background:#132039}.pattern{padding:16px}.patternrow{display:flex;gap:5px;flex-wrap:wrap;margin:9px 0}.dot{min-width:28px;height:28px;border-radius:6px;background:#2563eb;display:grid;place-items:center;font-size:11px}.dot.r{background:#d9465f}.status{display:inline-flex;align-items:center;gap:6px}.pulse{width:8px;height:8px;border-radius:50%;background:#22c55e}.foot{text-align:center;color:#63748f;padding:35px;font-size:12px}.modal{display:none;position:fixed;inset:0;background:#0009;z-index:20;place-items:center}.modal.on{display:grid}.modalbox{width:min(390px,90vw);background:#0e192b;border:1px solid #2b3d5c;border-radius:14px;padding:22px}.modalbox input{width:100%;margin:7px 0;padding:12px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff}.modalbox button{width:100%;margin-top:8px;padding:11px;border:0;border-radius:8px;background:#2563eb;color:#fff}.close{text-align:right;color:#93a4c0;cursor:pointer}.err{color:#fda4af;font-size:12px;margin-top:10px}.apiok{color:#86efac}.apifail{color:#fbbf24}body.light{background:#eef3f9;color:#172033}body.light .top{background:#ffffffee}body.light .card,body.light .modalbox{background:#fff;border-color:#d5deea}body.light .notice,body.light .stat,body.light .table th,body.light .modalbox input{background:#f5f8fc;color:#334155}body.light .head,body.light .table th,body.light .table td,body.light .sideitem{border-color:#e2e8f0}body.light .stat strong{color:#172033}body.light .nav{color:#64748b}body.light .nav a:hover{color:#111827}@media(max-width:800px){.nav{display:none}.hero,.grid{grid-template-columns:1fr}.balls{gap:5px}.ball{width:40px;height:40px}.timer{font-size:34px}.table th:nth-child(2),.table td:nth-child(2){font-size:11px}}
-</style>
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>로그인 | TOVIEW</title>
+    <link rel="stylesheet" href="common.css">
 
-<link rel="stylesheet" href="common.css">
+    <style>
+        :root{
+            color-scheme:dark;
+        }
 
+        body{
+            min-height:100vh;
+            margin:0;
+            font-family:Arial,"Noto Sans KR",sans-serif;
+            background:
+                radial-gradient(circle at 50% -10%, rgba(37,99,235,.14), transparent 34%),
+                #07101f;
+            color:#eef4ff;
+        }
+
+        .account-main{
+            width:min(100%, 1200px);
+            min-height:calc(100vh - 68px);
+            margin:0 auto;
+            padding:72px 18px 48px;
+
+            display:flex;
+            align-items:flex-start;
+            justify-content:center;
+        }
+
+        .account-shell{
+            width:min(100%, 460px);
+        }
+
+        .account-intro{
+            margin-bottom:18px;
+            text-align:center;
+        }
+
+        .account-kicker{
+            color:#60a5fa;
+            font-size:10px;
+            font-weight:900;
+            letter-spacing:1.5px;
+        }
+
+        .account-intro h1{
+            margin:8px 0 6px;
+            color:#fff;
+            font-size:28px;
+            font-weight:900;
+            letter-spacing:-.8px;
+        }
+
+        .account-intro p{
+            margin:0;
+            color:#7185a5;
+            font-size:12px;
+            line-height:1.6;
+        }
+
+        .account-card{
+            overflow:hidden;
+            border:1px solid #22334e;
+            border-radius:14px;
+            background:#0e192b;
+            box-shadow:0 22px 60px rgba(0,0,0,.22);
+        }
+
+        .account-card-head{
+            padding:18px 20px;
+            border-bottom:1px solid #22334e;
+            background:
+                radial-gradient(circle at 90% 20%, rgba(37,99,235,.14), transparent 35%),
+                #0e192b;
+        }
+
+        .account-card-head strong{
+            display:block;
+            color:#fff;
+            font-size:17px;
+            font-weight:900;
+        }
+
+        .account-card-head span{
+            display:block;
+            margin-top:5px;
+            color:#7185a5;
+            font-size:10px;
+        }
+
+        .account-form{
+            padding:20px;
+        }
+
+        .field{
+            margin-bottom:14px;
+        }
+
+        .field label{
+            display:block;
+            margin-bottom:7px;
+            color:#aebbd1;
+            font-size:11px;
+            font-weight:800;
+        }
+
+        .field input{
+            width:100%;
+            height:46px;
+            padding:0 13px;
+
+            border:1px solid #263a58;
+            border-radius:8px;
+            outline:none;
+
+            background:#091426;
+            color:#fff;
+
+            font-size:13px;
+            transition:.16s ease;
+        }
+
+        .field input::placeholder{
+            color:#50617b;
+        }
+
+        .field input:focus{
+            border-color:#3b82f6;
+            box-shadow:0 0 0 3px rgba(59,130,246,.08);
+        }
+
+        .login-submit{
+            width:100%;
+            height:46px;
+            margin-top:2px;
+
+            border:1px solid #3b82f6;
+            border-radius:8px;
+
+            background:#2563eb;
+            color:#fff;
+
+            font-size:13px;
+            font-weight:900;
+            cursor:pointer;
+            transition:.16s ease;
+        }
+
+        .login-submit:hover{
+            background:#1d4ed8;
+        }
+
+        .login-submit:disabled{
+            opacity:.6;
+            cursor:wait;
+        }
+
+        .account-message{
+            display:none;
+            margin-top:12px;
+            padding:10px 12px;
+
+            border:1px solid rgba(251,113,133,.22);
+            border-radius:7px;
+
+            background:rgba(251,113,133,.06);
+            color:#fda4af;
+
+            font-size:11px;
+            line-height:1.5;
+        }
+
+        .account-message.on{
+            display:block;
+        }
+
+        .account-message.ok{
+            border-color:rgba(34,197,94,.22);
+            background:rgba(34,197,94,.06);
+            color:#86efac;
+        }
+
+        .account-divider{
+            height:1px;
+            margin:20px 0;
+            background:#1e304a;
+        }
+
+        .register-box{
+            text-align:center;
+        }
+
+        .register-box p{
+            margin:0 0 10px;
+            color:#7185a5;
+            font-size:11px;
+        }
+
+        .register-link{
+            width:100%;
+            height:44px;
+
+            display:flex;
+            align-items:center;
+            justify-content:center;
+
+            border:1px solid #2b3d5c;
+            border-radius:8px;
+
+            background:#101c30;
+            color:#d7e1ef;
+
+            font-size:12px;
+            font-weight:800;
+            text-decoration:none;
+
+            transition:.16s ease;
+        }
+
+        .register-link:hover{
+            border-color:#3b82f6;
+            background:#13233c;
+            color:#fff;
+        }
+
+        .account-footer{
+            padding:26px 18px 36px;
+            text-align:center;
+            color:#52627a;
+            font-size:10px;
+        }
+
+        @media(max-width:700px){
+            .account-main{
+                min-height:calc(100vh - 62px);
+                padding-top:42px;
+            }
+
+            .account-intro h1{
+                font-size:24px;
+            }
+        }
+    </style>
 </head>
-<body>
 
+<body>
 <header class="top">
     <div class="bar">
 
-        <a href="index.html" class="brand">
+        <a href="index.html" class="brand" aria-label="TOVIEW 홈">
             <div class="brand-mark">T</div>
             <div class="brand-name">
                 <strong>TO<span>VIEW</span></strong>
@@ -19,7 +261,7 @@
         </a>
 
         <nav class="nav">
-            <a href="index.html">실시간</a>
+            <a href="index.html#live">실시간</a>
             <a href="results.html">결과</a>
             <a href="analysis.html">분석</a>
             <a href="pattern.html">패턴</a>
@@ -27,24 +269,24 @@
             <a href="dashboard.html">대시보드</a>
         </nav>
 
-        <button class="menu-btn" type="button" onclick="openMainMenu()">
+        <button class="menu-btn" type="button" onclick="openMainMenu()" aria-label="전체메뉴 열기">
             <span class="menu-icon">☰</span>
             <span>전체메뉴</span>
         </button>
 
-        <button class="login"
-                id="loginBtn"
-                type="button"
-                onclick="location.href='account.html'">
+        <button id="loginBtn" type="button" onclick="location.href='account.html'">
             로그인
         </button>
 
+        <button id="userBtn" type="button" hidden onclick="location.href='dashboard.html'">
+            내 계정
+        </button>
+
     </div>
-</header>    
+</header>
 
 <div class="menu-overlay" id="mainMenuOverlay" onclick="closeMainMenu(event)">
-
-    <div class="menu-panel">
+    <div class="menu-panel" role="dialog" aria-modal="true" aria-label="전체 메뉴">
 
         <div class="menu-panel-top">
             <div>
@@ -52,7 +294,7 @@
                 <span>TOVIEW SERVICE</span>
             </div>
 
-            <button type="button" class="menu-close" onclick="closeMainMenu()">
+            <button type="button" class="menu-close" onclick="closeMainMenu()" aria-label="전체메뉴 닫기">
                 ✕
             </button>
         </div>
@@ -129,7 +371,7 @@
                     <span>새로운 알림 확인</span>
                 </a>
 
-                <a href="javascript:void(0)" onclick="document.getElementById('loginBtn').click(); closeMainMenu();">
+                <a href="account.html">
                     <b>내 계정</b>
                     <span>로그인 및 계정 관리</span>
                 </a>
@@ -142,79 +384,246 @@
         </div>
 
     </div>
-
 </div>
-    
-<main class="wrap"><div class="card" style="max-width:480px;margin:40px auto"><div class="head">TOVIEW 계정</div><div class="pattern"><input id="id" placeholder="아이디" style="width:100%;padding:12px;margin-bottom:8px"><input id="pw" type="password" placeholder="비밀번호" style="width:100%;padding:12px;margin-bottom:8px"><button class="login" style="width:100%" onclick="login()">로그인</button><button style="width:100%;margin-top:8px;padding:11px" onclick="location.href='register.html'">회원가입</button></div></div></main><footer class="foot">TOVIEW V7 · 페이지 이동형 프로토타입 · © 2026 TOVIEW</footer><script>
-async function checkLogin() {
-    try {
-        const response = await fetch('/api/me');
-        const user = await response.json();
 
-        const button = document.getElementById('userBtn');
+<main class="account-main">
+    <section class="account-shell">
 
-        if (user.username) {
-            button.textContent = (user.nickname || user.username) + ' 님';
-        } else {
-            button.textContent = '로그인';
+        <div class="account-intro">
+            <div class="account-kicker">TOVIEW ACCOUNT</div>
+            <h1>로그인</h1>
+            <p>하나의 TOVIEW 계정으로 PICK, 커뮤니티, 대시보드를 이용할 수 있습니다.</p>
+        </div>
+
+        <div class="account-card">
+            <div class="account-card-head">
+                <strong>계정 로그인</strong>
+                <span>가입한 아이디와 비밀번호를 입력하세요.</span>
+            </div>
+
+            <form class="account-form" id="loginForm" novalidate>
+                <div class="field">
+                    <label for="id">아이디</label>
+                    <input
+                        id="id"
+                        name="username"
+                        type="text"
+                        autocomplete="username"
+                        placeholder="아이디 입력"
+                        maxlength="40"
+                        required
+                    >
+                </div>
+
+                <div class="field">
+                    <label for="pw">비밀번호</label>
+                    <input
+                        id="pw"
+                        name="password"
+                        type="password"
+                        autocomplete="current-password"
+                        placeholder="비밀번호 입력"
+                        maxlength="100"
+                        required
+                    >
+                </div>
+
+                <button class="login-submit" id="loginSubmit" type="submit">
+                    로그인
+                </button>
+
+                <div class="account-message" id="loginMessage" role="status" aria-live="polite"></div>
+
+                <div class="account-divider"></div>
+
+                <div class="register-box">
+                    <p>아직 TOVIEW 계정이 없나요?</p>
+                    <a class="register-link" id="registerLink" href="register.html">
+                        회원가입
+                    </a>
+                </div>
+            </form>
+        </div>
+
+    </section>
+</main>
+
+<footer class="account-footer">
+    TOVIEW · DATA & COMMUNITY PLATFORM · © 2026 TOVIEW
+</footer>
+
+<script>
+(function () {
+    'use strict';
+
+    const loginForm = document.getElementById('loginForm');
+    const usernameInput = document.getElementById('id');
+    const passwordInput = document.getElementById('pw');
+    const loginSubmit = document.getElementById('loginSubmit');
+    const loginMessage = document.getElementById('loginMessage');
+    const loginBtn = document.getElementById('loginBtn');
+    const userBtn = document.getElementById('userBtn');
+    const registerLink = document.getElementById('registerLink');
+
+    function safeNext() {
+        const raw = new URLSearchParams(location.search).get('next');
+
+        if (!raw) {
+            return 'index.html';
         }
 
-    } catch (error) {
-        console.error('로그인 상태 확인 실패:', error);
-    }
-}
+        try {
+            const url = new URL(raw, location.origin);
 
+            if (url.origin !== location.origin) {
+                return 'index.html';
+            }
 
-async function login() {
-
-    const username = document.getElementById('id').value.trim();
-    const password = document.getElementById('pw').value;
-
-    if (!username || !password) {
-        alert('아이디와 비밀번호를 입력하세요.');
-        return;
+            return url.pathname + url.search + url.hash;
+        } catch {
+            return 'index.html';
+        }
     }
 
-    try {
-        const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                username: username,
-                password: password
-            })
-        });
+    function setMessage(message, ok = false) {
+        loginMessage.textContent = message || '';
+        loginMessage.classList.toggle('on', Boolean(message));
+        loginMessage.classList.toggle('ok', Boolean(message) && ok);
+    }
 
-        const data = await response.json();
+    function setLoading(loading) {
+        loginSubmit.disabled = loading;
+        loginSubmit.textContent = loading ? '로그인 중...' : '로그인';
+    }
 
-        if (!response.ok) {
-            alert(data.error || '로그인에 실패했습니다.');
+    function setAccountHeader(user) {
+        const loggedIn = Boolean(user && user.username);
+
+        loginBtn.hidden = loggedIn;
+        userBtn.hidden = !loggedIn;
+
+        if (loggedIn) {
+            userBtn.textContent = (user.nickname || user.username) + ' 님';
+        }
+    }
+
+    async function checkLogin() {
+        try {
+            const response = await fetch('/api/me', {
+                method: 'GET',
+                credentials: 'include',
+                cache: 'no-store'
+            });
+
+            if (!response.ok) {
+                setAccountHeader(null);
+                return;
+            }
+
+            const user = await response.json();
+            setAccountHeader(user);
+
+            if (user && user.username) {
+                setMessage('이미 로그인되어 있습니다.', true);
+            }
+        } catch (error) {
+            console.error('로그인 상태 확인 실패:', error);
+            setAccountHeader(null);
+        }
+    }
+
+    async function login(event) {
+        event.preventDefault();
+
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value;
+
+        setMessage('');
+
+        if (!username || !password) {
+            setMessage('아이디와 비밀번호를 입력하세요.');
+            (!username ? usernameInput : passwordInput).focus();
             return;
         }
 
-        const next =
-            new URLSearchParams(location.search).get('next')
-            || 'index.html';
+        setLoading(true);
 
-        location.href = next;
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username,
+                    password
+                })
+            });
 
-    } catch (error) {
-        console.error(error);
-        alert('로그인 중 오류가 발생했습니다.');
+            let data = {};
+
+            try {
+                data = await response.json();
+            } catch {
+                data = {};
+            }
+
+            if (!response.ok) {
+                setMessage(data.error || data.message || '아이디 또는 비밀번호를 확인하세요.');
+                return;
+            }
+
+            setMessage('로그인되었습니다. 이동 중입니다.', true);
+
+            window.setTimeout(function () {
+                location.href = safeNext();
+            }, 250);
+
+        } catch (error) {
+            console.error('로그인 오류:', error);
+            setMessage('서버에 연결할 수 없습니다. 잠시 후 다시 시도하세요.');
+        } finally {
+            setLoading(false);
+        }
     }
-}
 
+    function preserveNextForRegister() {
+        const next = new URLSearchParams(location.search).get('next');
 
-window.addEventListener('DOMContentLoaded', checkLogin);
-</script>
+        if (!next) {
+            return;
+        }
 
-<script>
+        try {
+            const url = new URL(next, location.origin);
+
+            if (url.origin === location.origin) {
+                registerLink.href = 'register.html?next=' + encodeURIComponent(
+                    url.pathname + url.search + url.hash
+                );
+            }
+        } catch {}
+    }
+
+    loginForm.addEventListener('submit', login);
+
+    passwordInput.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' && !loginSubmit.disabled) {
+            loginForm.requestSubmit();
+        }
+    });
+
+    preserveNextForRegister();
+    checkLogin();
+})();
+
 function openMainMenu() {
     const menu = document.getElementById('mainMenuOverlay');
 
-    if (!menu) return;
+    if (!menu) {
+        return;
+    }
 
     menu.classList.add('on');
     document.body.style.overflow = 'hidden';
@@ -223,7 +632,9 @@ function openMainMenu() {
 function closeMainMenu(event) {
     const menu = document.getElementById('mainMenuOverlay');
 
-    if (!menu) return;
+    if (!menu) {
+        return;
+    }
 
     if (event && event.target !== menu) {
         return;
@@ -232,7 +643,17 @@ function closeMainMenu(event) {
     menu.classList.remove('on');
     document.body.style.overflow = '';
 }
+
+function openAlerts() {
+    alert('알림센터는 준비 중입니다.');
+}
+
+document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') {
+        closeMainMenu();
+    }
+});
 </script>
-    
+
 </body>
 </html>
