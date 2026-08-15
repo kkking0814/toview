@@ -67,7 +67,60 @@ async function initPowerballResultsTable() {
 
 
 // 서버 시작 시 테이블 확인
+
 initPowerballResultsTable();
+
+// ========================================
+// MEMBER PICK 게임 구분 컬럼 자동 보정
+// 기존 DB를 그대로 사용해도 실행 시 game_id 컬럼/인덱스를 준비한다.
+// ========================================
+async function initMemberPickGameColumn() {
+    try {
+        await pool.query(`
+            ALTER TABLE member_picks
+            ADD COLUMN IF NOT EXISTS game_id VARCHAR(30) DEFAULT 'powerball'
+        `);
+
+        // 예전 (username, round_number) UNIQUE 제약은 게임별 PICK을 막을 수 있으므로
+        // 알려진 제약 이름이 있으면 제거하고 게임 포함 UNIQUE INDEX를 사용한다.
+        await pool.query(`
+            DO $$
+            DECLARE r RECORD;
+            BEGIN
+                FOR r IN
+                    SELECT conname
+                    FROM pg_constraint
+                    WHERE conrelid = 'member_picks'::regclass
+                      AND contype = 'u'
+                LOOP
+                    IF pg_get_constraintdef(
+                        (SELECT oid FROM pg_constraint WHERE conname = r.conname AND conrelid='member_picks'::regclass LIMIT 1)
+                    ) ILIKE '%username%'
+                    AND pg_get_constraintdef(
+                        (SELECT oid FROM pg_constraint WHERE conname = r.conname AND conrelid='member_picks'::regclass LIMIT 1)
+                    ) ILIKE '%round_number%'
+                    AND pg_get_constraintdef(
+                        (SELECT oid FROM pg_constraint WHERE conname = r.conname AND conrelid='member_picks'::regclass LIMIT 1)
+                    ) NOT ILIKE '%game_id%'
+                    THEN
+                        EXECUTE format('ALTER TABLE member_picks DROP CONSTRAINT %I', r.conname);
+                    END IF;
+                END LOOP;
+            END $$;
+        `).catch(() => {});
+
+        await pool.query(`
+            CREATE UNIQUE INDEX IF NOT EXISTS member_picks_user_game_round_uidx
+            ON member_picks (username, game_id, round_number)
+        `);
+
+        console.log('MEMBER PICK game_id 준비 완료');
+    } catch (error) {
+        console.error('MEMBER PICK game_id 준비 오류:', error);
+    }
+}
+setTimeout(initMemberPickGameColumn, 1500);
+
 
 const app=express(); const PORT=process.env.PORT||3000; const dbPath=path.join(__dirname,'data.json');
 
@@ -997,759 +1050,328 @@ app.post('/api/chat', async (req, res) => {
 });
 
 // ========================================
-// TOVIEW MEMBER PICK 등록
+// TOVIEW MEMBER PICK 등록 - 게임별 분리
 // ========================================
-
 app.post('/api/picks', async (req, res) => {
-
     try {
-
-        // 로그인 확인
         if (!req.session || !req.session.user) {
-
-            return res.status(401).json({
-                error: '로그인이 필요합니다.'
-            });
-
+            return res.status(401).json({ error: '로그인이 필요합니다.' });
         }
-
 
         const username = req.session.user;
+        const gameId = String(req.body?.gameId || 'powerball').trim().toLowerCase();
+        const roundNumber = Number(req.body?.roundNumber);
+        const oddEven = String(req.body?.oddEven || '').trim().toLowerCase();
+        const underOver = String(req.body?.underOver || '').trim().toLowerCase();
 
-        const roundNumber =
-            Number(req.body?.roundNumber);
-
-        const oddEven =
-            String(req.body?.oddEven || '').trim();
-
-        const underOver =
-            String(req.body?.underOver || '').trim();
-
-
-        // 회차 확인
-        if (
-            !Number.isInteger(roundNumber) ||
-            roundNumber <= 0
-        ) {
-
-            return res.status(400).json({
-                error: '올바른 회차가 아닙니다.'
-            });
-
+        if (!['powerball','ladder','eos','speedkeno','kenoladder'].includes(gameId)) {
+            return res.status(400).json({ error: '지원하지 않는 게임입니다.' });
+        }
+        if (!Number.isInteger(roundNumber) || roundNumber <= 0) {
+            return res.status(400).json({ error: '올바른 회차가 아닙니다.' });
+        }
+        if (!['odd','even'].includes(oddEven)) {
+            return res.status(400).json({ error: '홀 또는 짝을 선택해주세요.' });
+        }
+        if (!['under','over'].includes(underOver)) {
+            return res.status(400).json({ error: '두 번째 PICK 항목을 선택해주세요.' });
         }
 
-
-        // 홀짝 값 확인
-        if (
-            oddEven !== 'odd' &&
-            oddEven !== 'even'
-        ) {
-
-            return res.status(400).json({
-                error: '홀 또는 짝을 선택해주세요.'
-            });
-
-        }
-
-
-        // 언더/오버 값 확인
-        if (
-            underOver !== 'under' &&
-            underOver !== 'over'
-        ) {
-
-            return res.status(400).json({
-                error: '언더 또는 오버를 선택해주세요.'
-            });
-
-        }
-
-
-        // 로그인 회원 정보 확인
         const userResult = await pool.query(
-            `
-            SELECT username, nickname
-            FROM users
-            WHERE username = $1
-            LIMIT 1
-            `,
+            `SELECT username, nickname FROM users WHERE username=$1 LIMIT 1`,
             [username]
         );
-
-
         if (userResult.rows.length === 0) {
-
-            return res.status(401).json({
-                error: '회원 정보를 찾을 수 없습니다.'
-            });
-
+            return res.status(401).json({ error: '회원 정보를 찾을 수 없습니다.' });
         }
 
-
-        const nickname =
-            userResult.rows[0].nickname;
-
-
-        // PICK 저장
+        const nickname = userResult.rows[0].nickname;
         const pickResult = await pool.query(
-            `
-            INSERT INTO member_picks
-                (
-                    username,
-                    nickname,
-                    round_number,
-                    odd_even,
-                    under_over
-                )
-
-            VALUES
-                ($1, $2, $3, $4, $5)
-
-            RETURNING
-                id,
-                username,
-                nickname,
-                round_number,
-                odd_even,
-                under_over,
-                created_at
-            `,
-            [
-                username,
-                nickname,
-                roundNumber,
-                oddEven,
-                underOver
-            ]
+            `INSERT INTO member_picks
+                (username,nickname,game_id,round_number,odd_even,under_over)
+             VALUES ($1,$2,$3,$4,$5,$6)
+             RETURNING id,username,nickname,game_id,round_number,odd_even,under_over,created_at`,
+            [username,nickname,gameId,roundNumber,oddEven,underOver]
         );
 
-
-        return res.json({
-            ok: true,
-            pick: pickResult.rows[0]
-        });
-
-
+        return res.json({ ok:true, pick:pickResult.rows[0] });
     } catch (error) {
-
-        // 같은 회원이 같은 회차에 또 등록한 경우
         if (error.code === '23505') {
-
-            return res.status(409).json({
-                error: '이미 해당 회차에 PICK을 등록했습니다.'
-            });
-
+            return res.status(409).json({ error:'이미 해당 게임의 해당 회차에 PICK을 등록했습니다.' });
         }
-
-
-        console.error(
-            'PICK 등록 DB 오류:',
-            error
-        );
-
-
-        return res.status(500).json({
-            error: 'PICK 등록에 실패했습니다.'
-        });
-
+        console.error('PICK 등록 DB 오류:', error);
+        return res.status(500).json({ error:'PICK 등록에 실패했습니다.' });
     }
-
 });
 
 // ========================================
-// TOVIEW MEMBER PICK 회차별 통계
+// TOVIEW MEMBER PICK 회차별 통계 - 게임별 분리
 // ========================================
-
 app.get('/api/picks/:round/stats', async (req, res) => {
-
     try {
+        const roundNumber = Number(req.params.round);
+        const gameId = String(req.query.game || 'powerball').trim().toLowerCase();
 
-        const roundNumber =
-            Number(req.params.round);
-
-
-        // 회차 검증
-        if (
-            !Number.isInteger(roundNumber) ||
-            roundNumber <= 0
-        ) {
-
-            return res.status(400).json({
-                error: '올바른 회차가 아닙니다.'
-            });
-
+        if (!Number.isInteger(roundNumber) || roundNumber <= 0) {
+            return res.status(400).json({ error:'올바른 회차가 아닙니다.' });
         }
 
-
-        // 해당 회차 PICK 집계
         const result = await pool.query(
-            `
-            SELECT
-
+            `SELECT
                 COUNT(*)::int AS total,
-
-                COUNT(*) FILTER (
-                    WHERE odd_even = 'odd'
-                )::int AS odd,
-
-                COUNT(*) FILTER (
-                    WHERE odd_even = 'even'
-                )::int AS even,
-
-                COUNT(*) FILTER (
-                    WHERE under_over = 'under'
-                )::int AS under,
-
-                COUNT(*) FILTER (
-                    WHERE under_over = 'over'
-                )::int AS over
-
-            FROM member_picks
-
-            WHERE round_number = $1
-            `,
-            [roundNumber]
+                COUNT(*) FILTER (WHERE odd_even='odd')::int AS odd,
+                COUNT(*) FILTER (WHERE odd_even='even')::int AS even,
+                COUNT(*) FILTER (WHERE under_over='under')::int AS under,
+                COUNT(*) FILTER (WHERE under_over='over')::int AS over
+             FROM member_picks
+             WHERE round_number=$1
+               AND COALESCE(game_id,'powerball')=$2`,
+            [roundNumber, gameId]
         );
 
-
-        const stats = result.rows[0];
-
-
-        const total =
-            Number(stats.total) || 0;
-
-        const odd =
-            Number(stats.odd) || 0;
-
-        const even =
-            Number(stats.even) || 0;
-
-        const under =
-            Number(stats.under) || 0;
-
-        const over =
-            Number(stats.over) || 0;
-
-
-        // 퍼센트 계산
-        const oddPercent =
-            total > 0
-                ? Math.round((odd / total) * 100)
-                : 50;
-
-        const evenPercent =
-            total > 0
-                ? 100 - oddPercent
-                : 50;
-
-
-        const underPercent =
-            total > 0
-                ? Math.round((under / total) * 100)
-                : 50;
-
-        const overPercent =
-            total > 0
-                ? 100 - underPercent
-                : 50;
-
+        const s=result.rows[0]||{};
+        const total=Number(s.total)||0, odd=Number(s.odd)||0, even=Number(s.even)||0;
+        const under=Number(s.under)||0, over=Number(s.over)||0;
+        const oddPercent=total?Math.round(odd/total*100):50;
+        const underPercent=total?Math.round(under/total*100):50;
 
         return res.json({
-
-            ok: true,
-
-            roundNumber: roundNumber,
-
-            participants: total,
-
-            oddEven: {
-                odd: odd,
-                even: even,
-                oddPercent: oddPercent,
-                evenPercent: evenPercent
-            },
-
-            underOver: {
-                under: under,
-                over: over,
-                underPercent: underPercent,
-                overPercent: overPercent
-            }
-
+            ok:true, gameId, roundNumber, participants:total,
+            oddEven:{odd,even,oddPercent,evenPercent:total?100-oddPercent:50},
+            underOver:{under,over,underPercent,overPercent:total?100-underPercent:50}
         });
-
-
     } catch (error) {
-
-        console.error(
-            'PICK 통계 조회 오류:',
-            error
-        );
-
-
-        return res.status(500).json({
-            error: 'PICK 통계를 불러오지 못했습니다.'
-        });
-
+        console.error('PICK 통계 조회 오류:', error);
+        return res.status(500).json({ error:'PICK 통계를 불러오지 못했습니다.' });
     }
-
 });
 
 // ========================================
 // TOVIEW GAME DATA API
+// results.html 게임 버튼 → 해당 API → 실제 회차/결과/중계 URL
 // ========================================
-
 const POWERBALL_API_URL = 'https://www.powerballgame.co.kr/json/powerball.json';
+const POWERBALL_RECENT_API_URL = 'https://www.powerballgame.co.kr/json/powerball_recent.json';
+const SPEEDKENO_API_URL = 'https://www.powerballgame.co.kr/json/speedkeno.json';
 
-// 현재 지원할 게임 목록
+// 아래 2개는 공개 API 안내 페이지가 제공하는 엔트리 호환 결과 주소.
+// 외부 서비스가 중단되면 502로 명확하게 반환하며 임의 결과를 만들지 않는다.
+const POWER_LADDER_API_URL = process.env.POWER_LADDER_API_URL ||
+    'http://services.nupro365.com/live/ntry/res.ladder.power.asp';
+const EOS_POWERBALL_API_URL = process.env.EOS_POWERBALL_API_URL ||
+    'http://services.nupro365.com/live/ntry/res.powerball.5m.asp';
+
 const TOVIEW_GAMES = {
-    powerball: {
-        id: 'powerball',
-        name: '파워볼',
-        enabled: true
+    powerball:{
+        id:'powerball', name:'파워볼', enabled:true, cycleSeconds:300,
+        videoUrl:'https://www.powerballgame.co.kr/?view=powerballMiniView'
     },
-    ladder: {
-        id: 'ladder',
-        name: '사다리',
-        enabled: false
+    ladder:{
+        id:'ladder', name:'사다리', enabled:true, cycleSeconds:300,
+        videoUrl:'https://www.powerballgame.co.kr/?view=powerballLadder'
     },
-    eos: {
-        id: 'eos',
-        name: 'EOS 파워볼',
-        enabled: false
+    eos:{
+        id:'eos', name:'EOS 파워볼', enabled:true, cycleSeconds:300,
+        videoUrl:'https://ntry.com/scores/eos_powerball/5min/main.php'
+    },
+    speedkeno:{
+        id:'speedkeno', name:'스피드키노', enabled:true, cycleSeconds:300,
+        videoUrl:'https://www.powerballgame.co.kr/?view=speedkeno'
+    },
+    kenoladder:{
+        id:'kenoladder', name:'키노사다리', enabled:true, cycleSeconds:300,
+        videoUrl:'https://www.powerballgame.co.kr/?view=speedkenoLadder'
     }
 };
 
-function normalizeOddEven(value, fallbackNumber) {
-    if (value === 1 || value === '1') return 'odd';
-    if (value === 2 || value === '2') return 'even';
-
-    const text = String(value ?? '').trim().toLowerCase();
-    if (text === 'odd' || text === '홀') return 'odd';
-    if (text === 'even' || text === '짝') return 'even';
-
-    const number = Number(fallbackNumber);
-    if (Number.isFinite(number)) {
-        return Math.abs(number % 2) === 1 ? 'odd' : 'even';
-    }
-
-    return null;
+function normalizeOddEven(value, fallbackNumber){
+    if(value===1||value==='1')return 'odd';
+    if(value===2||value==='2')return 'even';
+    const t=String(value??'').trim().toLowerCase();
+    if(t==='odd'||t==='홀')return 'odd';
+    if(t==='even'||t==='짝')return 'even';
+    const n=Number(fallbackNumber);
+    return Number.isFinite(n)?(Math.abs(n%2)===1?'odd':'even'):null;
 }
-
-function normalizeUnderOver(value, powerball) {
-    if (value === 1 || value === '1') return 'under';
-    if (value === 2 || value === '2') return 'over';
-
-    const text = String(value ?? '').trim().toLowerCase();
-    if (text === 'under' || text === '언더') return 'under';
-    if (text === 'over' || text === '오버') return 'over';
-
-    const number = Number(powerball);
-    if (Number.isFinite(number)) {
-        return number <= 4 ? 'under' : 'over';
-    }
-
-    return null;
+function normalizeUnderOver(value, fallbackNumber){
+    if(value===1||value==='1')return 'under';
+    if(value===2||value==='2')return 'over';
+    const t=String(value??'').trim().toLowerCase();
+    if(t==='under'||t==='언더')return 'under';
+    if(t==='over'||t==='오버')return 'over';
+    const n=Number(fallbackNumber);
+    return Number.isFinite(n)?(n<=4?'under':'over'):null;
 }
-
-function extractPowerballSourceRecord(payload) {
-    if (Array.isArray(payload)) {
-        return payload[0] || null;
-    }
-
-    if (payload && Array.isArray(payload.data)) {
-        return payload.data[0] || null;
-    }
-
-    if (payload && Array.isArray(payload.result)) {
-        return payload.result[0] || null;
-    }
-
-    if (payload && typeof payload === 'object') {
-        return payload;
-    }
-
-    return null;
+async function fetchJson(url){
+    const r=await fetch(url,{headers:{'User-Agent':'Mozilla/5.0','Accept':'application/json,text/plain,*/*'}});
+    if(!r.ok)throw new Error(`외부 API HTTP ${r.status}`);
+    return r.json();
 }
-
-function parsePowerballRecord(source) {
-    if (!source || typeof source !== 'object') {
-        throw new Error('파워볼 원본 데이터가 비어 있습니다.');
+async function fetchText(url){
+    const r=await fetch(url,{headers:{'User-Agent':'Mozilla/5.0','Accept':'text/plain,text/html,*/*'}});
+    if(!r.ok)throw new Error(`외부 API HTTP ${r.status}`);
+    return r.text();
+}
+function parsePowerballSource(source){
+    if(!source||typeof source!=='object')throw new Error('파워볼 원본 데이터 없음');
+    const nums=[source.nBall1,source.nBall2,source.nBall3,source.nBall4,source.nBall5].map(Number);
+    let balls=nums;
+    if(balls.some(v=>!Number.isFinite(v))){
+        const s=String(source.number??'').replace(/\D/g,'');
+        if(s.length>=10)balls=[0,2,4,6,8].map(i=>Number(s.slice(i,i+2)));
     }
-
-    const roundNumber = Number(source.Round ?? source.round);
-    const todayRound = Number(source.AllRound ?? source.todayRound ?? source.allRound);
-    const drawDate = String(source.Date ?? source.date ?? '').trim();
-    const drawTime = String(source.Time ?? source.time ?? '').trim();
-
-    let balls = [
-        source.nBall1,
-        source.nBall2,
-        source.nBall3,
-        source.nBall4,
-        source.nBall5
-    ].map(Number);
-
-    // 예전 형식(number="0417222602")도 안전하게 지원
-    if (balls.some(number => !Number.isFinite(number))) {
-        const numberString = String(source.number ?? '').replace(/\D/g, '');
-        if (numberString.length >= 10) {
-            balls = [];
-            for (let i = 0; i < 10; i += 2) {
-                balls.push(Number(numberString.slice(i, i + 2)));
-            }
-        }
-    }
-
-    const numberSumFromSource = Number(source.nBallSum ?? source.numberSum);
-    const numberSum = Number.isFinite(numberSumFromSource)
-        ? numberSumFromSource
-        : balls.reduce((sum, number) => sum + (Number.isFinite(number) ? number : 0), 0);
-
-    const powerball = Number(source.PowerBall ?? source.powerball ?? source.pBall);
-    const numberOddEven = normalizeOddEven(
-        source.oddEven ?? source.oddEven_number ?? source.nOddEven,
-        numberSum
-    );
-    const powerballOddEven = normalizeOddEven(
-        source.pOddEven ?? source.oddEven_powerball ?? source.powerballOddEven,
-        powerball
-    );
-    const powerballUnderOver = normalizeUnderOver(
-        source.pUnderOver ?? source.underOver_powerball ?? source.powerballUnderOver,
-        powerball
-    );
-
-    if (!Number.isInteger(roundNumber) || roundNumber <= 0) {
-        throw new Error('전체 회차 정보를 확인할 수 없습니다.');
-    }
-
-    if (!Number.isInteger(todayRound) || todayRound <= 0) {
-        throw new Error('오늘 회차 정보를 확인할 수 없습니다.');
-    }
-
-    if (!drawDate) {
-        throw new Error('추첨 날짜 정보를 확인할 수 없습니다.');
-    }
-
-    if (balls.length !== 5 || balls.some(number => !Number.isFinite(number))) {
-        throw new Error('일반볼 정보를 확인할 수 없습니다.');
-    }
-
-    if (!Number.isFinite(powerball)) {
-        throw new Error('파워볼 정보를 확인할 수 없습니다.');
-    }
-
+    const powerball=Number(source.PowerBall??source.powerball??source.pBall);
+    const sum=Number(source.nBallSum??source.numberSum) || balls.reduce((a,b)=>a+(Number(b)||0),0);
     return {
-        roundNumber,
-        todayRound,
-        drawDate,
-        drawTime,
-        nBall1: balls[0],
-        nBall2: balls[1],
-        nBall3: balls[2],
-        nBall4: balls[3],
-        nBall5: balls[4],
-        numberSum,
-        numberOddEven,
-        powerball,
-        powerballOddEven,
-        powerballUnderOver
+        roundNumber:Number(source.Round??source.round),
+        todayRound:Number(source.AllRound??source.todayRound??source.allRound),
+        drawDate:String(source.Date??source.date??''),
+        drawTime:String(source.Time??source.time??''),
+        nBall1:balls[0],nBall2:balls[1],nBall3:balls[2],nBall4:balls[3],nBall5:balls[4],
+        numberSum:sum, numberOddEven:normalizeOddEven(source.oddEven??source.numberSumOddEven,sum),
+        powerball, powerballOddEven:normalizeOddEven(source.pOddEven??source.powerballOddEven,powerball),
+        powerballUnderOver:normalizeUnderOver(source.pUnderOver??source.powerballUnderOver,powerball)
     };
 }
-
-async function fetchPowerballRecord() {
-    const response = await fetch(POWERBALL_API_URL, {
-        headers: {
-            'User-Agent': 'Mozilla/5.0',
-            'Accept': 'application/json,text/plain,*/*'
-        }
-    });
-
-    if (!response.ok) {
-        throw new Error(`파워볼 원본 서버 응답 오류: HTTP ${response.status}`);
-    }
-
-    const payload = await response.json();
-    const source = extractPowerballSourceRecord(payload);
-    return parsePowerballRecord(source);
+async function fetchPowerballRecord(){
+    const p=await fetchJson(POWERBALL_API_URL);
+    const source=Array.isArray(p)?p[0]:(Array.isArray(p?.data)?p.data[0]:p);
+    const r=parsePowerballSource(source);
+    if(!Number.isInteger(r.roundNumber)||r.roundNumber<=0)throw new Error('파워볼 회차 오류');
+    return r;
 }
-
-async function savePowerballRecord(record) {
+async function savePowerballRecord(record){
     await pool.query(
-        `
-        INSERT INTO powerball_results (
-            round_number,
-            today_round,
-            draw_date,
-            draw_time,
-            n_ball1,
-            n_ball2,
-            n_ball3,
-            n_ball4,
-            n_ball5,
-            number_sum,
-            number_odd_even,
-            powerball,
-            powerball_odd_even,
-            powerball_under_over
-        )
-        VALUES (
-            $1, $2, $3, $4,
-            $5, $6, $7, $8, $9,
-            $10, $11,
-            $12, $13, $14
-        )
-        ON CONFLICT (round_number)
-        DO UPDATE SET
-            today_round = EXCLUDED.today_round,
-            draw_date = EXCLUDED.draw_date,
-            draw_time = EXCLUDED.draw_time,
-            n_ball1 = EXCLUDED.n_ball1,
-            n_ball2 = EXCLUDED.n_ball2,
-            n_ball3 = EXCLUDED.n_ball3,
-            n_ball4 = EXCLUDED.n_ball4,
-            n_ball5 = EXCLUDED.n_ball5,
-            number_sum = EXCLUDED.number_sum,
-            number_odd_even = EXCLUDED.number_odd_even,
-            powerball = EXCLUDED.powerball,
-            powerball_odd_even = EXCLUDED.powerball_odd_even,
-            powerball_under_over = EXCLUDED.powerball_under_over
-        `,
-        [
-            record.roundNumber,
-            record.todayRound,
-            record.drawDate,
-            record.drawTime,
-            record.nBall1,
-            record.nBall2,
-            record.nBall3,
-            record.nBall4,
-            record.nBall5,
-            record.numberSum,
-            record.numberOddEven,
-            record.powerball,
-            record.powerballOddEven,
-            record.powerballUnderOver
-        ]
+        `INSERT INTO powerball_results
+        (round_number,today_round,draw_date,draw_time,n_ball1,n_ball2,n_ball3,n_ball4,n_ball5,number_sum,number_odd_even,powerball,powerball_odd_even,powerball_under_over)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+        ON CONFLICT(round_number) DO UPDATE SET
+        today_round=EXCLUDED.today_round,draw_date=EXCLUDED.draw_date,draw_time=EXCLUDED.draw_time,
+        n_ball1=EXCLUDED.n_ball1,n_ball2=EXCLUDED.n_ball2,n_ball3=EXCLUDED.n_ball3,n_ball4=EXCLUDED.n_ball4,n_ball5=EXCLUDED.n_ball5,
+        number_sum=EXCLUDED.number_sum,number_odd_even=EXCLUDED.number_odd_even,powerball=EXCLUDED.powerball,
+        powerball_odd_even=EXCLUDED.powerball_odd_even,powerball_under_over=EXCLUDED.powerball_under_over`,
+        [record.roundNumber,record.todayRound,record.drawDate,record.drawTime,record.nBall1,record.nBall2,record.nBall3,record.nBall4,record.nBall5,record.numberSum,record.numberOddEven,record.powerball,record.powerballOddEven,record.powerballUnderOver]
     );
 }
-
-function recordToPublicResult(record) {
-    return {
-        AllRound: record.todayRound,
-        Round: record.roundNumber,
-        Date: record.drawDate,
-        Time: record.drawTime,
-        nBall1: record.nBall1,
-        nBall2: record.nBall2,
-        nBall3: record.nBall3,
-        nBall4: record.nBall4,
-        nBall5: record.nBall5,
-        nBallSum: record.numberSum,
-        PowerBall: record.powerball,
-        oddEven: record.numberOddEven === 'odd' ? 1 : 2,
-        pOddEven: record.powerballOddEven === 'odd' ? 1 : 2,
-        pUnderOver: record.powerballUnderOver === 'under' ? 1 : 2
-    };
+function powerballPublic(r){
+    return {AllRound:r.todayRound,Round:r.roundNumber,Date:r.drawDate,Time:r.drawTime,
+        nBall1:r.nBall1,nBall2:r.nBall2,nBall3:r.nBall3,nBall4:r.nBall4,nBall5:r.nBall5,
+        nBallSum:r.numberSum,PowerBall:r.powerball,
+        oddEven:r.numberOddEven==='odd'?1:2,pOddEven:r.powerballOddEven==='odd'?1:2,pUnderOver:r.powerballUnderOver==='under'?1:2};
+}
+function parseBracketApi(text){
+    const m=String(text).match(/#?\[([^\]]+)\]/);
+    if(!m)throw new Error('외부 게임 API 형식을 확인할 수 없습니다.');
+    return m[1].split(',').map(v=>String(v).trim().replace(/^["']|["']$/g,''));
+}
+function ladderResultFromParts(parts){
+    // 안내 형식: [회차고유값,회차,홀짝결과,좌우결과,줄수결과]
+    const round=Number(parts[1]);
+    const oe=/odd|홀/i.test(parts[2])?'odd':'even';
+    const start=/left|좌/i.test(parts[3])?'left':'right';
+    const lines=Number(parts[4])===4?4:3;
+    return {Round:round,AllRound:round,oddEven:oe==='odd'?1:2,pOddEven:oe==='odd'?1:2,pUnderOver:start==='left'?1:2,
+        ladder:{start,lines,result:oe}};
+}
+function speedKenoPublic(p){
+    const numbers=String(p.number||'').split(',').map(v=>Number(v)).filter(Number.isFinite);
+    const sum=Number(p.numberSum)||numbers.reduce((a,b)=>a+b,0);
+    const oe=normalizeOddEven(p.numberSumOddEven,sum);
+    const uo=String(p.underOver||'').toLowerCase()==='over'?'over':'under';
+    return {Round:Number(p.round),AllRound:Number(p.todayRound),Date:p.date||'',Time:p.time||'',
+        numbers,nBallSum:sum,oddEven:oe==='odd'?1:2,pOddEven:oe==='odd'?1:2,pUnderOver:uo==='under'?1:2};
+}
+function kenoLadderFromSpeed(p){
+    const first=Number(String(p.number||'').split(',')[0]);
+    if(!Number.isFinite(first))throw new Error('키노사다리 기준 숫자 없음');
+    const start=first%2?'left':'right';
+    const lines=first<=35?3:4;
+    // 사다리 구조상 좌3/우4는 짝, 좌4/우3은 홀
+    const result=((start==='left'&&lines===4)||(start==='right'&&lines===3))?'odd':'even';
+    return {Round:Number(p.round),AllRound:Number(p.todayRound),Date:p.date||'',
+        oddEven:result==='odd'?1:2,pOddEven:result==='odd'?1:2,pUnderOver:start==='left'?1:2,
+        ladder:{start,lines,result},sourceFirstNumber:first};
+}
+function parseEosParts(parts){
+    // 안내 형식: [회차고유값,회차,일반볼1..5,파워볼,일반볼합]
+    const round=Number(parts[1]), balls=parts.slice(2,7).map(Number), power=Number(parts[7]), sum=Number(parts[8]);
+    const dateKey=String(parts[0]||'').slice(0,8);
+    const date=/^\d{8}$/.test(dateKey)?`${dateKey.slice(0,4)}-${dateKey.slice(4,6)}-${dateKey.slice(6,8)}`:'';
+    return {Round:round,AllRound:round,Date:date,nBall1:balls[0],nBall2:balls[1],nBall3:balls[2],nBall4:balls[3],nBall5:balls[4],
+        nBallSum:sum,PowerBall:power,oddEven:sum%2?1:2,pOddEven:power%2?1:2,pUnderOver:power<=4?1:2};
+}
+async function getGameLive(gameId){
+    const g=TOVIEW_GAMES[gameId];
+    if(!g)throw Object.assign(new Error('지원하지 않는 게임입니다.'),{status:404});
+    let data;
+    if(gameId==='powerball'){
+        const r=await fetchPowerballRecord(); try{await savePowerballRecord(r)}catch(e){console.error('POWERBALL 저장 오류',e)}
+        data=powerballPublic(r);
+    }else if(gameId==='speedkeno'){
+        data=speedKenoPublic(await fetchJson(SPEEDKENO_API_URL));
+    }else if(gameId==='kenoladder'){
+        data=kenoLadderFromSpeed(await fetchJson(SPEEDKENO_API_URL));
+    }else if(gameId==='ladder'){
+        data=ladderResultFromParts(parseBracketApi(await fetchText(POWER_LADDER_API_URL)));
+    }else if(gameId==='eos'){
+        data=parseEosParts(parseBracketApi(await fetchText(EOS_POWERBALL_API_URL)));
+    }
+    return {ok:true,connected:true,game:gameId,name:g.name,cycleSeconds:g.cycleSeconds,videoUrl:g.videoUrl,
+        roundNumber:Number(data.Round),todayRound:Number(data.AllRound),drawDate:data.Date||'',drawTime:data.Time||'',data,result:data};
 }
 
-// ========================================
-// 게임 목록
-// ========================================
-app.get('/api/games', (req, res) => {
-    return res.json({
-        ok: true,
-        games: Object.values(TOVIEW_GAMES)
-    });
+app.get('/api/games',(req,res)=>res.json({ok:true,games:Object.values(TOVIEW_GAMES)}));
+app.get('/api/games/:game/live',async(req,res)=>{
+    try{return res.json(await getGameLive(String(req.params.game||'').toLowerCase()))}
+    catch(error){console.error('게임 LIVE API 오류:',error);return res.status(error.status||502).json({ok:false,connected:false,error:error.message||'게임 데이터를 불러오지 못했습니다.'})}
+});
+app.get('/api/games/:game/results',async(req,res)=>{
+    try{
+        const gameId=String(req.params.game||'').toLowerCase();
+        if(gameId==='powerball')return res.redirect(307,'/api/results');
+        if(gameId==='speedkeno'){
+            // 공개 speedkeno.json은 최신 확정 결과를 제공한다. 임의 과거 데이터를 만들지 않는다.
+            const one=speedKenoPublic(await fetchJson(SPEEDKENO_API_URL));
+            return res.json({ok:true,game:gameId,records:[one]});
+        }
+        if(gameId==='kenoladder'){
+            const one=kenoLadderFromSpeed(await fetchJson(SPEEDKENO_API_URL));
+            return res.json({ok:true,game:gameId,records:[one]});
+        }
+        const live=await getGameLive(gameId);
+        return res.json({ok:true,game:gameId,records:[live.data]});
+    }catch(error){return res.status(502).json({ok:false,error:error.message||'게임 결과를 불러오지 못했습니다.',records:[]})}
 });
 
 // ========================================
-// 특정 게임 LIVE 데이터
+// index.html / results.html 공용 오늘 파워볼 누적 결과
 // ========================================
-app.get('/api/games/:game/live', async (req, res) => {
-    try {
-        const gameId = String(req.params.game || '').trim().toLowerCase();
-        const game = TOVIEW_GAMES[gameId];
-
-        if (!game) {
-            return res.status(404).json({
-                error: '지원하지 않는 게임입니다.'
-            });
-        }
-
-        if (!game.enabled) {
-            return res.status(503).json({
-                ok: false,
-                game: game.id,
-                name: game.name,
-                connected: false,
-                error: '게임 데이터 API 연결 준비 중입니다.'
-            });
-        }
-
-        if (gameId === 'powerball') {
-            const record = await fetchPowerballRecord();
-
-            try {
-                await savePowerballRecord(record);
-            } catch (saveError) {
-                // DB 저장 실패가 실시간 결과 표시까지 막지는 않도록 분리
-                console.error('POWERBALL 결과 자동 저장 오류:', saveError);
-            }
-
-            const publicResult = recordToPublicResult(record);
-
-            return res.json({
-                ok: true,
-                connected: true,
-                game: 'powerball',
-                name: '파워볼',
-                roundNumber: record.roundNumber,
-                todayRound: record.todayRound,
-                drawDate: record.drawDate,
-                drawTime: record.drawTime,
-                result: {
-                    // 현재 index.html과의 호환을 위해 기존 키와 실제 키를 함께 제공
-                    powerball: record.powerball,
-                    powerballOddEven: record.powerballOddEven === 'odd' ? 1 : 2,
-                    powerballUnderOver: record.powerballUnderOver === 'under' ? 1 : 2,
-                    number: [record.nBall1, record.nBall2, record.nBall3, record.nBall4, record.nBall5]
-                        .map(number => String(number).padStart(2, '0'))
-                        .join(''),
-                    numberSum: record.numberSum,
-                    nBall1: record.nBall1,
-                    nBall2: record.nBall2,
-                    nBall3: record.nBall3,
-                    nBall4: record.nBall4,
-                    nBall5: record.nBall5,
-                    nBallSum: record.numberSum,
-                    oddEven: publicResult.oddEven,
-                    PowerBall: record.powerball,
-                    pOddEven: publicResult.pOddEven,
-                    pUnderOver: publicResult.pUnderOver
-                },
-                // 실제 원본 결과 형식과 같은 평면 데이터도 제공
-                data: publicResult
-            });
-        }
-
-        return res.status(503).json({
-            ok: false,
-            connected: false,
-            error: '게임 데이터 API 연결 준비 중입니다.'
-        });
-
-    } catch (error) {
-        console.error('게임 LIVE API 오류:', error);
-
-        return res.status(502).json({
-            ok: false,
-            connected: false,
-            error: '게임 데이터를 불러오지 못했습니다.'
-        });
-    }
+app.get('/api/results',async(req,res)=>{
+    try{
+        const live=await fetchPowerballRecord();
+        try{await savePowerballRecord(live)}catch(e){console.error('최신 파워볼 저장 오류',e)}
+        const today=live.drawDate;
+        const q=await pool.query(
+            `SELECT round_number,today_round,draw_date,draw_time,n_ball1,n_ball2,n_ball3,n_ball4,n_ball5,number_sum,number_odd_even,powerball,powerball_odd_even,powerball_under_over
+             FROM powerball_results WHERE draw_date=$1 ORDER BY today_round DESC`,[today]);
+        return res.json(q.rows.map(row=>({
+            AllRound:Number(row.today_round),Round:Number(row.round_number),Date:row.draw_date,Time:row.draw_time,
+            nBall1:Number(row.n_ball1),nBall2:Number(row.n_ball2),nBall3:Number(row.n_ball3),nBall4:Number(row.n_ball4),nBall5:Number(row.n_ball5),
+            nBallSum:Number(row.number_sum),PowerBall:Number(row.powerball),
+            oddEven:normalizeOddEven(row.number_odd_even,row.number_sum)==='odd'?1:2,
+            pOddEven:normalizeOddEven(row.powerball_odd_even,row.powerball)==='odd'?1:2,
+            pUnderOver:normalizeUnderOver(row.powerball_under_over,row.powerball)==='under'?1:2
+        })));
+    }catch(error){console.error('오늘 파워볼 결과 조회 오류:',error);return res.status(500).json({error:'오늘 결과를 불러오지 못했습니다.'})}
 });
 
-// ========================================
-// 홈 화면 - 오늘 누적 파워볼 결과
-// ========================================
-app.get('/api/results', async (req, res) => {
-    console.log('[/api/results] 요청 들어옴');
-
-    try {
-        // 원본 API의 최신 결과를 먼저 읽고 DB에도 저장한다.
-        // 이렇게 하면 /api/results만 호출되어도 최신 회차가 누락되지 않는다.
-        const liveRecord = await fetchPowerballRecord();
-
-        try {
-            await savePowerballRecord(liveRecord);
-        } catch (saveError) {
-            console.error('[/api/results] 최신 결과 저장 오류:', saveError);
-        }
-
-        // 원본 API가 알려준 날짜만 조회한다.
-        // 날짜가 바뀌면 전날 결과는 DB에 보관되지만 화면 응답에서는 자동으로 사라진다.
-        const today = liveRecord.drawDate;
-
-        const result = await pool.query(
-            `
-            SELECT
-                round_number,
-                today_round,
-                draw_date,
-                draw_time,
-                n_ball1,
-                n_ball2,
-                n_ball3,
-                n_ball4,
-                n_ball5,
-                number_sum,
-                number_odd_even,
-                powerball,
-                powerball_odd_even,
-                powerball_under_over
-            FROM powerball_results
-            WHERE draw_date = $1
-            ORDER BY today_round DESC
-            `,
-            [today]
-        );
-
-        const records = result.rows.map(row => ({
-            AllRound: Number(row.today_round),
-            Round: Number(row.round_number),
-            Date: row.draw_date,
-            Time: row.draw_time,
-            nBall1: Number(row.n_ball1),
-            nBall2: Number(row.n_ball2),
-            nBall3: Number(row.n_ball3),
-            nBall4: Number(row.n_ball4),
-            nBall5: Number(row.n_ball5),
-            nBallSum: Number(row.number_sum),
-            PowerBall: Number(row.powerball),
-            oddEven: normalizeOddEven(row.number_odd_even, row.number_sum) === 'odd' ? 1 : 2,
-            pOddEven: normalizeOddEven(row.powerball_odd_even, row.powerball) === 'odd' ? 1 : 2,
-            pUnderOver: normalizeUnderOver(row.powerball_under_over, row.powerball) === 'under' ? 1 : 2
-        }));
-
-        console.log(`[/api/results] ${today} 결과 ${records.length}개 반환`);
-        return res.json(records);
-
-    } catch (error) {
-        console.error('오늘 파워볼 결과 조회 오류:', error);
-
-        return res.status(500).json({
-            error: '오늘 결과를 불러오지 못했습니다.'
-        });
-    }
-});
-
-// ========================================
-// 최신 결과 자동 수집
-// ========================================
-// 서버가 실행 중인 동안 60초마다 최신 회차를 확인한다.
-// 같은 round_number는 UPSERT되므로 중복 행은 생기지 않는다.
-let powerballCollectorRunning = false;
-
-async function collectLatestPowerballResult() {
-    if (powerballCollectorRunning) return;
-    powerballCollectorRunning = true;
-
-    try {
-        const record = await fetchPowerballRecord();
-        await savePowerballRecord(record);
-    } catch (error) {
-        console.error('POWERBALL 자동 수집 오류:', error.message || error);
-    } finally {
-        powerballCollectorRunning = false;
-    }
+let powerballCollectorRunning=false;
+async function collectLatestPowerballResult(){
+    if(powerballCollectorRunning)return; powerballCollectorRunning=true;
+    try{await savePowerballRecord(await fetchPowerballRecord())}
+    catch(error){console.error('POWERBALL 자동 수집 오류:',error.message||error)}
+    finally{powerballCollectorRunning=false}
 }
-
-// 초기 테이블 생성과 충돌하지 않도록 서버 시작 직후 약간의 여유를 둔다.
-setTimeout(() => {
-    collectLatestPowerballResult();
-    setInterval(collectLatestPowerballResult, 60 * 1000);
-}, 3000);
+setTimeout(()=>{collectLatestPowerballResult();setInterval(collectLatestPowerballResult,60*1000)},3000);
 
 app.listen(PORT,()=>console.log(`TOVIEW http://localhost:${PORT}`));
