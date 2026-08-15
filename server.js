@@ -1096,4 +1096,132 @@ app.post('/api/picks', async (req, res) => {
 
 });
 
+// ========================================
+// TOVIEW GAME DATA API
+// ========================================
+
+// 현재 지원할 게임 목록
+const TOVIEW_GAMES = {
+    powerball: {
+        id: 'powerball',
+        name: '파워볼',
+        enabled: false
+    },
+
+    ladder: {
+        id: 'ladder',
+        name: '사다리',
+        enabled: false
+    },
+
+    eos: {
+        id: 'eos',
+        name: 'EOS 파워볼',
+        enabled: false
+    }
+};
+
+
+// ========================================
+// 게임 목록
+// ========================================
+
+app.get('/api/games', (req, res) => {
+
+    return res.json({
+        ok: true,
+        games: Object.values(TOVIEW_GAMES)
+    });
+
+});
+
+
+// ========================================
+// 특정 게임 LIVE 데이터
+// ========================================
+
+app.get('/api/games/:game/live', async (req, res) => {
+
+    try {
+
+        const gameId =
+            String(req.params.game || '')
+                .trim()
+                .toLowerCase();
+
+
+        const game =
+            TOVIEW_GAMES[gameId];
+
+
+        // 존재하지 않는 게임
+        if (!game) {
+
+            return res.status(404).json({
+                error: '지원하지 않는 게임입니다.'
+            });
+
+        }
+
+
+        // 아직 실제 데이터 API가 연결되지 않은 게임
+        if (!game.enabled) {
+
+            return res.status(503).json({
+                ok: false,
+
+                game: game.id,
+
+                name: game.name,
+
+                connected: false,
+
+                error: '게임 데이터 API 연결 준비 중입니다.'
+            });
+
+        }
+
+
+        /*
+            나중에 실제 외부 API를 여기서 호출한다.
+
+            예:
+
+            const response = await fetch(...);
+            const data = await response.json();
+
+            return res.json({
+                ok: true,
+                connected: true,
+                game: game.id,
+                roundNumber: 실제회차,
+                remainingSeconds: 남은시간,
+                status: 'OPEN'
+            });
+        */
+
+
+        return res.status(503).json({
+            ok: false,
+            connected: false,
+            error: '게임 데이터 API 연결 준비 중입니다.'
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            '게임 LIVE API 오류:',
+            error
+        );
+
+
+        return res.status(500).json({
+            error: '게임 데이터를 불러오지 못했습니다.'
+        });
+
+    }
+
+});
+
 app.listen(PORT,()=>console.log(`TOVIEW http://localhost:${PORT}`));
