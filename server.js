@@ -9,6 +9,66 @@ const pool = new Pool({
     }
 });
 
+// ========================================
+// 파워볼 결과 누적 저장 테이블
+// ========================================
+
+async function initPowerballResultsTable() {
+
+    try {
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS powerball_results (
+
+                id SERIAL PRIMARY KEY,
+
+                round_number BIGINT UNIQUE NOT NULL,
+
+                today_round INTEGER,
+
+                draw_date VARCHAR(20),
+
+                draw_time VARCHAR(20),
+
+                n_ball1 INTEGER,
+                n_ball2 INTEGER,
+                n_ball3 INTEGER,
+                n_ball4 INTEGER,
+                n_ball5 INTEGER,
+
+                number_sum INTEGER,
+
+                number_odd_even VARCHAR(10),
+
+                powerball INTEGER,
+
+                powerball_odd_even VARCHAR(10),
+
+                powerball_under_over VARCHAR(10),
+
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        console.log(
+            'POWERBALL 결과 테이블 준비 완료'
+        );
+
+    } catch (error) {
+
+        console.error(
+            'POWERBALL 결과 테이블 생성 오류:',
+            error
+        );
+
+    }
+
+}
+
+
+// 서버 시작 시 테이블 확인
+initPowerballResultsTable();
+
 const app=express(); const PORT=process.env.PORT||3000; const dbPath=path.join(__dirname,'data.json');
 
 app.use(express.json());
@@ -1368,7 +1428,100 @@ if (gameId === 'powerball') {
 
     }
 
+// ========================================
+// 오늘 파워볼 결과 PostgreSQL 자동 저장
+// ========================================
 
+try {
+
+    // 일반번호 문자열을 5개의 숫자로 분리
+    // 예: "0417222602"
+    // → 4, 17, 22, 26, 2
+    const numberString =
+        String(data.number || '')
+            .padStart(10, '0');
+
+    const numbers = [];
+
+    for (let i = 0; i < 10; i += 2) {
+
+        numbers.push(
+            Number(
+                numberString.slice(i, i + 2)
+            )
+        );
+
+    }
+
+
+    // 결과 저장
+    await pool.query(
+        `
+        INSERT INTO powerball_results (
+
+            round_number,
+            today_round,
+            draw_date,
+            draw_time,
+
+            n_ball1,
+            n_ball2,
+            n_ball3,
+            n_ball4,
+            n_ball5,
+
+            number_sum,
+            number_odd_even,
+
+            powerball,
+            powerball_odd_even,
+            powerball_under_over
+
+        )
+
+        VALUES (
+            $1, $2, $3, $4,
+            $5, $6, $7, $8, $9,
+            $10, $11,
+            $12, $13, $14
+        )
+
+        ON CONFLICT (round_number)
+        DO NOTHING
+        `,
+        [
+            roundNumber,
+            Number(data.todayRound),
+            data.date,
+            data.time,
+
+            numbers[0],
+            numbers[1],
+            numbers[2],
+            numbers[3],
+            numbers[4],
+
+            Number(data.numberSum),
+            data.oddEven_number,
+
+            Number(data.powerball),
+            data.oddEven_powerball,
+            data.underOver_powerball
+        ]
+    );
+
+
+} catch (saveError) {
+
+    // DB 저장에 문제가 생겨도
+    // 실시간 LIVE API 자체는 계속 작동
+    console.error(
+        'POWERBALL 결과 자동 저장 오류:',
+        saveError
+    );
+
+}
+    
     return res.json({
 
         ok: true,
