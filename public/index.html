@@ -1212,6 +1212,80 @@
     display:block;
 }
 
+/* ========================================
+   최근 결과 - 오늘 전체 회차 스크롤
+======================================== */
+
+.results-scroll {
+    max-height: 430px;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+
+/* 스크롤을 내려도 제목줄 고정 */
+.results-scroll thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #0d1a2e;
+}
+
+
+/* 세로 스크롤바 */
+.results-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+
+/* 스크롤바 배경 */
+.results-scroll::-webkit-scrollbar-track {
+    background: #091426;
+}
+
+
+/* 움직이는 부분 */
+.results-scroll::-webkit-scrollbar-thumb {
+    background: #2b3d5c;
+    border-radius: 10px;
+}
+
+/* ========================================
+   오늘 전체 회차 - 최근 결과 내부 스크롤
+======================================== */
+
+.results-scroll {
+    height: 430px;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+
+/* 스크롤 내려도 테이블 제목 고정 */
+.results-scroll thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #0d1a2e;
+}
+
+
+/* 스크롤바 */
+.results-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+
+.results-scroll::-webkit-scrollbar-track {
+    background: #091426;
+}
+
+
+.results-scroll::-webkit-scrollbar-thumb {
+    background: #2b3d5c;
+    border-radius: 10px;
+}
+   
 </style>
 
 <link rel="stylesheet" href="common.css">
@@ -2478,7 +2552,167 @@ renderRank();
     
 function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
 
-function renderRows(a){let term=(document.getElementById('roundSearch')?.value||'').trim(),f=document.getElementById('resultFilter')?.value||'all';let out=a.filter(x=>{let q=x.PowerBall,r=String(x.AllRound||x.Round||x.ID||'');if(term&&!r.includes(term))return false;if(f==='odd'&&q.pOddEven!==1)return false;if(f==='even'&&q.pOddEven!==2)return false;if(f==='under'&&q.pUnderOver!==1)return false;if(f==='over'&&q.pUnderOver!==2)return false;return true});rows.innerHTML=out.map(x=>{let q=x.PowerBall;return `<tr><td>${x.AllRound||x.Round||x.ID}</td><td>${[q.nBall1,q.nBall2,q.nBall3,q.nBall4,q.nBall5].join(' · ')}</td><td>${q.nBallSum}</td><td class="${q.nOddEven===1?'blue':'red'}">${q.nOddEven===1?'홀':'짝'}</td><td><b>${q.pBall}</b></td><td class="${q.pOddEven===1?'blue':'red'}">${q.pOddEven===1?'홀':'짝'}</td><td>${q.pUnderOver===1?'언더':'오버'}</td></tr>`}).join('')||'<tr><td colspan="7" class="sub">조건에 맞는 결과가 없습니다.</td></tr>'}
+function renderRows(a) {
+
+    const term =
+        (
+            document.getElementById('roundSearch')?.value || ''
+        ).trim();
+
+    const filter =
+        document.getElementById('resultFilter')?.value || 'all';
+
+
+    // ========================================
+    // 검색 + 필터
+    // ========================================
+
+    const out = a.filter(x => {
+
+        const round =
+            String(
+                x.AllRound ||
+                x.Round ||
+                x.ID ||
+                ''
+            );
+
+
+        // 회차 검색
+        if (
+            term &&
+            !round.includes(term)
+        ) {
+            return false;
+        }
+
+
+        // 파워볼 홀
+        if (
+            filter === 'odd' &&
+            x.pOddEven !== 1
+        ) {
+            return false;
+        }
+
+
+        // 파워볼 짝
+        if (
+            filter === 'even' &&
+            x.pOddEven !== 2
+        ) {
+            return false;
+        }
+
+
+        // 파워볼 언더
+        if (
+            filter === 'under' &&
+            x.pUnderOver !== 1
+        ) {
+            return false;
+        }
+
+
+        // 파워볼 오버
+        if (
+            filter === 'over' &&
+            x.pUnderOver !== 2
+        ) {
+            return false;
+        }
+
+
+        return true;
+
+    });
+
+
+    // ========================================
+    // 최근 결과 테이블 출력
+    // 오늘 저장된 결과 전체
+    // ========================================
+
+    rows.innerHTML = out.map(x => {
+
+        const normalOddEven =
+            x.oddEven === 1
+                ? '홀'
+                : '짝';
+
+
+        const powerOddEven =
+            x.pOddEven === 1
+                ? '홀'
+                : '짝';
+
+
+        const underOver =
+            x.pUnderOver === 1
+                ? '언더'
+                : '오버';
+
+
+        return `
+            <tr>
+
+                <td>
+                    ${x.AllRound || x.Round || x.ID}
+                </td>
+
+                <td>
+                    ${
+                        [
+                            x.nBall1,
+                            x.nBall2,
+                            x.nBall3,
+                            x.nBall4,
+                            x.nBall5
+                        ].join(' · ')
+                    }
+                </td>
+
+                <td>
+                    ${x.nBallSum}
+                </td>
+
+                <td class="${
+                    x.oddEven === 1
+                        ? 'blue'
+                        : 'red'
+                }">
+                    ${normalOddEven}
+                </td>
+
+                <td>
+                    <b>${x.PowerBall}</b>
+                </td>
+
+                <td class="${
+                    x.pOddEven === 1
+                        ? 'blue'
+                        : 'red'
+                }">
+                    ${powerOddEven}
+                </td>
+
+                <td>
+                    ${underOver}
+                </td>
+
+            </tr>
+        `;
+
+    }).join('') || `
+        <tr>
+            <td colspan="7" class="sub">
+                조건에 맞는 결과가 없습니다.
+            </td>
+        </tr>
+    `;
+
+}
+   
 document.addEventListener('input',e=>{if(e.target.id==='roundSearch')renderRows(records)});document.addEventListener('change',e=>{if(e.target.id==='resultFilter')renderRows(records)});
 function exportCSV(){if(!records.length)return;let lines=['회차,일반볼1,일반볼2,일반볼3,일반볼4,일반볼5,합,일반홀짝,파워볼,파워홀짝,언오버'];records.forEach(x=>{let q=x.PowerBall;lines.push([x.AllRound||x.Round||x.ID,q.nBall1,q.nBall2,q.nBall3,q.nBall4,q.nBall5,q.nBallSum,q.nOddEven===1?'홀':'짝',q.pBall,q.pOddEven===1?'홀':'짝',q.pUnderOver===1?'언더':'오버'].join(','))});let blob=new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv;charset=utf-8'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='toview-results.csv';a.click();URL.revokeObjectURL(u)}
 function toggleTheme(){document.body.classList.toggle('light');localStorage.setItem('toviewTheme',document.body.classList.contains('light')?'light':'dark')}if(localStorage.getItem('toviewTheme')==='light')document.body.classList.add('light');
