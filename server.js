@@ -1147,330 +1147,207 @@ app.get('/api/picks/:round/stats', async (req, res) => {
 });
 
 // ========================================
-// TOVIEW GAME DATA API V5
-// 게임 결과 데이터만 서버에서 정규화하고, 중계 화면은 TOVIEW 자체 애니메이션으로 렌더링한다.
+// TOVIEW GAME STATE API V7
+// 단일 데이터 계약: index / results / pattern / analysis / dashboard
+// 외부 공급처 실패 시 임의 당첨번호를 생성하지 않는다.
+// 정상 수신한 확정 결과는 PostgreSQL에 누적 저장하고 이후 캐시로 사용한다.
 // ========================================
+
 const TOVIEW_GAMES = {
-  dh_randomball: {
-    id:'dh_randomball', name:'동행파워볼(랜덤볼)', type:'powerball', cycleSeconds:300,
-    url:process.env.DH_RANDOMBALL_API_URL || 'https://bepick.nupro765.com/bepick/dh/rand.powerball.asp'
-  },
-  dh_speedkeno: {
-    id:'dh_speedkeno', name:'동행스피드키노', type:'keno', cycleSeconds:300,
-    url:process.env.DH_SPEEDKENO_API_URL || 'https://www.powerballgame.co.kr/json/speedkeno.json'
-  },
-  speedkeno_ladder: {
-    id:'speedkeno_ladder', name:'스피드키노사다리', type:'ladder', cycleSeconds:300,
-    url:process.env.SPEEDKENO_LADDER_API_URL || 'https://bepick.nupro765.com/bepick/speedkeno/rand.ladder.asp'
-  },
-  bubble_powerball: {
-    id:'bubble_powerball', name:'보글파워볼', type:'powerball', cycleSeconds:120,
-    url:process.env.BUBBLE_POWERBALL_API_URL || 'https://bepick.net/game/default/bubble_power'
-  },
-  bubble_ladder: {
-    id:'bubble_ladder', name:'보글사다리', type:'ladder', cycleSeconds:180,
-    url:process.env.BUBBLE_LADDER_API_URL || 'https://bepick.net/game/default/bubble_ladder3'
-  }
+  dh_randomball:{id:'dh_randomball',name:'동행파워볼(랜덤볼)',type:'powerball',cycleSeconds:300,roundsPerDay:288,url:process.env.DH_RANDOMBALL_API_URL||''},
+  dh_speedkeno:{id:'dh_speedkeno',name:'동행스피드키노',type:'keno',cycleSeconds:300,roundsPerDay:288,url:process.env.DH_SPEEDKENO_API_URL||''},
+  speedkeno_ladder:{id:'speedkeno_ladder',name:'스피드키노사다리',type:'ladder',cycleSeconds:300,roundsPerDay:288,url:process.env.SPEEDKENO_LADDER_API_URL||''},
+  bubble_powerball:{id:'bubble_powerball',name:'보글파워볼',type:'powerball',cycleSeconds:120,roundsPerDay:720,url:process.env.BUBBLE_POWERBALL_API_URL||''},
+  bubble_ladder:{id:'bubble_ladder',name:'보글사다리',type:'ladder',cycleSeconds:180,roundsPerDay:480,url:process.env.BUBBLE_LADDER_API_URL||''}
 };
 
-function apiOddEven(v,n){
-  const t=String(v??'').toLowerCase();
-  if(v===1||v==='1'||/odd|홀/.test(t))return 1;
-  if(v===2||v==='2'||/even|짝/.test(t))return 2;
-  return Number(n)%2?1:2;
-}
-function apiUnderOver(v,n){
-  const t=String(v??'').toLowerCase();
-  if(v===1||v==='1'||/under|언/.test(t))return 1;
-  if(v===2||v==='2'||/over|오/.test(t))return 2;
-  return Number(n)<=4?1:2;
-}
-async function gameFetchText(url){
-  if(!url)throw Object.assign(new Error('이 게임의 결과 공급 API 주소를 서버 환경변수에 설정해야 합니다.'),{status:503});
-  const r=await fetch(url,{headers:{'User-Agent':'Mozilla/5.0','Accept':'application/json,text/plain,text/html,*/*'}});
-  const text=await r.text();
-  if(!r.ok)throw Object.assign(new Error(`외부 결과 API HTTP ${r.status}`),{status:502});
-  if(/unauthorized|forbidden|access denied/i.test(text))throw Object.assign(new Error('결과 API 공급처가 현재 서버 접속을 허용하지 않습니다.'),{status:502});
-  return text.replace(/^\uFEFF/,'').trim();
-}
-function bracketParts(text){
-  let raw=String(text||'').replace(/&#91;|&lbrack;/gi,'[').replace(/&#93;|&rbrack;/gi,']').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'");
-  const m=raw.match(/#?\s*\[([\s\S]*?)\]/);
-  if(!m){console.error('게임 API 원문:',raw.slice(0,300));throw Object.assign(new Error('결과 API 응답 형식을 인식하지 못했습니다.'),{status:502})}
-  return m[1].split(',').map(v=>String(v).trim().replace(/^["']|["']$/g,''));
-}
-function dateFromKey(key){
-  const d=String(key||'').match(/(\d{8})/)?.[1]||'';
-  return d?`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`:'';
-}
-function normalizePowerball(parts){
-  // 공급처별로 전체/일회차가 하나 더 있는 경우를 모두 허용한다.
-  const nums=parts.map(x=>Number(x));
-  let offset=2;
-  if(parts.length>=10)offset=3;
-  const balls=parts.slice(offset,offset+5).map(Number);
-  const power=Number(parts[offset+5]);
-  const sum=Number(parts[offset+6]) || balls.reduce((a,b)=>a+(Number(b)||0),0);
-  return {Round:Number(parts[1]),AllRound:Number(parts.length>=10?parts[2]:parts[1]),Date:dateFromKey(parts[0]),
-    nBall1:balls[0],nBall2:balls[1],nBall3:balls[2],nBall4:balls[3],nBall5:balls[4],nBallSum:sum,PowerBall:power,
-    oddEven:apiOddEven(null,sum),pOddEven:apiOddEven(null,power),pUnderOver:apiUnderOver(null,power)};
-}
-function normalizeLadder(parts){
-  const six=parts.length>=6;
-  const oe=parts[six?3:2], start=parts[six?4:3], lines=Number(parts[six?5:4])===4?4:3;
-  const odd=/odd|홀/i.test(String(oe)), left=/left|좌/i.test(String(start));
-  return {Round:Number(parts[1]),AllRound:six?Number(parts[2]):Number(parts[1]),Date:dateFromKey(parts[0]),
-    oddEven:odd?1:2,pOddEven:odd?1:2,pUnderOver:left?1:2,
-    ladder:{start:left?'left':'right',lines,result:odd?'odd':'even'}};
-}
-function normalizeSpeedKeno(obj){
-  const nums=String(obj.number||'').split(',').map(Number).filter(Number.isFinite);
-  const sum=Number(obj.numberSum)||nums.reduce((a,b)=>a+b,0);
-  return {Round:Number(obj.round),AllRound:Number(obj.todayRound||obj.round),Date:obj.date||'',Time:obj.time||'',
-    numbers:nums,nBallSum:sum,oddEven:apiOddEven(obj.numberSumOddEven,sum),pOddEven:apiOddEven(obj.numberSumOddEven,sum),
-    pUnderOver:/over/i.test(String(obj.underOver||''))?2:1};
-}
+const gameMemory = new Map();
 
-function stripHtml(s){
-  return String(s||'').replace(/<script[\s\S]*?<\/script>/gi,' ')
-    .replace(/<style[\s\S]*?<\/style>/gi,' ')
-    .replace(/<[^>]+>/g,' ').replace(/&nbsp;/gi,' ')
-    .replace(/&amp;/gi,'&').replace(/\s+/g,' ').trim();
-}
-function findJsonNumber(raw, keys){
-  for(const k of keys){
-    const m=raw.match(new RegExp('["\\\']?'+k+'["\\\']?\\s*[:=]\\s*["\\\']?(-?\\d+)','i'));
-    if(m)return Number(m[1]);
-  }
-  return null;
-}
-function findJsonString(raw, keys){
-  for(const k of keys){
-    const m=raw.match(new RegExp('["\\\']?'+k+'["\\\']?\\s*[:=]\\s*["\\\']([^"\\\']+)["\\\']','i'));
-    if(m)return m[1];
-  }
-  return null;
-}
-function parseBepickRound(text, maxRound){
-  const plain=stripHtml(text);
-  const re=/(\d{4}[.\-]\d{2}[.\-]\d{2})\s*[- ]\s*(\d{1,3})/g;
-  let m,best=null;
-  while((m=re.exec(plain))){
-    const r=Number(m[2]);
-    if(r>0 && r<=maxRound && (!best || r>best.round)) best={date:m[1].replace(/\./g,'-'),round:r,index:m.index};
-  }
-  if(best)return best;
-  const cur=plain.match(/(\d{1,3})\s*회차\s*데이터/);
-  if(cur)return {date:'',round:Math.max(1,Number(cur[1])-1),index:0};
-  return null;
-}
-function parseBepickBubblePower(raw){
-  const latest=parseBepickRound(raw,720);
-  if(!latest)throw Object.assign(new Error('베픽 보글파워볼 회차를 찾지 못했습니다.'),{status:502});
-
-  // 1순위: 페이지/스크립트에 구조화된 결과 키가 있으면 사용
-  let power=findJsonNumber(raw,['powerball','power_ball','pball','powerBall']);
-  let b1=findJsonNumber(raw,['ball1','nBall1','number1']);
-  let b2=findJsonNumber(raw,['ball2','nBall2','number2']);
-  let b3=findJsonNumber(raw,['ball3','nBall3','number3']);
-  let b4=findJsonNumber(raw,['ball4','nBall4','number4']);
-  let b5=findJsonNumber(raw,['ball5','nBall5','number5']);
-
-  // 2순위: 최신 회차 주변 HTML에서 "파워볼 + 일반볼 5개 + 합" 숫자열 탐색
-  if([power,b1,b2,b3,b4,b5].some(v=>v===null)){
-    const marker1=new RegExp(latest.date.replace(/-/g,'[.\\-]')+'\\s*[- ]\\s*'+latest.round);
-    const mm=raw.match(marker1);
-    const chunk=mm ? raw.slice(mm.index,mm.index+6000) : raw.slice(0,12000);
-    const plain=stripHtml(chunk);
-    const nums=(plain.match(/\b\d{1,3}\b/g)||[]).map(Number);
-    // 보글 일반볼은 1~28 범위, 파워볼은 0~9. 회차/시간 숫자를 제외하기 위해
-    // 연속 6개 후보 중 뒤 5개가 일반볼 범위인 첫 조합을 선택한다.
-    for(let i=0;i+5<nums.length;i++){
-      const a=nums.slice(i,i+6);
-      if(a[0]>=0&&a[0]<=9 && a.slice(1).every(n=>n>=1&&n<=28)){
-        power=a[0]; [b1,b2,b3,b4,b5]=a.slice(1); break;
-      }
-    }
-  }
-  if([power,b1,b2,b3,b4,b5].some(v=>!Number.isFinite(v))){
-    throw Object.assign(new Error('베픽 보글파워볼 페이지에서 최신 결과 숫자를 추출하지 못했습니다.'),{status:502});
-  }
-  const balls=[b1,b2,b3,b4,b5],sum=balls.reduce((a,b)=>a+b,0);
-  return {Round:latest.round,AllRound:latest.round,Date:latest.date,
-    nBall1:b1,nBall2:b2,nBall3:b3,nBall4:b4,nBall5:b5,nBallSum:sum,PowerBall:power,
-    oddEven:sum%2?1:2,pOddEven:power%2?1:2,pUnderOver:power<=4?1:2,source:'bepick'};
-}
-function parseBepickBubbleLadder(raw){
-  const latest=parseBepickRound(raw,480);
-  if(!latest)throw Object.assign(new Error('베픽 보글사다리 회차를 찾지 못했습니다.'),{status:502});
-
-  let start=findJsonString(raw,['start','startPosition','start_position','leftRight','left_right']);
-  let lines=findJsonNumber(raw,['line','lines','lineCount','line_count','ladderCount']);
-  let result=findJsonString(raw,['result','oddEven','odd_even','endResult']);
-
-  // 최신 회차 근처에서 좌/우, 3/4줄, 홀/짝 텍스트를 찾는 fallback.
-  const marker=new RegExp(latest.date.replace(/-/g,'[.\\-]')+'\\s*[- ]\\s*'+latest.round);
-  const mm=raw.match(marker);
-  const chunk=mm ? stripHtml(raw.slice(mm.index,mm.index+3500)) : stripHtml(raw.slice(0,8000));
-  if(!start){
-    const m=chunk.match(/(좌(?:출발)?|우(?:출발)?|left|right)/i); if(m)start=m[1];
-  }
-  if(!lines){
-    const m=chunk.match(/\b([34])\s*줄/); if(m)lines=Number(m[1]);
-  }
-  if(!result){
-    const m=chunk.match(/(홀|짝|odd|even)/i); if(m)result=m[1];
-  }
-
-  const left=/좌|left/i.test(String(start||'')), right=/우|right/i.test(String(start||''));
-  const odd=/홀|odd/i.test(String(result||'')), even=/짝|even/i.test(String(result||''));
-  if((!left&&!right)||![3,4].includes(Number(lines))||(!odd&&!even)){
-    throw Object.assign(new Error('베픽 보글사다리 페이지에서 최신 좌우/줄수/홀짝 결과를 추출하지 못했습니다.'),{status:502});
-  }
-  return {Round:latest.round,AllRound:latest.round,Date:latest.date,
-    oddEven:odd?1:2,pOddEven:odd?1:2,pUnderOver:left?1:2,
-    ladder:{start:left?'left':'right',lines:Number(lines),result:odd?'odd':'even'},source:'bepick'};
-}
-
-async function gamePayload(id){
-  const g=TOVIEW_GAMES[id]; if(!g)throw Object.assign(new Error('지원하지 않는 게임입니다.'),{status:404});
-  const raw=await gameFetchText(g.url);
-  let data;
-  if(id==='dh_speedkeno'){
-    let obj;try{obj=JSON.parse(raw)}catch{throw Object.assign(new Error('동행스피드키노 JSON 형식을 인식하지 못했습니다.'),{status:502})}
-    data=normalizeSpeedKeno(Array.isArray(obj)?obj[0]:obj);
-  }else if(id==='bubble_powerball'){
-    // 환경변수에 전용 API를 넣었으면 bracket/JSON을 우선 시도하고,
-    // 기본값(Bepick 공개 페이지)이면 공개 결과 페이지를 파싱한다.
-    if(g.url.includes('bepick.net/game/')) data=parseBepickBubblePower(raw);
-    else {
-      try{
-        const obj=JSON.parse(raw);
-        const x=Array.isArray(obj)?obj[0]:obj;
-        const balls=x.balls||x.numbers||[x.nBall1,x.nBall2,x.nBall3,x.nBall4,x.nBall5];
-        const power=Number(x.PowerBall??x.powerball??x.powerBall);
-        const sum=Number(x.nBallSum??x.sum)||balls.map(Number).reduce((a,b)=>a+b,0);
-        data={Round:Number(x.Round??x.round),AllRound:Number(x.AllRound??x.todayRound??x.round),Date:x.Date??x.date??'',
-          nBall1:Number(balls[0]),nBall2:Number(balls[1]),nBall3:Number(balls[2]),nBall4:Number(balls[3]),nBall5:Number(balls[4]),
-          nBallSum:sum,PowerBall:power,oddEven:sum%2?1:2,pOddEven:power%2?1:2,pUnderOver:power<=4?1:2};
-      }catch{data=normalizePowerball(bracketParts(raw))}
-    }
-  }else if(id==='bubble_ladder'){
-    if(g.url.includes('bepick.net/game/')) data=parseBepickBubbleLadder(raw);
-    else {
-      try{
-        const obj=JSON.parse(raw),x=Array.isArray(obj)?obj[0]:obj;
-        const left=/left|좌/i.test(String(x.start??x.leftRight??'')),odd=/odd|홀/i.test(String(x.result??x.oddEven??''));
-        data={Round:Number(x.Round??x.round),AllRound:Number(x.AllRound??x.todayRound??x.round),Date:x.Date??x.date??'',
-          oddEven:odd?1:2,pOddEven:odd?1:2,pUnderOver:left?1:2,
-          ladder:{start:left?'left':'right',lines:Number(x.lines??x.lineCount),result:odd?'odd':'even'}};
-      }catch{data=normalizeLadder(bracketParts(raw))}
-    }
-  }else{
-    const parts=bracketParts(raw);
-    data=g.type==='ladder'?normalizeLadder(parts):normalizePowerball(parts);
-  }
-  return {ok:true,game:id,name:g.name,type:g.type,cycleSeconds:g.cycleSeconds,renderer:g.type==='ladder'?'toview-ladder':'toview-balls',
-    roundNumber:Number(data.Round),todayRound:Number(data.AllRound),drawDate:data.Date||'',drawTime:data.Time||'',source:data.source||'result-api',data};
-}
-
-app.get('/api/games',(req,res)=>res.json({ok:true,games:Object.values(TOVIEW_GAMES).map(({url,...g})=>g)}));
-app.get('/api/games/:game/live',async(req,res)=>{
-  try{return res.json(await gamePayload(String(req.params.game||'').toLowerCase()))}
-  catch(e){console.error('게임 LIVE API 오류:',e);return res.status(e.status||502).json({ok:false,error:e.message})}
-});
-app.get('/api/games/:game/results',async(req,res)=>{
+async function initGameResultsTable(){
   try{
-    const id=String(req.params.game||'').toLowerCase();
-    const live=await gamePayload(id);
-    // 공급처가 최신값 하나만 제공할 때 임의 과거 결과를 생성하지 않는다.
-    return res.json({ok:true,game:id,records:[live.data]});
-  }catch(e){return res.status(e.status||502).json({ok:false,error:e.message,records:[]})}
-});
-
-// 기존 index.html 호환: /api/results는 동행파워볼(랜덤볼) 최신 결과 배열을 반환한다.
-app.get('/api/results',async(req,res)=>{
-  try{const live=await gamePayload('dh_randomball');return res.json([live.data])}
-  catch(e){console.error('/api/results 오류:',e);return res.status(e.status||502).json({error:e.message})}
-});
-
-
-// ========================================
-// TOVIEW UNIFIED GAME STATE API V6
-// index.html / results.html 이 동일한 현재회차·타이머·최근결과·통계를 사용한다.
-// ========================================
-const TOVIEW_STATE_META = {
-  dh_randomball:{name:'동행파워볼(랜덤볼)',type:'powerball',cycleSeconds:300,roundsPerDay:288},
-  dh_speedkeno:{name:'동행스피드키노',type:'keno',cycleSeconds:300,roundsPerDay:288},
-  speedkeno_ladder:{name:'스피드키노사다리',type:'ladder',cycleSeconds:300,roundsPerDay:288},
-  bubble_powerball:{name:'보글파워볼',type:'powerball',cycleSeconds:120,roundsPerDay:720},
-  bubble_ladder:{name:'보글사다리',type:'ladder',cycleSeconds:180,roundsPerDay:480}
-};
-const stateCache=new Map();
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS game_results (
+        id BIGSERIAL PRIMARY KEY,
+        game_id VARCHAR(40) NOT NULL,
+        round_number BIGINT NOT NULL,
+        today_round INTEGER,
+        draw_date VARCHAR(20),
+        draw_time VARCHAR(20),
+        payload JSONB NOT NULL,
+        source VARCHAR(80),
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(game_id, round_number)
+      )
+    `);
+    await pool.query(`CREATE INDEX IF NOT EXISTS game_results_game_created_idx ON game_results(game_id, created_at DESC)`);
+    console.log('GAME RESULTS 테이블 준비 완료');
+  }catch(e){console.error('GAME RESULTS 테이블 준비 오류:',e)}
+}
+initGameResultsTable();
 
 function seoulClock(){
-  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
-  const x=Object.fromEntries(parts.map(p=>[p.type,p.value]));
+  const p=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
+  const x=Object.fromEntries(p.map(v=>[v.type,v.value]));
   return {date:`${x.year}-${x.month}-${x.day}`,hour:+x.hour,minute:+x.minute,second:+x.second};
 }
 function clockState(gameId){
-  const m=TOVIEW_STATE_META[gameId], k=seoulClock();
-  const elapsed=k.hour*3600+k.minute*60+k.second;
-  const completed=Math.floor(elapsed/m.cycleSeconds);
-  const currentRound=Math.min(m.roundsPerDay,completed+1);
-  const remaining=m.cycleSeconds-(elapsed%m.cycleSeconds);
-  return {date:k.date,currentRound,remainingSeconds:remaining===m.cycleSeconds?m.cycleSeconds:remaining};
+  const g=TOVIEW_GAMES[gameId],k=seoulClock(),elapsed=k.hour*3600+k.minute*60+k.second;
+  const completed=Math.floor(elapsed/g.cycleSeconds);
+  return {date:k.date,currentRound:(completed%g.roundsPerDay)+1,remainingSeconds:g.cycleSeconds-(elapsed%g.cycleSeconds)};
 }
-function summarizeRecords(gameId,records){
-  const meta=TOVIEW_STATE_META[gameId];
-  const s={total:records.length};
-  if(meta.type==='ladder'){
-    s.left=records.filter(r=>r.ladder?.start==='left').length;
-    s.right=records.filter(r=>r.ladder?.start==='right').length;
-    s.line3=records.filter(r=>Number(r.ladder?.lines)===3).length;
-    s.line4=records.filter(r=>Number(r.ladder?.lines)===4).length;
-    s.odd=records.filter(r=>r.ladder?.result==='odd'||r.pOddEven===1).length;
-    s.even=records.filter(r=>r.ladder?.result==='even'||r.pOddEven===2).length;
+function oe(v,n){
+  const s=String(v??'').toLowerCase();
+  if(v===1||v==='1'||/odd|홀/.test(s))return 1;
+  if(v===2||v==='2'||/even|짝/.test(s))return 2;
+  return Number(n)%2?1:2;
+}
+function uo(v,n){
+  const s=String(v??'').toLowerCase();
+  if(v===1||v==='1'||/under|언더/.test(s))return 1;
+  if(v===2||v==='2'||/over|오버/.test(s))return 2;
+  return Number(n)<=4?1:2;
+}
+function decodeEntities(s){
+  return String(s||'').replace(/&#91;|&lbrack;/gi,'[').replace(/&#93;|&rbrack;/gi,']').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'").replace(/&amp;/gi,'&');
+}
+function bracketParts(text){
+  const m=decodeEntities(text).match(/#?\s*\[([\s\S]*?)\]/);
+  if(!m)throw Object.assign(new Error('RESULT_FORMAT'),{status:502});
+  return m[1].split(',').map(v=>String(v).trim().replace(/^["']|["']$/g,''));
+}
+function dateFromKey(v){
+  const d=String(v||'').match(/(\d{8})/)?.[1]||'';
+  return d?`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`:'';
+}
+function normalizePowerball(parts){
+  const offset=parts.length>=10?3:2, balls=parts.slice(offset,offset+5).map(Number), power=Number(parts[offset+5]);
+  const sum=Number(parts[offset+6])||balls.reduce((a,b)=>a+(Number(b)||0),0);
+  if(balls.length!==5||balls.some(n=>!Number.isFinite(n))||!Number.isFinite(power))throw Object.assign(new Error('RESULT_FORMAT'),{status:502});
+  return {Round:Number(parts[1]),AllRound:Number(parts.length>=10?parts[2]:parts[1]),Date:dateFromKey(parts[0]),Time:'',
+    nBall1:balls[0],nBall2:balls[1],nBall3:balls[2],nBall4:balls[3],nBall5:balls[4],nBallSum:sum,PowerBall:power,
+    oddEven:oe(null,sum),pOddEven:oe(null,power),pUnderOver:uo(null,power)};
+}
+function normalizeLadder(parts){
+  const six=parts.length>=6, rawResult=parts[six?3:2], rawStart=parts[six?4:3], lines=Number(parts[six?5:4]);
+  const odd=/odd|홀/i.test(String(rawResult)), even=/even|짝/i.test(String(rawResult));
+  const left=/left|좌/i.test(String(rawStart)), right=/right|우/i.test(String(rawStart));
+  if((!odd&&!even)||(!left&&!right)||![3,4].includes(lines))throw Object.assign(new Error('RESULT_FORMAT'),{status:502});
+  return {Round:Number(parts[1]),AllRound:Number(six?parts[2]:parts[1]),Date:dateFromKey(parts[0]),Time:'',
+    oddEven:odd?1:2,pOddEven:odd?1:2,pUnderOver:left?1:2,ladder:{start:left?'left':'right',lines,result:odd?'odd':'even'}};
+}
+function normalizeJson(gameId,obj){
+  const g=TOVIEW_GAMES[gameId],x=Array.isArray(obj)?obj[0]:obj;
+  if(!x||typeof x!=='object')throw Object.assign(new Error('RESULT_FORMAT'),{status:502});
+  if(g.type==='ladder'){
+    const left=/left|좌/i.test(String(x.start??x.leftRight??x.startPosition??'')), right=/right|우/i.test(String(x.start??x.leftRight??x.startPosition??''));
+    const odd=/odd|홀/i.test(String(x.result??x.oddEven??'')), even=/even|짝/i.test(String(x.result??x.oddEven??''));
+    const lines=Number(x.lines??x.lineCount??x.ladderCount);
+    if((!left&&!right)||(!odd&&!even)||![3,4].includes(lines))throw Object.assign(new Error('RESULT_FORMAT'),{status:502});
+    return {Round:Number(x.Round??x.round),AllRound:Number(x.AllRound??x.todayRound??x.round),Date:x.Date??x.date??'',Time:x.Time??x.time??'',
+      oddEven:odd?1:2,pOddEven:odd?1:2,pUnderOver:left?1:2,ladder:{start:left?'left':'right',lines,result:odd?'odd':'even'}};
+  }
+  const nums=(x.numbers||x.balls||[x.nBall1,x.nBall2,x.nBall3,x.nBall4,x.nBall5]).map(Number).filter(Number.isFinite);
+  if(gameId==='dh_speedkeno'){
+    if(!nums.length)throw Object.assign(new Error('RESULT_FORMAT'),{status:502});
+    const sum=Number(x.nBallSum??x.numberSum??x.sum)||nums.reduce((a,b)=>a+b,0);
+    return {Round:Number(x.Round??x.round),AllRound:Number(x.AllRound??x.todayRound??x.round),Date:x.Date??x.date??'',Time:x.Time??x.time??'',
+      numbers:nums,nBallSum:sum,oddEven:oe(x.oddEven??x.numberSumOddEven,sum),pOddEven:oe(x.pOddEven??x.numberSumOddEven,sum),
+      pUnderOver:uo(x.pUnderOver??x.underOver,sum)};
+  }
+  if(nums.length<5)throw Object.assign(new Error('RESULT_FORMAT'),{status:502});
+  const power=Number(x.PowerBall??x.powerball??x.powerBall),balls=nums.slice(0,5),sum=Number(x.nBallSum??x.sum)||balls.reduce((a,b)=>a+b,0);
+  if(!Number.isFinite(power))throw Object.assign(new Error('RESULT_FORMAT'),{status:502});
+  return {Round:Number(x.Round??x.round),AllRound:Number(x.AllRound??x.todayRound??x.round),Date:x.Date??x.date??'',Time:x.Time??x.time??'',
+    nBall1:balls[0],nBall2:balls[1],nBall3:balls[2],nBall4:balls[3],nBall5:balls[4],nBallSum:sum,PowerBall:power,
+    oddEven:oe(x.oddEven,sum),pOddEven:oe(x.pOddEven,power),pUnderOver:uo(x.pUnderOver,power)};
+}
+async function fetchProvider(gameId){
+  const g=TOVIEW_GAMES[gameId];
+  if(!g.url)throw Object.assign(new Error('PROVIDER_NOT_CONFIGURED'),{status:503});
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),7000);
+  try{
+    const r=await fetch(g.url,{signal:controller.signal,headers:{Accept:'application/json,text/plain,*/*'}});
+    const raw=(await r.text()).replace(/^\uFEFF/,'').trim();
+    if(!r.ok)throw Object.assign(new Error('PROVIDER_HTTP_'+r.status),{status:502});
+    // 차단 페이지를 우회하지 않는다.
+    if(/access denied|forbidden|unauthorized|접속.*차단|접속.*불가/i.test(raw))throw Object.assign(new Error('PROVIDER_UNAVAILABLE'),{status:502});
+    try{return normalizeJson(gameId,JSON.parse(raw))}catch(e){
+      if(e.message!=='RESULT_FORMAT' && !(e instanceof SyntaxError))throw e;
+      const parts=bracketParts(raw);
+      return g.type==='ladder'?normalizeLadder(parts):normalizePowerball(parts);
+    }
+  }finally{clearTimeout(timer)}
+}
+async function saveGameResult(gameId,data,source){
+  const round=Number(data.AllRound??data.Round);
+  if(!Number.isFinite(round)||round<=0)return;
+  gameMemory.set(gameId,{data,source,at:Date.now()});
+  try{
+    await pool.query(`INSERT INTO game_results(game_id,round_number,today_round,draw_date,draw_time,payload,source)
+      VALUES($1,$2,$3,$4,$5,$6::jsonb,$7)
+      ON CONFLICT(game_id,round_number) DO UPDATE SET payload=EXCLUDED.payload,source=EXCLUDED.source,draw_date=EXCLUDED.draw_date,draw_time=EXCLUDED.draw_time`,
+      [gameId,round,Number(data.Round)||null,data.Date||'',data.Time||'',JSON.stringify(data),source||'provider']);
+  }catch(e){console.error('게임 결과 저장 오류:',gameId,e.message)}
+}
+async function storedResults(gameId,limit=50){
+  try{
+    const q=await pool.query(`SELECT payload,source FROM game_results WHERE game_id=$1 ORDER BY round_number DESC LIMIT $2`,[gameId,limit]);
+    return q.rows.map(r=>({...r.payload,source:r.payload?.source||r.source||'stored'}));
+  }catch(e){
+    console.error('게임 결과 DB 조회 오류:',gameId,e.message);
+    const m=gameMemory.get(gameId); return m?[m.data]:[];
+  }
+}
+function summarize(gameId,records){
+  const g=TOVIEW_GAMES[gameId],s={total:records.length};
+  if(g.type==='ladder'){
+    s.left=records.filter(r=>r.ladder?.start==='left').length;s.right=records.filter(r=>r.ladder?.start==='right').length;
+    s.line3=records.filter(r=>Number(r.ladder?.lines)===3).length;s.line4=records.filter(r=>Number(r.ladder?.lines)===4).length;
+    s.odd=records.filter(r=>r.ladder?.result==='odd'||r.pOddEven===1).length;s.even=records.filter(r=>r.ladder?.result==='even'||r.pOddEven===2).length;
   }else{
-    s.powerOdd=records.filter(r=>r.pOddEven===1).length;
-    s.powerEven=records.filter(r=>r.pOddEven===2).length;
-    s.powerUnder=records.filter(r=>r.pUnderOver===1).length;
-    s.powerOver=records.filter(r=>r.pUnderOver===2).length;
-    s.normalOdd=records.filter(r=>r.oddEven===1).length;
-    s.normalEven=records.filter(r=>r.oddEven===2).length;
+    s.powerOdd=records.filter(r=>r.pOddEven===1).length;s.powerEven=records.filter(r=>r.pOddEven===2).length;
+    s.powerUnder=records.filter(r=>r.pUnderOver===1).length;s.powerOver=records.filter(r=>r.pUnderOver===2).length;
+    s.normalOdd=records.filter(r=>r.oddEven===1).length;s.normalEven=records.filter(r=>r.oddEven===2).length;
   }
   return s;
 }
 async function getUnifiedState(gameId){
-  const meta=TOVIEW_STATE_META[gameId];
-  if(!meta)throw Object.assign(new Error('지원하지 않는 게임입니다.'),{status:404});
+  const g=TOVIEW_GAMES[gameId]; if(!g)throw Object.assign(new Error('지원하지 않는 게임입니다.'),{status:404});
   const clock=clockState(gameId);
-  let records=[],source='result-api',live=null,error=null;
+  let providerError=null,source='stored';
   try{
-    const payload=await gamePayload(gameId);
-    live=payload.data; source=payload.source||'result-api';
-    records=[live];
-    stateCache.set(gameId,{live,records,source,at:Date.now()});
-  }catch(e){
-    error=e.message;
-    const cached=stateCache.get(gameId);
-    if(cached){live=cached.live;records=cached.records;source='cache';}
-  }
-  const lastRound=Number(live?.AllRound??live?.Round??0);
-  // API가 최신 확정회차를 제공하면 다음 회차는 그 다음 번호를 우선한다.
-  const currentRound=lastRound>0 ? ((lastRound % meta.roundsPerDay)+1) : clock.currentRound;
-  return {
-    ok:!!live,game:gameId,name:meta.name,type:meta.type,
-    cycleSeconds:meta.cycleSeconds,roundsPerDay:meta.roundsPerDay,
-    currentRound,remainingSeconds:clock.remainingSeconds,
-    lastCompletedRound:lastRound||null,lastResult:live||null,
-    recentResults:records.slice(0,30),stats:summarizeRecords(gameId,records),
-    source,error
-  };
+    const fresh=await fetchProvider(gameId);
+    await saveGameResult(gameId,fresh,'provider');
+    source='provider';
+  }catch(e){providerError=e.message}
+  const records=await storedResults(gameId,50);
+  const last=records[0]||null,lastRound=Number(last?.AllRound??last?.Round??0);
+  const currentRound=lastRound>0?((lastRound%g.roundsPerDay)+1):clock.currentRound;
+  return {ok:records.length>0,game:gameId,name:g.name,type:g.type,cycleSeconds:g.cycleSeconds,roundsPerDay:g.roundsPerDay,
+    currentRound,remainingSeconds:clock.remainingSeconds,lastCompletedRound:lastRound||null,lastResult:last,
+    recentResults:records,stats:summarize(gameId,records),source:records.length?(source==='provider'?'provider':'stored'):'waiting',
+    providerConfigured:!!g.url,providerError};
 }
+app.get('/api/games',(req,res)=>res.json({ok:true,games:Object.values(TOVIEW_GAMES).map(({url,...g})=>({...g,providerConfigured:!!url}))}));
 app.get('/api/game-state/:game',async(req,res)=>{
   try{return res.json(await getUnifiedState(String(req.params.game||'').toLowerCase()))}
   catch(e){return res.status(e.status||500).json({ok:false,error:e.message})}
+});
+// 이전 프론트 호환. 이제 동일한 game-state를 사용한다.
+app.get('/api/games/:game/live',async(req,res)=>{
+  try{
+    const s=await getUnifiedState(String(req.params.game||'').toLowerCase());
+    return res.json({ok:s.ok,game:s.game,name:s.name,type:s.type,cycleSeconds:s.cycleSeconds,renderer:s.type==='ladder'?'toview-ladder':'toview-balls',
+      roundNumber:s.lastCompletedRound,todayRound:s.lastCompletedRound,source:s.source,data:s.lastResult,waiting:!s.lastResult});
+  }catch(e){return res.status(e.status||500).json({ok:false,error:e.message})}
+});
+app.get('/api/games/:game/results',async(req,res)=>{
+  try{const s=await getUnifiedState(String(req.params.game||'').toLowerCase());return res.json({ok:true,game:s.game,records:s.recentResults})}
+  catch(e){return res.status(e.status||500).json({ok:false,error:e.message,records:[]})}
+});
+app.get('/api/results',async(req,res)=>{
+  try{const s=await getUnifiedState('dh_randomball');return res.json(s.recentResults)}
+  catch(e){return res.status(e.status||500).json({error:e.message})}
 });
 
 app.listen(PORT,()=>console.log(`TOVIEW http://localhost:${PORT}`));
