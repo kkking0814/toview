@@ -2267,7 +2267,51 @@ function showInfo(t,b){
 }
 function openCommunity(board){let posts=JSON.parse(localStorage.getItem('toviewPosts')||'[]').filter(x=>x.board===board);modalTitle.textContent=board;modalBody.innerHTML=`<div id="postList" style="max-height:220px;overflow:auto;margin-bottom:12px">${posts.length?posts.slice().reverse().map(x=>`<div style="padding:10px;border-bottom:1px solid #22334e"><b>${esc(x.title)}</b><div class="sub">${esc(x.user)} · ${x.time}</div><div style="margin-top:5px;color:#aebbd1">${esc(x.body)}</div></div>`).join(''):'<div class="sub">아직 게시글이 없습니다.</div>'}</div>${board==='공지사항'?'':'<input id="pt" placeholder="제목"><input id="pb" placeholder="내용"><button onclick="writePost(\''+board+'\')">글쓰기</button>'}`;modal.classList.add('on')}
 function writePost(board){let u=localStorage.getItem('toviewUser');if(!u){alert('먼저 로그인해 주세요.');return}let title=document.getElementById('pt').value.trim(),body=document.getElementById('pb').value.trim();if(!title||!body)return;let posts=JSON.parse(localStorage.getItem('toviewPosts')||'[]');posts.push({board,title,body,user:u,time:new Date().toLocaleString('ko-KR')});localStorage.setItem('toviewPosts',JSON.stringify(posts));renderRank();openCommunity(board)}
-function renderRank(){let posts=JSON.parse(localStorage.getItem('toviewPosts')||'[]'),m={};posts.forEach(x=>m[x.user]=(m[x.user]||0)+1);let r=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,5);rankList.innerHTML=r.length?r.map((x,i)=>`<div class="sideitem" style="cursor:default"><b>${i+1}위 · ${esc(x[0])}</b><span class="sub" style="float:right">${x[1]}글</span></div>`).join(''):'<div class="sideitem sub" style="cursor:default">게시글을 작성하면 활동 랭킹이 표시됩니다.</div>'}renderRank();
+
+function renderRank() {
+
+    const rankList = document.getElementById('rankList');
+
+    // 홈 화면에 rankList 영역이 없으면 그냥 종료
+    if (!rankList) {
+        return;
+    }
+
+    const posts =
+        JSON.parse(
+            localStorage.getItem('toviewPosts') || '[]'
+        );
+
+    const m = {};
+
+    posts.forEach(x => {
+        m[x.user] = (m[x.user] || 0) + 1;
+    });
+
+    const r =
+        Object.entries(m)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+
+    rankList.innerHTML =
+        r.length
+            ? r.map((x, i) => `
+                <div class="sideitem" style="cursor:default">
+                    <b>${i + 1}위 · ${esc(x[0])}</b>
+                    <span class="sub" style="float:right">
+                        ${x[1]}글
+                    </span>
+                </div>
+            `).join('')
+            : `
+                <div class="sideitem sub" style="cursor:default">
+                    게시글을 작성하면 활동 랭킹이 표시됩니다.
+                </div>
+            `;
+}
+
+renderRank();
+    
 function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
 
 function renderRows(a){let term=(document.getElementById('roundSearch')?.value||'').trim(),f=document.getElementById('resultFilter')?.value||'all';let out=a.filter(x=>{let q=x.PowerBall,r=String(x.AllRound||x.Round||x.ID||'');if(term&&!r.includes(term))return false;if(f==='odd'&&q.pOddEven!==1)return false;if(f==='even'&&q.pOddEven!==2)return false;if(f==='under'&&q.pUnderOver!==1)return false;if(f==='over'&&q.pUnderOver!==2)return false;return true});rows.innerHTML=out.map(x=>{let q=x.PowerBall;return `<tr><td>${x.AllRound||x.Round||x.ID}</td><td>${[q.nBall1,q.nBall2,q.nBall3,q.nBall4,q.nBall5].join(' · ')}</td><td>${q.nBallSum}</td><td class="${q.nOddEven===1?'blue':'red'}">${q.nOddEven===1?'홀':'짝'}</td><td><b>${q.pBall}</b></td><td class="${q.pOddEven===1?'blue':'red'}">${q.pOddEven===1?'홀':'짝'}</td><td>${q.pUnderOver===1?'언더':'오버'}</td></tr>`}).join('')||'<tr><td colspan="7" class="sub">조건에 맞는 결과가 없습니다.</td></tr>'}
