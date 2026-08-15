@@ -1072,7 +1072,8 @@ async function submitPick() {
 
         // 성공
         alert('PICK이 등록되었습니다.');
-
+        
+        loadPickStats();
 
         const myPickText =
             document.getElementById('myPickText');
@@ -1337,6 +1338,21 @@ setInterval(function() {
     loadPowerballLive();
 
 }, 5000);
+
+// 페이지 접속 후 PICK 통계 불러오기
+setTimeout(function() {
+
+    loadPickStats();
+
+}, 1000);
+
+
+// 3초마다 현재 회차 PICK 통계 갱신
+setInterval(function() {
+
+    loadPickStats();
+
+}, 3000);
     
 // 페이지 접속 즉시 채팅 불러오기
 loadChat();
