@@ -672,6 +672,11 @@ function syncPickRound() {
     }
 }
 
+const currentPick = {
+    oddEven: null,
+    underOver: null
+};
+    
 function selectPick(button) {
 
     const type = button.dataset.type;
