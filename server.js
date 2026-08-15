@@ -1593,11 +1593,16 @@ try {
 // 기존 홈 화면용 파워볼 결과 API
 // ========================================
 
+// ========================================
+// 홈 화면 - 오늘 누적 파워볼 결과
+// ========================================
+
 app.get('/api/results', async (req, res) => {
 
     try {
 
-        const apiResponse = await fetch(
+        // 먼저 실제 파워볼 API에서 현재 날짜 확인
+        const liveResponse = await fetch(
             'https://www.powerballgame.co.kr/json/powerball.json',
             {
                 headers: {
@@ -1606,104 +1611,137 @@ app.get('/api/results', async (req, res) => {
             }
         );
 
-        if (!apiResponse.ok) {
+        if (!liveResponse.ok) {
 
             return res.status(502).json({
-                error: '파워볼 데이터를 불러오지 못했습니다.'
+                error: '현재 파워볼 날짜를 확인하지 못했습니다.'
             });
 
         }
 
-        const data = await apiResponse.json();
+        const liveData =
+            await liveResponse.json();
+
+        const today =
+            String(liveData.date || '').trim();
 
 
-        // 일반번호 문자열
-        // 예: "1909011107"
-        // → 19, 09, 01, 11, 07
-        const numberString =
-            String(data.number || '')
-                .padStart(10, '0');
+        if (!today) {
 
-
-        const numbers = [];
-
-        for (let i = 0; i < 10; i += 2) {
-
-            numbers.push(
-                Number(numberString.slice(i, i + 2))
-            );
+            return res.status(502).json({
+                error: '현재 날짜 정보가 없습니다.'
+            });
 
         }
 
 
-        // index.html 기존 구조에 맞춰서 반환
-        const result = {
+        // ========================================
+        // 오늘 저장된 결과 전체 조회
+        // 최신 회차 → 과거 회차 순서
+        // ========================================
 
-            AllRound:
-                Number(data.todayRound),
+        const result =
+            await pool.query(
+                `
+                SELECT
+                    round_number,
+                    today_round,
+                    draw_date,
+                    draw_time,
 
-            Round:
-                Number(data.round),
+                    n_ball1,
+                    n_ball2,
+                    n_ball3,
+                    n_ball4,
+                    n_ball5,
 
-            Date:
-                data.date,
+                    number_sum,
+                    number_odd_even,
 
-            Time:
-                data.time,
+                    powerball,
+                    powerball_odd_even,
+                    powerball_under_over
 
-            nBall1:
-                numbers[0],
+                FROM powerball_results
 
-            nBall2:
-                numbers[1],
+                WHERE draw_date = $1
 
-            nBall3:
-                numbers[2],
-
-            nBall4:
-                numbers[3],
-
-            nBall5:
-                numbers[4],
-
-            nBallSum:
-                Number(data.numberSum),
-
-            PowerBall:
-                Number(data.powerball),
-
-            oddEven:
-                data.oddEven_number === 'odd'
-                    ? 1
-                    : 2,
-
-            pOddEven:
-                data.oddEven_powerball === 'odd'
-                    ? 1
-                    : 2,
-
-            pUnderOver:
-                data.underOver_powerball === 'under'
-                    ? 1
-                    : 2
-
-        };
+                ORDER BY today_round DESC
+                `,
+                [today]
+            );
 
 
-        return res.json([
-            result
-        ]);
+        // ========================================
+        // 기존 index.html 형식으로 변환
+        // ========================================
+
+        const records =
+            result.rows.map(row => ({
+
+                AllRound:
+                    Number(row.today_round),
+
+                Round:
+                    Number(row.round_number),
+
+                Date:
+                    row.draw_date,
+
+                Time:
+                    row.draw_time,
+
+                nBall1:
+                    Number(row.n_ball1),
+
+                nBall2:
+                    Number(row.n_ball2),
+
+                nBall3:
+                    Number(row.n_ball3),
+
+                nBall4:
+                    Number(row.n_ball4),
+
+                nBall5:
+                    Number(row.n_ball5),
+
+                nBallSum:
+                    Number(row.number_sum),
+
+                oddEven:
+                    row.number_odd_even === 'odd'
+                        ? 1
+                        : 2,
+
+                PowerBall:
+                    Number(row.powerball),
+
+                pOddEven:
+                    row.powerball_odd_even === 'odd'
+                        ? 1
+                        : 2,
+
+                pUnderOver:
+                    row.powerball_under_over === 'under'
+                        ? 1
+                        : 2
+
+            }));
+
+
+        return res.json(records);
 
 
     } catch (error) {
 
         console.error(
-            '홈 파워볼 결과 API 오류:',
+            '오늘 파워볼 결과 조회 오류:',
             error
         );
 
         return res.status(500).json({
-            error: '파워볼 결과 처리 중 오류가 발생했습니다.'
+            error: '오늘 결과를 불러오지 못했습니다.'
         });
 
     }
