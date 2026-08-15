@@ -1059,12 +1059,12 @@ app.post('/api/picks', async (req, res) => {
         }
 
         const username = req.session.user;
-        const gameId = String(req.body?.gameId || 'powerball').trim().toLowerCase();
+        const gameId = String(req.body?.gameId || 'dhpowerball').trim().toLowerCase();
         const roundNumber = Number(req.body?.roundNumber);
         const oddEven = String(req.body?.oddEven || '').trim().toLowerCase();
         const underOver = String(req.body?.underOver || '').trim().toLowerCase();
 
-        if (!['powerball','ladder','eos','speedkeno','kenoladder'].includes(gameId)) {
+        if (!['dhpowerball','dhpowerladder','eos','bubbleladder','kenoladder'].includes(gameId)) {
             return res.status(400).json({ error: '지원하지 않는 게임입니다.' });
         }
         if (!Number.isInteger(roundNumber) || roundNumber <= 0) {
@@ -1110,7 +1110,7 @@ app.post('/api/picks', async (req, res) => {
 app.get('/api/picks/:round/stats', async (req, res) => {
     try {
         const roundNumber = Number(req.params.round);
-        const gameId = String(req.query.game || 'powerball').trim().toLowerCase();
+        const gameId = String(req.query.game || 'dhpowerball').trim().toLowerCase();
 
         if (!Number.isInteger(roundNumber) || roundNumber <= 0) {
             return res.status(400).json({ error:'올바른 회차가 아닙니다.' });
@@ -1125,7 +1125,7 @@ app.get('/api/picks/:round/stats', async (req, res) => {
                 COUNT(*) FILTER (WHERE under_over='over')::int AS over
              FROM member_picks
              WHERE round_number=$1
-               AND COALESCE(game_id,'powerball')=$2`,
+               AND COALESCE(NULLIF(game_id,'powerball'),'dhpowerball')=$2`,
             [roundNumber, gameId]
         );
 
@@ -1157,30 +1157,30 @@ const SPEEDKENO_API_URL = 'https://www.powerballgame.co.kr/json/speedkeno.json';
 // 아래 2개는 공개 API 안내 페이지가 제공하는 엔트리 호환 결과 주소.
 // 외부 서비스가 중단되면 502로 명확하게 반환하며 임의 결과를 만들지 않는다.
 const POWER_LADDER_API_URL = process.env.POWER_LADDER_API_URL ||
-    'http://services.nupro365.com/live/ntry/res.ladder.power.asp';
+    'https://bepick.nupro765.com/bepick/dh/rand.powerladder.asp';
 const EOS_POWERBALL_API_URL = process.env.EOS_POWERBALL_API_URL ||
     'http://services.nupro365.com/live/ntry/res.powerball.5m.asp';
 
 const TOVIEW_GAMES = {
-    powerball:{
-        id:'powerball', name:'파워볼', enabled:true, cycleSeconds:300,
-        videoUrl:'https://www.powerballgame.co.kr/?view=powerballMiniView'
+    dhpowerball:{
+        id:'dhpowerball', name:'동행파워볼', enabled:true, cycleSeconds:300,
+        renderer:'toview-powerball'
     },
-    ladder:{
-        id:'ladder', name:'사다리', enabled:true, cycleSeconds:300,
-        videoUrl:'https://www.powerballgame.co.kr/?view=powerballLadder'
+    dhpowerladder:{
+        id:'dhpowerladder', name:'동행파워사다리', enabled:true, cycleSeconds:300,
+        renderer:'toview-ladder'
     },
     eos:{
         id:'eos', name:'EOS 파워볼', enabled:true, cycleSeconds:300,
-        videoUrl:'https://ntry.com/scores/eos_powerball/5min/main.php'
+        renderer:'toview-powerball'
     },
-    speedkeno:{
-        id:'speedkeno', name:'스피드키노', enabled:true, cycleSeconds:300,
-        videoUrl:'https://www.powerballgame.co.kr/?view=speedkeno'
+    bubbleladder:{
+        id:'bubbleladder', name:'보글사다리', enabled:true, cycleSeconds:180,
+        renderer:'toview-ladder'
     },
     kenoladder:{
         id:'kenoladder', name:'키노사다리', enabled:true, cycleSeconds:300,
-        videoUrl:'https://www.powerballgame.co.kr/?view=speedkenoLadder'
+        renderer:'toview-ladder'
     }
 };
 
@@ -1260,18 +1260,55 @@ function powerballPublic(r){
         oddEven:r.numberOddEven==='odd'?1:2,pOddEven:r.powerballOddEven==='odd'?1:2,pUnderOver:r.powerballUnderOver==='under'?1:2};
 }
 function parseBracketApi(text){
-    const m=String(text).match(/#?\[([^\]]+)\]/);
-    if(!m)throw new Error('외부 게임 API 형식을 확인할 수 없습니다.');
+    const raw=String(text??'').replace(/^\uFEFF/,'').trim();
+
+    // 공급처가 Unauthorized/HTML 오류를 반환한 경우 파싱 오류로 숨기지 않는다.
+    if(/unauthorized|forbidden|access\s*denied/i.test(raw)){
+        throw Object.assign(new Error('결과 API 공급처가 Render 서버 접속을 차단했습니다.'),{status:502});
+    }
+
+    // 문서상 정상 형식: #[a,b,c...] / [a,b,c...]
+    let m=raw.match(/#?\s*\[([\s\S]*?)\]/);
+
+    // 일부 ASP 공급처가 HTML 안에 엔티티/스크립트 형태로 넣는 경우 대비
+    if(!m){
+        const decoded=raw
+          .replace(/&#91;|&lbrack;/gi,'[')
+          .replace(/&#93;|&rbrack;/gi,']')
+          .replace(/&quot;/gi,'"')
+          .replace(/&#39;/gi,"'");
+        m=decoded.match(/#?\s*\[([\s\S]*?)\]/);
+    }
+    if(!m){
+        console.error('외부 API 원문(앞 300자):', raw.slice(0,300));
+        throw Object.assign(new Error('외부 게임 API 응답이 문서 형식과 다릅니다.'),{status:502});
+    }
     return m[1].split(',').map(v=>String(v).trim().replace(/^["']|["']$/g,''));
 }
 function ladderResultFromParts(parts){
-    // 안내 형식: [회차고유값,회차,홀짝결과,좌우결과,줄수결과]
-    const round=Number(parts[1]);
-    const oe=/odd|홀/i.test(parts[2])?'odd':'even';
-    const start=/left|좌/i.test(parts[3])?'left':'right';
-    const lines=Number(parts[4])===4?4:3;
-    return {Round:round,AllRound:round,oddEven:oe==='odd'?1:2,pOddEven:oe==='odd'?1:2,pUnderOver:start==='left'?1:2,
-        ladder:{start,lines,result:oe}};
+    // 5필드: [고유값,회차,홀짝,좌우,줄수]
+    // 6필드: [고유값,전체회차,일회차,홀짝,좌우,줄수] (동행파워사다리)
+    const six = parts.length >= 6;
+    const round = Number(parts[six ? 1 : 1]);
+    const todayRound = six ? Number(parts[2]) : round;
+    const oeRaw = parts[six ? 3 : 2];
+    const startRaw = parts[six ? 4 : 3];
+    const linesRaw = parts[six ? 5 : 4];
+
+    const oe=/odd|홀/i.test(oeRaw)?'odd':'even';
+    const start=/left|좌/i.test(startRaw)?'left':'right';
+    const lines=Number(linesRaw)===4?4:3;
+
+    const key=String(parts[0]||'');
+    const dateKey=key.match(/(\d{8})/)?.[1]||'';
+    const date=dateKey?`${dateKey.slice(0,4)}-${dateKey.slice(4,6)}-${dateKey.slice(6,8)}`:'';
+
+    return {
+        Round:round, AllRound:todayRound, Date:date,
+        oddEven:oe==='odd'?1:2, pOddEven:oe==='odd'?1:2,
+        pUnderOver:start==='left'?1:2,
+        ladder:{start,lines,result:oe}
+    };
 }
 function speedKenoPublic(p){
     const numbers=String(p.number||'').split(',').map(v=>Number(v)).filter(Number.isFinite);
@@ -1304,19 +1341,25 @@ async function getGameLive(gameId){
     const g=TOVIEW_GAMES[gameId];
     if(!g)throw Object.assign(new Error('지원하지 않는 게임입니다.'),{status:404});
     let data;
-    if(gameId==='powerball'){
+    if(gameId==='dhpowerball'){
         const r=await fetchPowerballRecord(); try{await savePowerballRecord(r)}catch(e){console.error('POWERBALL 저장 오류',e)}
         data=powerballPublic(r);
-    }else if(gameId==='speedkeno'){
-        data=speedKenoPublic(await fetchJson(SPEEDKENO_API_URL));
+    }else if(gameId==='bubbleladder'){
+        // 보글사다리는 외부 영상이 아니라 TOVIEW 자체 렌더러를 사용한다.
+        // 실제 결과 공급 API는 환경변수 BUBBLE_LADDER_API_URL을 지정하면 그 값을 파싱한다.
+        // 미설정 상태에서는 임의 결과를 만들지 않고 명확히 연결대기 상태를 반환한다.
+        if(!process.env.BUBBLE_LADDER_API_URL){
+            throw Object.assign(new Error('BUBBLE_LADDER_API_URL이 아직 설정되지 않았습니다.'),{status:503});
+        }
+        data=ladderResultFromParts(parseBracketApi(await fetchText(process.env.BUBBLE_LADDER_API_URL)));
     }else if(gameId==='kenoladder'){
         data=kenoLadderFromSpeed(await fetchJson(SPEEDKENO_API_URL));
-    }else if(gameId==='ladder'){
+    }else if(gameId==='dhpowerladder'){
         data=ladderResultFromParts(parseBracketApi(await fetchText(POWER_LADDER_API_URL)));
     }else if(gameId==='eos'){
         data=parseEosParts(parseBracketApi(await fetchText(EOS_POWERBALL_API_URL)));
     }
-    return {ok:true,connected:true,game:gameId,name:g.name,cycleSeconds:g.cycleSeconds,videoUrl:g.videoUrl,
+    return {ok:true,connected:true,game:gameId,name:g.name,cycleSeconds:g.cycleSeconds,renderer:g.renderer,
         roundNumber:Number(data.Round),todayRound:Number(data.AllRound),drawDate:data.Date||'',drawTime:data.Time||'',data,result:data};
 }
 
@@ -1328,11 +1371,10 @@ app.get('/api/games/:game/live',async(req,res)=>{
 app.get('/api/games/:game/results',async(req,res)=>{
     try{
         const gameId=String(req.params.game||'').toLowerCase();
-        if(gameId==='powerball')return res.redirect(307,'/api/results');
-        if(gameId==='speedkeno'){
-            // 공개 speedkeno.json은 최신 확정 결과를 제공한다. 임의 과거 데이터를 만들지 않는다.
-            const one=speedKenoPublic(await fetchJson(SPEEDKENO_API_URL));
-            return res.json({ok:true,game:gameId,records:[one]});
+        if(gameId==='dhpowerball')return res.redirect(307,'/api/results');
+        if(gameId==='bubbleladder'){
+            const live=await getGameLive(gameId);
+            return res.json({ok:true,game:gameId,records:[live.data]});
         }
         if(gameId==='kenoladder'){
             const one=kenoLadderFromSpeed(await fetchJson(SPEEDKENO_API_URL));
@@ -1344,7 +1386,7 @@ app.get('/api/games/:game/results',async(req,res)=>{
 });
 
 // ========================================
-// index.html / results.html 공용 오늘 파워볼 누적 결과
+// index.html 공용 / results.html 동행파워볼 오늘 누적 결과
 // ========================================
 app.get('/api/results',async(req,res)=>{
     try{
@@ -1369,7 +1411,7 @@ let powerballCollectorRunning=false;
 async function collectLatestPowerballResult(){
     if(powerballCollectorRunning)return; powerballCollectorRunning=true;
     try{await savePowerballRecord(await fetchPowerballRecord())}
-    catch(error){console.error('POWERBALL 자동 수집 오류:',error.message||error)}
+    catch(error){console.error('동행파워볼 데이터 자동 수집 오류:',error.message||error)}
     finally{powerballCollectorRunning=false}
 }
 setTimeout(()=>{collectLatestPowerballResult();setInterval(collectLatestPowerballResult,60*1000)},3000);
