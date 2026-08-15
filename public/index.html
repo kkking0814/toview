@@ -903,41 +903,148 @@
     }
 }
 
-/* 최근 결과 + 패턴 시각화 */
+/* ===== 홈 데이터 4분할: 최근결과 2 / 패턴 1 / 최근통계 1 ===== */
+.hero{
+    display:block;
+}
+
+.live-card{
+    width:100%;
+}
+
 .data-grid{
     display:grid;
-    grid-template-columns:2fr 1fr;
+    grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);
     gap:18px;
     margin-top:18px;
+    align-items:stretch;
 }
 
-.data-grid > div{
-    display:contents;
-}
-
-.data-grid #results{
+.data-grid > .card{
     min-width:0;
 }
 
-.data-grid #pattern{
-    margin-top:0 !important;
+.results-scroll{
+    height:286px;
+    max-height:286px;
+    overflow-y:auto;
+    overflow-x:auto;
+}
+
+#results .table{
+    min-width:700px;
+}
+
+#pattern,
+#recentStats{
+    min-height:420px;
+}
+
+.pattern{
+    padding:14px;
+}
+
+.pattern-columns{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+}
+
+.pattern-panel{
     min-width:0;
 }
 
-@media(max-width:900px){
+.pattern-title{
+    display:block;
+    margin-bottom:8px;
+    color:#dbeafe;
+    font-size:12px;
+}
+
+.pattern-scroll{
+    height:320px;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding-right:4px;
+}
+
+.pattern-list{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.pattern-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:6px;
+    min-height:30px;
+    padding:5px 7px;
+    border:1px solid #22334e;
+    border-radius:7px;
+    background:#091426;
+    font-size:10px;
+}
+
+.pattern-round{
+    color:#8294b1;
+    white-space:nowrap;
+}
+
+.pattern-value{
+    min-width:34px;
+    padding:4px 6px;
+    border-radius:5px;
+    text-align:center;
+    font-weight:800;
+    color:#fff;
+    background:#2563eb;
+}
+
+.pattern-value.red{
+    background:#d9465f;
+}
+
+.recent-stats{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    padding:14px;
+}
+
+.recent-stats .stat{
+    padding:13px 10px;
+}
+
+.recent-stats .stat strong{
+    font-size:22px;
+}
+
+@media(max-width:1050px){
+    .data-grid{
+        grid-template-columns:1fr 1fr;
+    }
+
+    #results{
+        grid-column:1 / -1;
+    }
+}
+
+@media(max-width:700px){
     .data-grid{
         grid-template-columns:1fr;
     }
 
-    .data-grid > div{
-        display:block;
+    #results{
+        grid-column:auto;
     }
 
-    .data-grid #pattern{
-        margin-top:18px !important;
+    .pattern-columns{
+        grid-template-columns:1fr 1fr;
     }
 }
-    
+
 /* ===== 왼쪽 사이드바 ===== */
 
 .wrap{
@@ -1389,10 +1496,81 @@
 
 </section>
 
-<section class="hero" id="live"><div class="card"><div class="head"><span class="status"><i class="pulse"></i> 실시간 결과</span><span class="sub" id="clock">--:--:--</span></div><div class="live"><div class="round">TOVIEW POWER · <b id="round">데이터 불러오는 중</b></div><div class="timer" id="timer">--:--</div><div class="sub">다음 5분 회차까지</div><div class="balls" id="balls"><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball power">-</span></div><div class="tags" id="tags"></div><div id="apiState" class="sub" style="margin-top:14px">API 연결 확인 중…</div></div></div><div class="card"><div class="head">최근 통계 <span class="sub" id="sampleN">-</span></div><div class="stats"><div class="stat">파워볼 홀<strong id="sOdd">-</strong></div><div class="stat">파워볼 짝<strong id="sEven">-</strong></div><div class="stat">파워볼 언더<strong id="sUnder">-</strong></div><div class="stat">파워볼 오버<strong id="sOver">-</strong></div></div></div></section>
+<section class="hero" id="live">
+    <div class="card live-card">
+        <div class="head">
+            <span class="status"><i class="pulse"></i> 실시간 결과</span>
+            <span class="sub" id="clock">--:--:--</span>
+        </div>
+        <div class="live">
+            <div class="round">TOVIEW POWER · <b id="round">데이터 불러오는 중</b></div>
+            <div class="timer" id="timer">--:--</div>
+            <div class="sub">다음 5분 회차까지</div>
+            <div class="balls" id="balls">
+                <span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball">-</span><span class="ball power">-</span>
+            </div>
+            <div class="tags" id="tags"></div>
+            <div id="apiState" class="sub" style="margin-top:14px">API 연결 확인 중…</div>
+        </div>
+    </div>
+</section>
 
-    <section class="data-grid"><div><div class="card" id="results"><div class="head">최근 결과 <span class="sub">최신순</span></div><div style="display:flex;gap:8px;padding:12px 14px;flex-wrap:wrap"><input id="roundSearch" placeholder="회차 검색" style="flex:1;min-width:120px;padding:9px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff"><select id="resultFilter" style="padding:9px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff"><option value="all">전체</option><option value="odd">파워 홀</option><option value="even">파워 짝</option><option value="under">언더</option><option value="over">오버</option></select><button onclick="exportCSV()" style="padding:9px 12px;border:0;border-radius:8px;background:#2563eb;color:white;cursor:pointer">CSV 저장</button><button onclick="toggleTheme()" style="padding:9px 12px;border:1px solid #2b3d5c;border-radius:8px;background:#17243a;color:white;cursor:pointer">화면 전환</button></div><div class="results-scroll"><table class="table"><thead><tr><th>회차</th><th>일반볼</th><th>합</th><th>일반 홀짝</th><th>파워볼</th><th>파워 홀짝</th><th>언/오버</th></tr></thead><tbody id="rows"></tbody></table></div></div><div class="card" id="pattern" style="margin-top:18px"><div class="head">패턴 시각화 <span class="sub">최근 결과 기반</span></div><div class="pattern"><b>파워볼 홀/짝</b><div class="patternrow" id="p1"></div><br><b>파워볼 언더/오버</b><div class="patternrow" id="p2"></div></div></div></div></section>
-    
+<section class="data-grid">
+    <div class="card" id="results">
+        <div class="head">최근 결과 <span class="sub" id="resultCount">오늘 전체 · 최신순</span></div>
+        <div style="display:flex;gap:8px;padding:12px 14px;flex-wrap:wrap">
+            <input id="roundSearch" placeholder="오늘 회차 검색" style="flex:1;min-width:120px;padding:9px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff">
+            <select id="resultFilter" style="padding:9px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff">
+                <option value="all">전체</option>
+                <option value="odd">파워 홀</option>
+                <option value="even">파워 짝</option>
+                <option value="under">언더</option>
+                <option value="over">오버</option>
+            </select>
+            <button onclick="exportCSV()" style="padding:9px 12px;border:0;border-radius:8px;background:#2563eb;color:white;cursor:pointer">CSV 저장</button>
+            <button onclick="toggleTheme()" style="padding:9px 12px;border:1px solid #2b3d5c;border-radius:8px;background:#17243a;color:white;cursor:pointer">화면 전환</button>
+        </div>
+        <div class="results-scroll">
+            <table class="table">
+                <thead>
+                    <tr><th>회차</th><th>일반볼</th><th>합</th><th>일반 홀짝</th><th>파워볼</th><th>파워 홀짝</th><th>언/오버</th></tr>
+                </thead>
+                <tbody id="rows"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card" id="pattern">
+        <div class="head">패턴 시각화 <span class="sub">오늘 전체</span></div>
+        <div class="pattern">
+            <div class="pattern-columns">
+                <div class="pattern-panel">
+                    <b class="pattern-title">파워볼 홀/짝</b>
+                    <div class="pattern-scroll">
+                        <div class="pattern-list" id="p1"></div>
+                    </div>
+                </div>
+                <div class="pattern-panel">
+                    <b class="pattern-title">파워볼 언더/오버</b>
+                    <div class="pattern-scroll">
+                        <div class="pattern-list" id="p2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" id="recentStats">
+        <div class="head">최근 통계 <span class="sub" id="sampleN">오늘 전체</span></div>
+        <div class="recent-stats">
+            <div class="stat">파워볼 홀<strong id="sOdd">-</strong></div>
+            <div class="stat">파워볼 짝<strong id="sEven">-</strong></div>
+            <div class="stat">파워볼 언더<strong id="sUnder">-</strong></div>
+            <div class="stat">파워볼 오버<strong id="sOver">-</strong></div>
+        </div>
+    </div>
+</section>
+
 <section class="partner-section">
 
     <div class="partner-title">
@@ -1687,7 +1865,7 @@
 </section>
     
 </main><footer class="foot">TOVIEW · 독립적인 데이터 시각화 프로토타입 · 임시 로고<br>V7 · 실제 페이지 이동형 프로토타입<br>© 2026 TOVIEW</footer>
-<div class="modal" id="modal"><div class="modalbox"><div class="close" onclick="modal.classList.remove('on')">✕</div><h2 id="modalTitle">로그인</h2><div id="modalBody"><input id="uid" placeholder="아이디"><input id="pw" type="password" placeholder="비밀번호"><button onclick="demoLogin()">데모 로그인</button><div class="sub" style="margin-top:10px">현재 버전은 서버 계정 시스템 없이 브라우저에만 로그인 상태를 저장합니다.</div></div></div></div>
+<div class="modal" id="modal"><div class="modalbox"><div class="close" onclick="modal.classList.remove('on')">✕</div><h2 id="modalTitle">로그인</h2><div id="modalBody"></div></div></div>
 <script>
 
 function openMainMenu(){
@@ -1733,148 +1911,194 @@ document.addEventListener('keydown', function(event){
     }
 
 });
-const API='/api/results'; let records=[];
-const demo=[{AllRound:181,PowerBall:{nBall1:18,nBall2:8,nBall3:16,nBall4:13,nBall5:22,nBallSum:77,nOddEven:1,pBall:2,pOddEven:2,pUnderOver:1}},{AllRound:180,PowerBall:{nBall1:4,nBall2:17,nBall3:13,nBall4:11,nBall5:14,nBallSum:59,nOddEven:1,pBall:5,pOddEven:1,pUnderOver:2}},{AllRound:179,PowerBall:{nBall1:9,nBall2:21,nBall3:27,nBall4:5,nBall5:26,nBallSum:88,nOddEven:2,pBall:0,pOddEven:2,pUnderOver:1}},{AllRound:178,PowerBall:{nBall1:22,nBall2:1,nBall3:5,nBall4:21,nBall5:17,nBallSum:66,nOddEven:2,pBall:8,pOddEven:2,pUnderOver:2}},{AllRound:177,PowerBall:{nBall1:6,nBall2:16,nBall3:10,nBall4:23,nBall5:1,nBallSum:56,nOddEven:2,pBall:0,pOddEven:2,pUnderOver:1}},{AllRound:176,PowerBall:{nBall1:1,nBall2:2,nBall3:14,nBall4:28,nBall5:4,nBallSum:49,nOddEven:1,pBall:9,pOddEven:1,pUnderOver:2}}];
-function normalize(j){
-  let a;
+const API='/api/results';
+let records=[];
 
-  if(Array.isArray(j)){
-    a=j;
-  }else if(j && j.PowerBall){
-    a=[j];
-  }else{
-    a=j?.data || j?.result || j?.list || [];
-  }
+function normalize(payload){
+    let list=[];
 
-  return Array.isArray(a) ? a.filter(x=>x && x.PowerBall) : [];
+    if(Array.isArray(payload)){
+        list=payload;
+    }else if(payload && Array.isArray(payload.data)){
+        list=payload.data;
+    }else if(payload && Array.isArray(payload.results)){
+        list=payload.results;
+    }else if(payload && payload.data && typeof payload.data==='object'){
+        list=[payload.data];
+    }else if(payload && typeof payload==='object'){
+        list=[payload];
+    }
+
+    return list
+        .map(item=>{
+            if(!item || typeof item!=='object') return null;
+
+            // 현재 server.js 평면 구조를 기준으로 하되, 과거 중첩 구조도 안전하게 흡수.
+            const legacy=(item.PowerBall && typeof item.PowerBall==='object') ? item.PowerBall : null;
+
+            const allRound=Number(item.AllRound ?? item.todayRound ?? item.today_round);
+            const roundNumber=Number(item.Round ?? item.roundNumber ?? item.round_number);
+
+            const nBall1=Number(item.nBall1 ?? legacy?.nBall1);
+            const nBall2=Number(item.nBall2 ?? legacy?.nBall2);
+            const nBall3=Number(item.nBall3 ?? legacy?.nBall3);
+            const nBall4=Number(item.nBall4 ?? legacy?.nBall4);
+            const nBall5=Number(item.nBall5 ?? legacy?.nBall5);
+            const nBallSum=Number(item.nBallSum ?? item.numberSum ?? legacy?.nBallSum);
+
+            const powerRaw=(typeof item.PowerBall==='number' || typeof item.PowerBall==='string')
+                ? item.PowerBall
+                : (item.powerball ?? item.pBall ?? legacy?.pBall);
+
+            const powerBall=Number(powerRaw);
+            const oddEven=Number(item.oddEven ?? item.nOddEven ?? legacy?.nOddEven);
+            const pOddEven=Number(item.pOddEven ?? legacy?.pOddEven);
+            const pUnderOver=Number(item.pUnderOver ?? legacy?.pUnderOver);
+
+            if(!Number.isFinite(allRound) || allRound <= 0) return null;
+            if(!Number.isFinite(roundNumber) || roundNumber <= 0) return null;
+            if(![nBall1,nBall2,nBall3,nBall4,nBall5,nBallSum,powerBall].every(Number.isFinite)) return null;
+            if(![1,2].includes(oddEven) || ![1,2].includes(pOddEven) || ![1,2].includes(pUnderOver)) return null;
+
+            return {
+                AllRound:allRound,
+                Round:roundNumber,
+                Date:String(item.Date ?? item.drawDate ?? item.draw_date ?? ''),
+                Time:String(item.Time ?? item.drawTime ?? item.draw_time ?? ''),
+                nBall1,nBall2,nBall3,nBall4,nBall5,nBallSum,
+                PowerBall:powerBall,
+                oddEven,pOddEven,pUnderOver
+            };
+        })
+        .filter(Boolean)
+        .sort((a,b)=>b.AllRound-a.AllRound);
 }
-function render(a) {
 
-    records = a;
+function render(a){
+    records=a.slice();
 
-    if (!Array.isArray(a) || a.length === 0) {
+    if(!records.length){
+        document.getElementById('round').textContent='오늘 저장된 결과 없음';
+        document.getElementById('balls').innerHTML='<span class="sub">결과 대기 중</span>';
+        document.getElementById('tags').innerHTML='';
+        renderRows([]);
+        renderStats([]);
+        renderPatterns([]);
         return;
     }
 
-    // 최신 결과
-    const p = a[0];
+    const p=records[0];
+    document.getElementById('round').textContent=
+        `${p.Date} · 전체 ${p.Round}회 · 오늘 ${p.AllRound}회`;
 
+    document.getElementById('balls').innerHTML=
+        [p.nBall1,p.nBall2,p.nBall3,p.nBall4,p.nBall5]
+            .map(n=>`<span class="ball">${n}</span>`)
+            .join('')+
+        `<span class="ball power">${p.PowerBall}</span>`;
 
-    // ==============================
-    // 상단 회차 정보
-    // ==============================
+    const normalOddEven=p.oddEven===1?'홀':'짝';
+    const powerOddEven=p.pOddEven===1?'홀':'짝';
+    const powerUnderOver=p.pUnderOver===1?'언더':'오버';
 
-    round.textContent =
-        `${p.Date || ''} · ${p.Round || ''}회 / ${p.AllRound || ''}`;
+    document.getElementById('tags').innerHTML=
+        `<span class="tag">일반합 ${p.nBallSum} · ${normalOddEven}</span>`+
+        `<span class="tag">파워볼 ${p.PowerBall} · ${powerOddEven}</span>`+
+        `<span class="tag">${powerUnderOver}</span>`;
 
-
-    // ==============================
-    // 일반번호 5개 + 파워볼
-    // ==============================
-
-    const normalBalls = [
-        p.nBall1,
-        p.nBall2,
-        p.nBall3,
-        p.nBall4,
-        p.nBall5
-    ];
-
-    balls.innerHTML =
-        normalBalls
-            .map(n => `
-                <span class="ball">${n}</span>
-            `)
-            .join('') +
-
-        `
-        <span class="ball power">
-            ${p.PowerBall}
-        </span>
-        `;
-
-
-    // ==============================
-    // 결과 태그
-    // ==============================
-
-    const normalOddEven =
-        p.oddEven === 1 ? '홀' : '짝';
-
-    const powerOddEven =
-        p.pOddEven === 1 ? '홀' : '짝';
-
-    const powerUnderOver =
-        p.pUnderOver === 1 ? 'UNDER' : 'OVER';
-
-
-    tags.innerHTML = `
-        <span class="tag">
-            일반합 ${p.nBallSum} · ${normalOddEven}
-        </span>
-
-        <span class="tag">
-            파워볼 ${p.PowerBall} · ${powerOddEven}
-        </span>
-
-        <span class="tag">
-            ${powerUnderOver}
-        </span>
-    `;
-
-
-    // ==============================
-    // 오늘 누적 결과 전체 전달
-    // ==============================
-
-    renderRows(a);
-
+    renderRows(records);
+    renderStats(records);
+    renderPatterns(records);
 }
-async function load() {
 
-    try {
+function renderStats(a){
+    const n=a.length;
+    const odd=a.filter(x=>x.pOddEven===1).length;
+    const even=a.filter(x=>x.pOddEven===2).length;
+    const under=a.filter(x=>x.pUnderOver===1).length;
+    const over=a.filter(x=>x.pUnderOver===2).length;
 
-        const r = await fetch(API, {
-            cache: 'no-store'
-        });
+    document.getElementById('sampleN').textContent=n?`오늘 ${n}회 집계`:'오늘 0회';
+    document.getElementById('resultCount').textContent=n?`오늘 ${n}회 · 최신순`:'오늘 0회';
+    document.getElementById('sOdd').textContent=String(odd);
+    document.getElementById('sEven').textContent=String(even);
+    document.getElementById('sUnder').textContent=String(under);
+    document.getElementById('sOver').textContent=String(over);
+}
 
-        if (!r.ok) {
-            throw new Error(
-                `API HTTP ${r.status}`
-            );
-        }
+function renderPatterns(a){
+    const p1=document.getElementById('p1');
+    const p2=document.getElementById('p2');
 
-        const json = await r.json();
+    if(!p1 || !p2) return;
 
-        const a = normalize(json);
-
-        if (!a.length) {
-            throw new Error(
-                '오늘 저장된 결과가 없습니다.'
-            );
-        }
-
-        render(a);
-
-        apiState.innerHTML =
-            '<span class="apiok">● 실시간 API 연결됨</span>';
-
-
-    } catch (e) {
-
-        console.error(
-            '홈 결과 불러오기 오류:',
-            e
-        );
-
-        // 이제 오류 났다고 가짜 demo 데이터를 표시하지 않음
-        apiState.innerHTML =
-            '<span class="apifail">● 결과 데이터를 불러오지 못했습니다.</span>';
-
+    if(!a.length){
+        p1.innerHTML='<div class="sub">결과 없음</div>';
+        p2.innerHTML='<div class="sub">결과 없음</div>';
+        return;
     }
 
+    p1.innerHTML=a.map(x=>{
+        const value=x.pOddEven===1?'홀':'짝';
+        const cls=x.pOddEven===1?'':' red';
+        return `<div class="pattern-item"><span class="pattern-round">${x.AllRound}회</span><span class="pattern-value${cls}">${value}</span></div>`;
+    }).join('');
+
+    p2.innerHTML=a.map(x=>{
+        const value=x.pUnderOver===1?'언더':'오버';
+        const cls=x.pUnderOver===1?'':' red';
+        return `<div class="pattern-item"><span class="pattern-round">${x.AllRound}회</span><span class="pattern-value${cls}">${value}</span></div>`;
+    }).join('');
 }
-function tick(){let d=new Date(),sec=d.getMinutes()%5*60+d.getSeconds(),left=300-sec;if(left===300)left=0;timer.textContent=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');clock.textContent=d.toLocaleTimeString('ko-KR');if(left===0)setTimeout(load,1500)}setInterval(tick,1000);tick();load();setInterval(load,60000);
+
+async function load(){
+    try{
+        const response=await fetch(API,{cache:'no-store'});
+
+        if(!response.ok){
+            throw new Error(`API HTTP ${response.status}`);
+        }
+
+        const payload=await response.json();
+        const normalized=normalize(payload);
+
+        if(!normalized.length){
+            throw new Error('오늘 저장된 결과가 없습니다.');
+        }
+
+        render(normalized);
+        document.getElementById('apiState').innerHTML=
+            '<span class="apiok">● 실시간 API 연결됨</span>';
+    }catch(error){
+        console.error('홈 결과 불러오기 오류:',error);
+        document.getElementById('apiState').innerHTML=
+            '<span class="apifail">● 결과 데이터를 불러오지 못했습니다.</span>';
+    }
+}
+
+function tick(){
+    const d=new Date();
+    const sec=(d.getMinutes()%5)*60+d.getSeconds();
+    let left=300-sec;
+
+    if(left===300) left=0;
+
+    document.getElementById('timer').textContent=
+        String(Math.floor(left/60)).padStart(2,'0')+':'+
+        String(left%60).padStart(2,'0');
+
+    document.getElementById('clock').textContent=d.toLocaleTimeString('ko-KR');
+
+    if(left===0){
+        setTimeout(load,1500);
+    }
+}
+
+setInterval(tick,1000);
+tick();
+load();
+setInterval(load,60000);
+
 const modal=document.getElementById('modal');
 
 loginBtn.onclick=async()=>{
@@ -2442,169 +2666,83 @@ renderRank();
     
 function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
 
-function renderRows(a) {
+function renderRows(a){
+    const term=(document.getElementById('roundSearch')?.value||'').trim();
+    const filter=document.getElementById('resultFilter')?.value||'all';
 
-    const term =
-        (
-            document.getElementById('roundSearch')?.value || ''
-        ).trim();
+    const out=a.filter(x=>{
+        const round=String(x.AllRound ?? '');
 
-    const filter =
-        document.getElementById('resultFilter')?.value || 'all';
-
-
-    // ========================================
-    // 검색 + 필터
-    // ========================================
-
-    const out = a.filter(x => {
-
-        const round =
-            String(
-                x.AllRound ||
-                x.Round ||
-                x.ID ||
-                ''
-            );
-
-
-        // 회차 검색
-        if (
-            term &&
-            !round.includes(term)
-        ) {
-            return false;
-        }
-
-
-        // 파워볼 홀
-        if (
-            filter === 'odd' &&
-            x.pOddEven !== 1
-        ) {
-            return false;
-        }
-
-
-        // 파워볼 짝
-        if (
-            filter === 'even' &&
-            x.pOddEven !== 2
-        ) {
-            return false;
-        }
-
-
-        // 파워볼 언더
-        if (
-            filter === 'under' &&
-            x.pUnderOver !== 1
-        ) {
-            return false;
-        }
-
-
-        // 파워볼 오버
-        if (
-            filter === 'over' &&
-            x.pUnderOver !== 2
-        ) {
-            return false;
-        }
-
+        if(term && !round.includes(term)) return false;
+        if(filter==='odd' && x.pOddEven!==1) return false;
+        if(filter==='even' && x.pOddEven!==2) return false;
+        if(filter==='under' && x.pUnderOver!==1) return false;
+        if(filter==='over' && x.pUnderOver!==2) return false;
 
         return true;
-
     });
 
+    const rowsEl=document.getElementById('rows');
+    if(!rowsEl) return;
 
-    // ========================================
-    // 최근 결과 테이블 출력
-    // 오늘 저장된 결과 전체
-    // ========================================
-
-    rows.innerHTML = out.map(x => {
-
-        const normalOddEven =
-            x.oddEven === 1
-                ? '홀'
-                : '짝';
-
-
-        const powerOddEven =
-            x.pOddEven === 1
-                ? '홀'
-                : '짝';
-
-
-        const underOver =
-            x.pUnderOver === 1
-                ? '언더'
-                : '오버';
-
-
-        return `
-            <tr>
-
-                <td>
-                    ${x.AllRound || x.Round || x.ID}
-                </td>
-
-                <td>
-                    ${
-                        [
-                            x.nBall1,
-                            x.nBall2,
-                            x.nBall3,
-                            x.nBall4,
-                            x.nBall5
-                        ].join(' · ')
-                    }
-                </td>
-
-                <td>
-                    ${x.nBallSum}
-                </td>
-
-                <td class="${
-                    x.oddEven === 1
-                        ? 'blue'
-                        : 'red'
-                }">
-                    ${normalOddEven}
-                </td>
-
-                <td>
-                    <b>${x.PowerBall}</b>
-                </td>
-
-                <td class="${
-                    x.pOddEven === 1
-                        ? 'blue'
-                        : 'red'
-                }">
-                    ${powerOddEven}
-                </td>
-
-                <td>
-                    ${underOver}
-                </td>
-
-            </tr>
-        `;
-
-    }).join('') || `
+    rowsEl.innerHTML=out.map(x=>`
         <tr>
-            <td colspan="7" class="sub">
-                조건에 맞는 결과가 없습니다.
-            </td>
+            <td>${x.AllRound}</td>
+            <td>${[x.nBall1,x.nBall2,x.nBall3,x.nBall4,x.nBall5].join(' · ')}</td>
+            <td>${x.nBallSum}</td>
+            <td class="${x.oddEven===1?'blue':'red'}">${x.oddEven===1?'홀':'짝'}</td>
+            <td><b>${x.PowerBall}</b></td>
+            <td class="${x.pOddEven===1?'blue':'red'}">${x.pOddEven===1?'홀':'짝'}</td>
+            <td>${x.pUnderOver===1?'언더':'오버'}</td>
         </tr>
-    `;
-
+    `).join('') || '<tr><td colspan="7" class="sub">조건에 맞는 결과가 없습니다.</td></tr>';
 }
-   
-document.addEventListener('input',e=>{if(e.target.id==='roundSearch')renderRows(records)});document.addEventListener('change',e=>{if(e.target.id==='resultFilter')renderRows(records)});
-function exportCSV(){if(!records.length)return;let lines=['회차,일반볼1,일반볼2,일반볼3,일반볼4,일반볼5,합,일반홀짝,파워볼,파워홀짝,언오버'];records.forEach(x=>{let q=x.PowerBall;lines.push([x.AllRound||x.Round||x.ID,q.nBall1,q.nBall2,q.nBall3,q.nBall4,q.nBall5,q.nBallSum,q.nOddEven===1?'홀':'짝',q.pBall,q.pOddEven===1?'홀':'짝',q.pUnderOver===1?'언더':'오버'].join(','))});let blob=new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv;charset=utf-8'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='toview-results.csv';a.click();URL.revokeObjectURL(u)}
+
+document.addEventListener('input',e=>{
+    if(e.target.id==='roundSearch') renderRows(records);
+});
+
+document.addEventListener('change',e=>{
+    if(e.target.id==='resultFilter') renderRows(records);
+});
+
+function exportCSV(){
+    if(!records.length) return;
+
+    const lines=[
+        '오늘회차,전체회차,날짜,시간,일반볼1,일반볼2,일반볼3,일반볼4,일반볼5,합,일반홀짝,파워볼,파워홀짝,언오버'
+    ];
+
+    records.forEach(x=>{
+        lines.push([
+            x.AllRound,
+            x.Round,
+            x.Date,
+            x.Time,
+            x.nBall1,
+            x.nBall2,
+            x.nBall3,
+            x.nBall4,
+            x.nBall5,
+            x.nBallSum,
+            x.oddEven===1?'홀':'짝',
+            x.PowerBall,
+            x.pOddEven===1?'홀':'짝',
+            x.pUnderOver===1?'언더':'오버'
+        ].join(','));
+    });
+
+    const blob=new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement('a');
+
+    link.href=url;
+    link.download=`toview-results-${records[0]?.Date || 'today'}.csv`;
+    link.click();
+
+    URL.revokeObjectURL(url);
+}
+
 function toggleTheme(){document.body.classList.toggle('light');localStorage.setItem('toviewTheme',document.body.classList.contains('light')?'light':'dark')}if(localStorage.getItem('toviewTheme')==='light')document.body.classList.add('light');
 
 function toggleFavorite(){let v=localStorage.getItem('toviewFav')==='1';localStorage.setItem('toviewFav',v?'0':'1');renderFav();addAlert(v?'실시간 결과 즐겨찾기를 해제했습니다.':'실시간 결과를 즐겨찾기에 추가했습니다.')}
@@ -2613,7 +2751,46 @@ function getAlerts(){return JSON.parse(localStorage.getItem('toviewAlerts')||'[]
 function addAlert(text){let a=getAlerts();a.push({text,time:new Date().toLocaleString('ko-KR')});localStorage.setItem('toviewAlerts',JSON.stringify(a.slice(-30)));renderAlertCount()}
 function renderAlertCount(){let e=document.getElementById('alertCount');if(e)e.textContent=getAlerts().length}renderAlertCount();
 function openAlerts(){let a=getAlerts().slice().reverse();modalTitle.textContent='알림센터';modalBody.innerHTML=`<div style="max-height:300px;overflow:auto">${a.length?a.map(x=>`<div style="padding:10px;border-bottom:1px solid #22334e">${esc(x.text)}<div class="sub">${x.time}</div></div>`).join(''):'<div class="sub">알림이 없습니다.</div>'}</div><button onclick="localStorage.removeItem('toviewAlerts');renderAlertCount();openAlerts()">알림 비우기</button>`;modal.classList.add('on')}
-function openDetailedStats(){if(!records.length)return;let n=records.length, sums=records.map(x=>Number(x.PowerBall.nBallSum)||0), pbs=records.map(x=>Number(x.PowerBall.pBall)||0);let avg=(sums.reduce((a,b)=>a+b,0)/n).toFixed(1),pavg=(pbs.reduce((a,b)=>a+b,0)/n).toFixed(1);let streak=(key,val)=>{let m=0,c=0;for(let x of records){if(x.PowerBall[key]===val)c++;else c=0;m=Math.max(m,c)}return m};modalTitle.textContent='상세 통계';modalBody.innerHTML=`<div class="stats" style="padding:0"><div class="stat">일반볼 평균 합<strong>${avg}</strong></div><div class="stat">파워볼 평균<strong>${pavg}</strong></div><div class="stat">최장 파워 홀 연속<strong>${streak('pOddEven',1)}회</strong></div><div class="stat">최장 파워 짝 연속<strong>${streak('pOddEven',2)}회</strong></div><div class="stat">최장 언더 연속<strong>${streak('pUnderOver',1)}회</strong></div><div class="stat">최장 오버 연속<strong>${streak('pUnderOver',2)}회</strong></div></div><div class="sub" style="margin-top:12px">현재 불러온 ${n}개 결과를 단순 집계한 통계입니다.</div><button onclick="modal.classList.remove('on')">확인</button>`;modal.classList.add('on')}
+function openDetailedStats(){
+    if(!records.length) return;
+
+    const n=records.length;
+    const sums=records.map(x=>x.nBallSum);
+    const pbs=records.map(x=>x.PowerBall);
+    const avg=(sums.reduce((a,b)=>a+b,0)/n).toFixed(1);
+    const pavg=(pbs.reduce((a,b)=>a+b,0)/n).toFixed(1);
+
+    const streak=(key,val)=>{
+        let max=0;
+        let current=0;
+
+        for(const x of records.slice().reverse()){
+            if(x[key]===val){
+                current++;
+                max=Math.max(max,current);
+            }else{
+                current=0;
+            }
+        }
+
+        return max;
+    };
+
+    modalTitle.textContent='상세 통계';
+    modalBody.innerHTML=`
+        <div class="stats" style="padding:0">
+            <div class="stat">일반볼 평균 합<strong>${avg}</strong></div>
+            <div class="stat">파워볼 평균<strong>${pavg}</strong></div>
+            <div class="stat">최장 파워 홀 연속<strong>${streak('pOddEven',1)}회</strong></div>
+            <div class="stat">최장 파워 짝 연속<strong>${streak('pOddEven',2)}회</strong></div>
+            <div class="stat">최장 언더 연속<strong>${streak('pUnderOver',1)}회</strong></div>
+            <div class="stat">최장 오버 연속<strong>${streak('pUnderOver',2)}회</strong></div>
+        </div>
+        <div class="sub" style="margin-top:12px">오늘 저장된 ${n}개 결과 기준입니다.</div>
+        <button onclick="modal.classList.remove('on')">확인</button>
+    `;
+    modal.classList.add('on');
+}
 function sendChatMessage(){
 
     const input = document.getElementById('chatInput');
