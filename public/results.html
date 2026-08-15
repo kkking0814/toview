@@ -1413,6 +1413,35 @@ labels();await Promise.allSettled([liveLoad(),resultLoad()]);setInterval(liveLoa
 })();
 </script>
 
+
+<style id="toview-results-state-v6">
+.tv-round-badge{position:absolute;top:48px;left:16px;padding:7px 10px;border:1px solid #274665;border-radius:7px;background:#08192c;color:#a9c7e8;font-size:11px;font-weight:800;z-index:8}
+.tv-countdown{position:absolute;top:48px;right:16px;padding:7px 10px;border:1px solid #274665;border-radius:7px;background:#08192c;color:#fff;font-size:12px;font-weight:900;z-index:8}
+</style>
+<script id="toview-results-state-v6-script">
+(function(){
+let active=(new URLSearchParams(location.search).get('game')||'dh_randomball'),state=null;
+const valid=['dh_randomball','dh_speedkeno','speedkeno_ladder','bubble_powerball','bubble_ladder'];if(!valid.includes(active))active='dh_randomball';
+function mmss(s){s=Math.max(0,Number(s)||0);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function decorate(){
+ const area=document.getElementById('gameVideoArea');if(!area||!state)return;
+ let rb=area.querySelector('.tv-round-badge'),cd=area.querySelector('.tv-countdown');
+ if(!rb){rb=document.createElement('div');rb.className='tv-round-badge';area.appendChild(rb)}
+ if(!cd){cd=document.createElement('div');cd.className='tv-countdown';area.appendChild(cd)}
+ rb.textContent=state.currentRound+'회차';cd.textContent=mmss(state.remainingSeconds);
+ const lr=document.getElementById('liveRound');if(lr)lr.textContent=state.currentRound+'회차';
+ const pr=document.getElementById('pickRound');if(pr)pr.textContent=state.currentRound;
+}
+async function stateLoad(){
+ try{const r=await fetch('/api/game-state/'+active,{credentials:'include'}),d=await r.json();if(!r.ok)throw new Error(d.error||'state error');state=d;decorate()}
+ catch(e){console.error('결과 페이지 상태 오류',e)}
+}
+const old=window.changeGame;
+window.changeGame=async function(id,b){active=id;if(old)await old(id,b);await stateLoad()};
+document.addEventListener('DOMContentLoaded',()=>{stateLoad();setInterval(stateLoad,5000);setInterval(()=>{if(state){state.remainingSeconds=Math.max(0,state.remainingSeconds-1);decorate();if(state.remainingSeconds===0)stateLoad()}},1000)});
+})();
+</script>
+
 <script src="auth.js">
     
 </script>
