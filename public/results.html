@@ -629,6 +629,41 @@ function changeGame(game, button) {
     console.log('선택 게임:', game);
 }
 
+function syncPickRound() {
+
+    const liveRound =
+        document.getElementById('liveRound');
+
+    const pickRound =
+        document.getElementById('pickRound');
+
+    if (!liveRound || !pickRound) {
+        return;
+    }
+
+
+    // LIVE 영역에서 숫자만 추출
+    const roundNumber =
+        String(liveRound.textContent)
+            .replace(/[^0-9]/g, '');
+
+
+    // 아직 회차 정보가 없으면 변경하지 않음
+    if (!roundNumber) {
+        return;
+    }
+
+
+    pickRound.textContent = roundNumber;
+}
+
+// LIVE 회차와 PICK 회차 자동 동기화
+setInterval(function() {
+
+    syncPickRound();
+
+}, 1000);
+    
 const currentPick = {
     oddEven: null,
     underOver: null
