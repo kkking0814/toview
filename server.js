@@ -1154,11 +1154,11 @@ app.get('/api/picks/:round/stats', async (req, res) => {
 // ========================================
 
 const TOVIEW_GAMES = {
-  dh_randomball:{id:'dh_randomball',name:'동행파워볼(랜덤볼)',type:'powerball',cycleSeconds:300,roundsPerDay:288,url:process.env.DH_RANDOMBALL_API_URL||''},
-  dh_speedkeno:{id:'dh_speedkeno',name:'동행스피드키노',type:'keno',cycleSeconds:300,roundsPerDay:288,url:process.env.DH_SPEEDKENO_API_URL||''},
-  speedkeno_ladder:{id:'speedkeno_ladder',name:'스피드키노사다리',type:'ladder',cycleSeconds:300,roundsPerDay:288,url:process.env.SPEEDKENO_LADDER_API_URL||''},
-  bubble_powerball:{id:'bubble_powerball',name:'보글파워볼',type:'powerball',cycleSeconds:120,roundsPerDay:720,url:process.env.BUBBLE_POWERBALL_API_URL||''},
-  bubble_ladder:{id:'bubble_ladder',name:'보글사다리',type:'ladder',cycleSeconds:180,roundsPerDay:480,url:process.env.BUBBLE_LADDER_API_URL||''}
+  dh_randomball:{id:'dh_randomball',name:'동행파워볼(랜덤볼)',type:'powerball',cycleSeconds:300,roundsPerDay:288,url:process.env.DH_RANDOMBALL_API_URL||'https://bepick.nupro765.com/bepick/dh/rand.powerball.asp'},
+  dh_speedkeno:{id:'dh_speedkeno',name:'동행스피드키노',type:'keno',cycleSeconds:300,roundsPerDay:288,url:process.env.DH_SPEEDKENO_API_URL||'https://www.powerballgame.co.kr/json/speedkeno.json'},
+  speedkeno_ladder:{id:'speedkeno_ladder',name:'스피드키노사다리',type:'ladder',cycleSeconds:300,roundsPerDay:288,url:process.env.SPEEDKENO_LADDER_API_URL||'https://bepick.nupro765.com/bepick/speedkeno/rand.ladder.asp'},
+  bubble_powerball:{id:'bubble_powerball',name:'보글파워볼',type:'powerball',cycleSeconds:120,roundsPerDay:720,url:process.env.BUBBLE_POWERBALL_API_URL||'https://bepick.net/game/default/bubble_power'},
+  bubble_ladder:{id:'bubble_ladder',name:'보글사다리',type:'ladder',cycleSeconds:180,roundsPerDay:480,url:process.env.BUBBLE_LADDER_API_URL||'https://bepick.net/game/default/bubble_ladder3'}
 };
 
 const gameMemory = new Map();
@@ -1246,7 +1246,8 @@ function normalizeJson(gameId,obj){
     return {Round:Number(x.Round??x.round),AllRound:Number(x.AllRound??x.todayRound??x.round),Date:x.Date??x.date??'',Time:x.Time??x.time??'',
       oddEven:odd?1:2,pOddEven:odd?1:2,pUnderOver:left?1:2,ladder:{start:left?'left':'right',lines,result:odd?'odd':'even'}};
   }
-  const nums=(x.numbers||x.balls||[x.nBall1,x.nBall2,x.nBall3,x.nBall4,x.nBall5]).map(Number).filter(Number.isFinite);
+  const rawNums=x.numbers??x.balls??x.number??[x.nBall1,x.nBall2,x.nBall3,x.nBall4,x.nBall5];
+  const nums=(Array.isArray(rawNums)?rawNums:String(rawNums||'').split(',')).map(v=>Number(String(v).trim())).filter(Number.isFinite);
   if(gameId==='dh_speedkeno'){
     if(!nums.length)throw Object.assign(new Error('RESULT_FORMAT'),{status:502});
     const sum=Number(x.nBallSum??x.numberSum??x.sum)||nums.reduce((a,b)=>a+b,0);
