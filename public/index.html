@@ -1,4 +1,44 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TOVIEW | 데이터 분석 커뮤니티</title><style>
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TOVIEW | 데이터 분석 커뮤니티</title>
+
+/* ========================================
+   최근 결과 테이블 내부 스크롤
+======================================== */
+
+.results-scroll {
+    max-height: 430px;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+
+/* 스크롤해도 표 제목은 위에 고정 */
+.results-scroll thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #0d1a2e;
+}
+
+
+/* 스크롤바 크기 */
+.results-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+
+/* 스크롤바 뒤쪽 */
+.results-scroll::-webkit-scrollbar-track {
+    background: #091426;
+}
+
+
+/* 움직이는 스크롤바 */
+.results-scroll::-webkit-scrollbar-thumb {
+    background: #2b3d5c;
+    border-radius: 10px;
+}    
+    
+<style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,'Noto Sans KR',sans-serif;background:#07101f;color:#eef4ff}button,input{font:inherit}a{color:inherit;text-decoration:none}.top{position:sticky;top:0;z-index:10;background:#08111fee;border-bottom:1px solid #24324a;backdrop-filter:blur(10px)}.bar{max-width:1200px;margin:auto;height:68px;display:flex;align-items:center;gap:26px;padding:0 18px}.logo{font-size:26px;font-weight:900}.logo b{color:#4f9cff}.badge{font-size:10px;background:#15345e;color:#8fc3ff;padding:3px 6px;border-radius:5px}.nav{display:flex;gap:18px;color:#aebbd1;font-size:14px}.nav a:hover{color:#fff}.login{margin-left:auto;background:#2563eb;color:#fff;border:0;padding:10px 16px;border-radius:9px;cursor:pointer}.wrap{max-width:1200px;margin:22px auto;padding:0 18px}.notice{padding:11px 14px;background:#0c1a30;border:1px solid #213655;border-radius:10px;color:#9fb3d2;font-size:13px;margin-bottom:16px}.hero{display:grid;grid-template-columns:1.55fr 1fr;gap:18px}.card{background:#0e192b;border:1px solid #22334e;border-radius:14px;overflow:hidden}.head{padding:14px 16px;border-bottom:1px solid #22334e;font-weight:700;display:flex;justify-content:space-between;align-items:center}.sub{font-size:12px;color:#8294b1}.live{padding:23px;text-align:center}.round{color:#92a4c2;font-size:14px}.timer{font-size:42px;font-weight:900;margin:8px}.balls{display:flex;justify-content:center;gap:9px;margin:20px 0}.ball{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#334155;font-weight:900;box-shadow:inset 0 -5px 10px #0003}.power{background:#2563eb}.tags{display:flex;justify-content:center;gap:7px;flex-wrap:wrap}.tag{padding:7px 11px;border-radius:20px;background:#17243a;font-size:13px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}.stat{background:#091426;border-radius:10px;padding:15px;color:#9badc9}.stat strong{display:block;font-size:25px;color:#fff;margin-top:5px}.grid{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-top:18px}.table{width:100%;border-collapse:collapse;font-size:13px}.table th,.table td{padding:11px;text-align:center;border-bottom:1px solid #1c2a40}.table th{color:#899ab6;background:#091426}.blue{color:#60a5fa}.red{color:#fb7185}.sideitem{padding:13px 16px;border-bottom:1px solid #1c2a40;font-size:14px;cursor:pointer}.sideitem:hover{background:#132039}.pattern{padding:16px}.patternrow{display:flex;gap:5px;flex-wrap:wrap;margin:9px 0}.dot{min-width:28px;height:28px;border-radius:6px;background:#2563eb;display:grid;place-items:center;font-size:11px}.dot.r{background:#d9465f}.status{display:inline-flex;align-items:center;gap:6px}.pulse{width:8px;height:8px;border-radius:50%;background:#22c55e}.foot{text-align:center;color:#63748f;padding:35px;font-size:12px}.modal{display:none;position:fixed;inset:0;background:#0009;z-index:20;place-items:center}.modal.on{display:grid}.modalbox{width:min(390px,90vw);background:#0e192b;border:1px solid #2b3d5c;border-radius:14px;padding:22px}.modalbox input{width:100%;margin:7px 0;padding:12px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff}.modalbox button{width:100%;margin-top:8px;padding:11px;border:0;border-radius:8px;background:#2563eb;color:#fff}.close{text-align:right;color:#93a4c0;cursor:pointer}.err{color:#fda4af;font-size:12px;margin-top:10px}.apiok{color:#86efac}.apifail{color:#fbbf24}body.light{background:#eef3f9;color:#172033}body.light .top{background:#ffffffee}body.light .card,body.light .modalbox{background:#fff;border-color:#d5deea}body.light .notice,body.light .stat,body.light .table th,body.light .modalbox input{background:#f5f8fc;color:#334155}body.light .head,body.light .table th,body.light .table td,body.light .sideitem{border-color:#e2e8f0}body.light .stat strong{color:#172033}body.light .nav{color:#64748b}body.light .nav a:hover{color:#111827}@media(max-width:800px){.nav{display:none}.hero,.grid{grid-template-columns:1fr}.balls{gap:5px}.ball{width:40px;height:40px}.timer{font-size:34px}.table th:nth-child(2),.table td:nth-child(2){font-size:11px}}
 
 /* ===== TOVIEW NEW HEADER ===== */
@@ -1744,8 +1784,132 @@ function normalize(j){
 
   return Array.isArray(a) ? a.filter(x=>x && x.PowerBall) : [];
 }
-function render(a){records=a;let latest=a[0],p=latest;round.textContent=(latest.Date?latest.Date+' · ':'')+(latest.Round?latest.Round+'회 / ':'')+(latest.AllRound||latest.ID||'최신 회차');balls.innerHTML=[p.nBall1,p.nBall2,p.nBall3,p.nBall4,p.nBall5].map(n=>`<span class="ball">${n}</span>`).join('')+`<span class="ball power">${p.PowerBall}</span>`;tags.innerHTML=`<span class="tag">일반합 ${p.nBallSum} · ${p.nOddEven===1?'홀':'짝'}</span><span class="tag">파워볼 ${p.PowerBall} · ${p.pOddEven===1?'홀':'짝'}</span><span class="tag">${p.pUnderOver===1?'UNDER':'OVER'}</span>`;renderRows(a.slice(0,30));let n=a.length,odd=a.filter(x=>x.PowerBall.pOddEven===1).length,un=a.filter(x=>x.PowerBall.pUnderOver===1).length;sampleN.textContent=`${n}회 기준`;sOdd.textContent=Math.round(odd/n*100)+'%';sEven.textContent=Math.round((n-odd)/n*100)+'%';sUnder.textContent=Math.round(un/n*100)+'%';sOver.textContent=Math.round((n-un)/n*100)+'%';p1.innerHTML=a.slice(0,20).reverse().map(x=>`<span class="dot ${x.PowerBall.pOddEven===2?'r':''}">${x.PowerBall.pOddEven===1?'홀':'짝'}</span>`).join('');p2.innerHTML=a.slice(0,20).reverse().map(x=>`<span class="dot ${x.PowerBall.pUnderOver===2?'r':''}">${x.PowerBall.pUnderOver===1?'U':'O'}</span>`).join('')}
-async function load(){try{let r=await fetch(API,{cache:'no-store'});if(!r.ok)throw Error(r.status);let a=normalize(await r.json());if(!a.length)throw Error('empty');render(a);apiState.innerHTML='<span class="apiok">● 실시간 API 연결됨</span>'}catch(e){render(demo);apiState.innerHTML='<span class="apifail">● 브라우저에서 API 연결 불가 — 데모 데이터 표시 중</span>'}}
+function render(a) {
+
+    records = a;
+
+    if (!Array.isArray(a) || a.length === 0) {
+        return;
+    }
+
+    // 최신 결과
+    const p = a[0];
+
+
+    // ==============================
+    // 상단 회차 정보
+    // ==============================
+
+    round.textContent =
+        `${p.Date || ''} · ${p.Round || ''}회 / ${p.AllRound || ''}`;
+
+
+    // ==============================
+    // 일반번호 5개 + 파워볼
+    // ==============================
+
+    const normalBalls = [
+        p.nBall1,
+        p.nBall2,
+        p.nBall3,
+        p.nBall4,
+        p.nBall5
+    ];
+
+    balls.innerHTML =
+        normalBalls
+            .map(n => `
+                <span class="ball">${n}</span>
+            `)
+            .join('') +
+
+        `
+        <span class="ball power">
+            ${p.PowerBall}
+        </span>
+        `;
+
+
+    // ==============================
+    // 결과 태그
+    // ==============================
+
+    const normalOddEven =
+        p.oddEven === 1 ? '홀' : '짝';
+
+    const powerOddEven =
+        p.pOddEven === 1 ? '홀' : '짝';
+
+    const powerUnderOver =
+        p.pUnderOver === 1 ? 'UNDER' : 'OVER';
+
+
+    tags.innerHTML = `
+        <span class="tag">
+            일반합 ${p.nBallSum} · ${normalOddEven}
+        </span>
+
+        <span class="tag">
+            파워볼 ${p.PowerBall} · ${powerOddEven}
+        </span>
+
+        <span class="tag">
+            ${powerUnderOver}
+        </span>
+    `;
+
+
+    // ==============================
+    // 오늘 누적 결과 전체 전달
+    // ==============================
+
+    renderRows(a);
+
+}
+async function load() {
+
+    try {
+
+        const r = await fetch(API, {
+            cache: 'no-store'
+        });
+
+        if (!r.ok) {
+            throw new Error(
+                `API HTTP ${r.status}`
+            );
+        }
+
+        const json = await r.json();
+
+        const a = normalize(json);
+
+        if (!a.length) {
+            throw new Error(
+                '오늘 저장된 결과가 없습니다.'
+            );
+        }
+
+        render(a);
+
+        apiState.innerHTML =
+            '<span class="apiok">● 실시간 API 연결됨</span>';
+
+
+    } catch (e) {
+
+        console.error(
+            '홈 결과 불러오기 오류:',
+            e
+        );
+
+        // 이제 오류 났다고 가짜 demo 데이터를 표시하지 않음
+        apiState.innerHTML =
+            '<span class="apifail">● 결과 데이터를 불러오지 못했습니다.</span>';
+
+    }
+
+}
 function tick(){let d=new Date(),sec=d.getMinutes()%5*60+d.getSeconds(),left=300-sec;if(left===300)left=0;timer.textContent=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');clock.textContent=d.toLocaleTimeString('ko-KR');if(left===0)setTimeout(load,1500)}setInterval(tick,1000);tick();load();setInterval(load,60000);
 const modal=document.getElementById('modal');
 
