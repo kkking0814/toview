@@ -1,700 +1,230 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>TOVIEW 회원가입</title>
-
-<style>
-*{
-    box-sizing:border-box;
-}
-
-body{
-    margin:0;
-    background:#07111f;
-    color:#fff;
-    font-family:Arial, sans-serif;
-}
-
-.top{
-    height:64px;
-    border-bottom:1px solid #1c2b40;
-}
-
-.bar{
-    max-width:1160px;
-    height:100%;
-    margin:auto;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-}
-
-.logo{
-    color:#fff;
-    font-size:28px;
-    font-weight:900;
-    text-decoration:none;
-}
-
-.logo b{
-    color:#4d91ff;
-}
-
-.login{
-    border:1px solid #3264a8;
-    border-radius:8px;
-    padding:10px 20px;
-    background:#10284b;
-    color:#fff;
-    font-weight:700;
-    cursor:pointer;
-}
-
-.wrap{
-    max-width:480px;
-    margin:40px auto;
-    padding:0 15px;
-}
-
-.card{
-    background:#0d1b2e;
-    border:1px solid #263b58;
-    border-radius:14px;
-    overflow:hidden;
-}
-
-.head{
-    padding:18px;
-    border-bottom:1px solid #263b58;
-    font-size:17px;
-    font-weight:800;
-}
-
-.form{
-    padding:18px;
-}
-
-.form input{
-    width:100%;
-    padding:13px;
-    margin-bottom:10px;
-    border:1px solid #334761;
-    border-radius:6px;
-    outline:none;
-    font-size:14px;
-}
-
-.email-row{
-    display:flex;
-    gap:8px;
-}
-
-.email-row input{
-    flex:1;
-}
-
-.email-row button{
-    height:43px;
-    white-space:nowrap;
-    border:0;
-    border-radius:6px;
-    padding:0 14px;
-    background:#1d4f91;
-    color:white;
-    cursor:pointer;
-}
-
-.register-btn{
-    width:100%;
-    padding:13px;
-    margin-top:8px;
-    border:0;
-    border-radius:7px;
-    background:#2f6fed;
-    color:#fff;
-    font-size:15px;
-    font-weight:800;
-    cursor:pointer;
-}
-
-.message{
-    min-height:20px;
-    margin:10px 0;
-    color:#8fb8ff;
-    font-size:12px;
-}
-
-.back{
-    display:block;
-    margin-top:14px;
-    color:#8ca0bb;
-    text-align:center;
-    text-decoration:none;
-    font-size:13px;
-}
-</style>
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>회원가입 | TOVIEW</title>
 <link rel="stylesheet" href="common.css">
-
+<style>
+body{margin:0;font-family:Arial,"Noto Sans KR",sans-serif;background:#07101f;color:#eef4ff}
+.register-main{width:min(100%,1200px);margin:0 auto;padding:48px 18px 60px;display:flex;justify-content:center}
+.register-shell{width:min(100%,520px)}
+.register-intro{text-align:center;margin-bottom:18px}
+.register-intro small{color:#60a5fa;font-size:10px;font-weight:900;letter-spacing:1.5px}
+.register-intro h1{margin:7px 0 5px;font-size:27px}
+.register-intro p{margin:0;color:#7185a5;font-size:11px;line-height:1.6}
+.register-card{overflow:hidden;border:1px solid #22334e;border-radius:14px;background:#0e192b;box-shadow:0 22px 60px rgba(0,0,0,.22)}
+.register-head{padding:17px 19px;border-bottom:1px solid #22334e}
+.register-head strong{display:block;font-size:16px}.register-head span{display:block;margin-top:4px;color:#7185a5;font-size:10px}
+.register-form{padding:19px}
+.field{margin-bottom:13px}.field label{display:block;margin-bottom:6px;color:#aebbd1;font-size:10px;font-weight:800}
+.input-row{display:flex;gap:8px}
+.field input{width:100%;height:44px;padding:0 12px;border:1px solid #293e5e;border-radius:8px;outline:none;background:#091426;color:#fff;font-size:12px}
+.field input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.08)}
+.field input::placeholder{color:#50617b}
+.input-row input{flex:1;min-width:0}
+.check-btn{height:44px;min-width:104px;padding:0 12px;border:1px solid #31527c;border-radius:8px;background:#122846;color:#d8e8ff;font-size:10px;font-weight:800;cursor:pointer}
+.check-btn:hover{background:#17345b}.check-btn:disabled{opacity:.55;cursor:wait}
+.help{min-height:16px;margin-top:5px;color:#657895;font-size:9px;line-height:1.5}
+.help.ok{color:#86efac}.help.error{color:#fda4af}
+.register-message{display:none;margin:4px 0 12px;padding:10px 12px;border:1px solid rgba(251,113,133,.22);border-radius:7px;background:rgba(251,113,133,.06);color:#fda4af;font-size:10px;line-height:1.5}
+.register-message.on{display:block}.register-message.ok{border-color:rgba(34,197,94,.22);background:rgba(34,197,94,.06);color:#86efac}
+.register-btn{width:100%;height:46px;border:1px solid #3b82f6;border-radius:8px;background:#2563eb;color:#fff;font-size:12px;font-weight:900;cursor:pointer}
+.register-btn:hover{background:#1d4ed8}.register-btn:disabled{opacity:.6;cursor:wait}
+.back{display:block;margin-top:14px;text-align:center;color:#7890af;font-size:10px;text-decoration:none}.back:hover{color:#fff}
+.register-footer{text-align:center;color:#52627a;padding:0 18px 34px;font-size:10px}
+@media(max-width:600px){.register-main{padding-top:34px}.input-row{align-items:stretch}.check-btn{min-width:94px;padding:0 8px}}
+</style>
 </head>
 <body>
 
 <header class="top">
-    <div class="bar">
-
-        <a href="index.html" class="brand">
-            <div class="brand-mark">T</div>
-
-            <div class="brand-name">
-                <strong>TO<span>VIEW</span></strong>
-                <small>DATA & COMMUNITY</small>
-            </div>
-        </a>
-
-        <nav class="nav">
-            <a href="index.html">실시간</a>
-            <a href="results.html">결과</a>
-            <a href="analysis.html">분석</a>
-            <a href="pattern.html">패턴</a>
-            <a href="community.html">커뮤니티</a>
-            <a href="dashboard.html">대시보드</a>
-        </nav>
-
-        <button class="menu-btn"
-                type="button"
-                onclick="openMainMenu()">
-            <span class="menu-icon">☰</span>
-            <span>전체메뉴</span>
-        </button>
-
-        <button class="login"
-                id="loginBtn"
-                type="button"
-                onclick="location.href='account.html'">
-            로그인
-        </button>
-
-    </div>
+<div class="bar">
+<a href="index.html" class="brand"><div class="brand-mark">T</div><div class="brand-name"><strong>TO<span>VIEW</span></strong><small>DATA & COMMUNITY</small></div></a>
+<nav class="nav"><a href="index.html#live">실시간</a><a href="results.html">결과</a><a href="analysis.html">분석</a><a href="pattern.html">패턴</a><a href="community.html">커뮤니티</a><a href="dashboard.html">대시보드</a></nav>
+<button class="menu-btn" type="button" onclick="openMainMenu()"><span class="menu-icon">☰</span><span>전체메뉴</span></button>
+<button id="loginBtn" type="button" onclick="location.href='account.html'">로그인</button>
+<button id="userBtn" type="button" hidden onclick="location.href='dashboard.html'">내 계정</button>
+</div>
 </header>
 
 <div class="menu-overlay" id="mainMenuOverlay" onclick="closeMainMenu(event)">
-
-    <div class="menu-panel">
-
-        <div class="menu-panel-top">
-            <div>
-                <strong>전체 메뉴</strong>
-                <span>TOVIEW SERVICE</span>
-            </div>
-
-            <button type="button" class="menu-close" onclick="closeMainMenu()">
-                ✕
-            </button>
-        </div>
-
-        <div class="menu-sections">
-
-            <div class="menu-section">
-                <div class="menu-section-title">GAME</div>
-
-                <a href="index.html#live">
-                    <b>실시간 게임</b>
-                    <span>실시간 회차 및 결과</span>
-                </a>
-
-                <a href="results.html">
-                    <b>게임 결과</b>
-                    <span>최근 회차 결과 조회</span>
-                </a>
-
-                <a href="pattern.html">
-                    <b>패턴 분석</b>
-                    <span>결과 흐름 및 패턴</span>
-                </a>
-            </div>
-
-            <div class="menu-section">
-                <div class="menu-section-title">ANALYSIS</div>
-
-                <a href="analysis.html#daily">
-                    <b>일별 분석</b>
-                    <span>날짜별 데이터 분석</span>
-                </a>
-
-                <a href="analysis.html#range">
-                    <b>구간 분석</b>
-                    <span>구간별 결과 통계</span>
-                </a>
-
-                <a href="analysis.html#round">
-                    <b>회차 분석</b>
-                    <span>회차별 상세 데이터</span>
-                </a>
-            </div>
-
-            <div class="menu-section">
-                <div class="menu-section-title">COMMUNITY</div>
-
-                <a href="community.html?board=자유게시판">
-                    <b>자유게시판</b>
-                    <span>자유로운 커뮤니티</span>
-                </a>
-
-                <a href="community.html?board=분석%20토론">
-                    <b>분석 토론</b>
-                    <span>데이터 및 분석 토론</span>
-                </a>
-
-                <a href="community.html#rank">
-                    <b>활동 랭킹</b>
-                    <span>회원 활동 순위</span>
-                </a>
-            </div>
-
-            <div class="menu-section">
-                <div class="menu-section-title">MY TOVIEW</div>
-
-                <a href="dashboard.html">
-                    <b>대시보드</b>
-                    <span>내 활동 한눈에 보기</span>
-                </a>
-
-                <a href="javascript:void(0)" onclick="openAlerts(); closeMainMenu();">
-                    <b>알림센터</b>
-                    <span>새로운 알림 확인</span>
-                </a>
-
-                <a href="javascript:void(0)" onclick="document.getElementById('loginBtn').click(); closeMainMenu();">
-                    <b>내 계정</b>
-                    <span>로그인 및 계정 관리</span>
-                </a>
-            </div>
-
-        </div>
-
-        <div class="menu-panel-bottom">
-            TOVIEW · DATA & COMMUNITY PLATFORM
-        </div>
-
-    </div>
-
+<div class="menu-panel">
+<div class="menu-panel-top"><div><strong>전체 메뉴</strong><span>TOVIEW SERVICE</span></div><button type="button" class="menu-close" onclick="closeMainMenu()">✕</button></div>
+<div class="menu-sections">
+<div class="menu-section"><div class="menu-section-title">GAME</div><a href="index.html#live"><b>실시간 게임</b><span>실시간 회차 및 결과</span></a><a href="results.html"><b>게임 결과</b><span>최근 회차 결과 조회</span></a><a href="pattern.html"><b>패턴 분석</b><span>결과 흐름 및 패턴</span></a></div>
+<div class="menu-section"><div class="menu-section-title">ANALYSIS</div><a href="analysis.html#daily"><b>일별 분석</b><span>날짜별 데이터 분석</span></a><a href="analysis.html#range"><b>구간 분석</b><span>구간별 결과 통계</span></a><a href="analysis.html#round"><b>회차 분석</b><span>회차별 상세 데이터</span></a></div>
+<div class="menu-section"><div class="menu-section-title">COMMUNITY</div><a href="community.html?board=자유게시판"><b>자유게시판</b><span>자유로운 커뮤니티</span></a><a href="community.html?board=분석%20토론"><b>분석 토론</b><span>데이터 및 분석 토론</span></a><a href="community.html#rank"><b>활동 랭킹</b><span>회원 활동 순위</span></a></div>
+<div class="menu-section"><div class="menu-section-title">MY TOVIEW</div><a href="dashboard.html"><b>대시보드</b><span>내 활동 한눈에 보기</span></a><a href="javascript:void(0)" onclick="openAlerts();closeMainMenu();"><b>알림센터</b><span>새로운 알림 확인</span></a><a href="account.html"><b>내 계정</b><span>로그인 및 계정 관리</span></a></div>
+</div>
+<div class="menu-panel-bottom">TOVIEW · DATA & COMMUNITY PLATFORM</div>
+</div>
 </div>
 
-<main class="wrap">
+<main class="register-main">
+<section class="register-shell">
+<div class="register-intro"><small>TOVIEW ACCOUNT</small><h1>회원가입</h1><p>이메일 인증 후 하나의 계정으로 TOVIEW 서비스를 이용할 수 있습니다.</p></div>
+<div class="register-card">
+<div class="register-head"><strong>계정 만들기</strong><span>아이디 · 닉네임 · 비밀번호 · 이메일 인증</span></div>
+<form class="register-form" id="registerForm" novalidate>
 
-    <div class="card">
+<div class="field">
+<label for="username">아이디</label>
+<div class="input-row"><input id="username" name="username" type="text" autocomplete="username" maxlength="40" placeholder="영문 5자 이상"><button class="check-btn" id="usernameCheckBtn" type="button">중복 확인</button></div>
+<div class="help" id="usernameHelp">영문 5자 이상 · 동일/연속 문자 3개 이상 사용 불가</div>
+</div>
 
-        <div class="head">
-            TOVIEW 회원가입
-        </div>
+<div class="field">
+<label for="nickname">닉네임</label>
+<div class="input-row"><input id="nickname" name="nickname" type="text" maxlength="30" placeholder="한글 2자 이상"><button class="check-btn" id="nicknameCheckBtn" type="button">중복 확인</button></div>
+<div class="help" id="nicknameHelp">한글 2자 이상 · 자음/모음만으로 구성된 닉네임 사용 불가</div>
+</div>
 
-        <div class="form">
+<div class="field"><label for="password">비밀번호</label><input id="password" name="password" type="password" autocomplete="new-password" maxlength="100" placeholder="영문 + 숫자 8자 이상"><div class="help" id="passwordHelp">영문과 숫자를 포함한 8자 이상 · 동일/연속 문자 3개 이상 사용 불가</div></div>
+<div class="field"><label for="passwordCheck">비밀번호 확인</label><input id="passwordCheck" type="password" autocomplete="new-password" maxlength="100" placeholder="비밀번호 다시 입력"><div class="help" id="passwordCheckHelp"></div></div>
 
-            <input
-                id="username"
-                type="text"
-                placeholder="아이디"
-                autocomplete="username"
-            >
+<div class="field">
+<label for="email">이메일 인증</label>
+<div class="input-row"><input id="email" name="email" type="email" autocomplete="email" maxlength="120" placeholder="example@email.com"><button class="check-btn" id="sendEmailBtn" type="button">인증번호 발송</button></div>
+<div class="help" id="emailHelp">계정당 인증된 이메일 1개를 사용합니다.</div>
+</div>
 
-            <input
-                id="nickname"
-                type="text"
-                placeholder="닉네임"
-            >
+<div class="field">
+<div class="input-row"><input id="emailCode" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="인증번호 6자리"><button class="check-btn" id="verifyEmailBtn" type="button">인증 확인</button></div>
+<div class="help" id="emailCodeHelp"></div>
+</div>
 
-            <input
-                id="password"
-                type="password"
-                placeholder="비밀번호"
-                autocomplete="new-password"
-            >
-
-            <input
-                id="passwordCheck"
-                type="password"
-                placeholder="비밀번호 확인"
-                autocomplete="new-password"
-            >
-
-
-            <div class="email-row">
-
-                <input
-                    id="email"
-                    type="email"
-                    placeholder="이메일"
-                >
-
-                <button
-                    type="button"
-                    onclick="sendEmailCode()"
-                >
-                    인증번호 발송
-                </button>
-
-            </div>
-
-
-            <div class="email-row">
-
-                <input
-                    id="emailCode"
-                    type="text"
-                    inputmode="numeric"
-                    maxlength="6"
-                    placeholder="인증번호 6자리"
-                >
-
-                <button
-                    type="button"
-                    onclick="verifyEmailCode()"
-                >
-                    인증 확인
-                </button>
-
-            </div>
-
-
-            <div
-                id="message"
-                class="message"
-            ></div>
-
-
-            <button
-                class="register-btn"
-                type="button"
-                onclick="register()"
-            >
-                회원가입
-            </button>
-
-
-            <a
-                class="back"
-                href="account.html"
-            >
-                이미 계정이 있으신가요? 로그인
-            </a>
-
-        </div>
-
-    </div>
-
+<div class="register-message" id="message" role="status" aria-live="polite"></div>
+<button class="register-btn" id="registerBtn" type="submit">회원가입</button>
+<a class="back" id="loginLink" href="account.html">이미 계정이 있으신가요? 로그인</a>
+</form>
+</div>
+</section>
 </main>
 
+<footer class="register-footer">TOVIEW · DATA & COMMUNITY PLATFORM · © 2026 TOVIEW</footer>
 
+<script src="auth.js"></script>
 <script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+let emailVerified=false,verifiedEmail='',usernameChecked=false,nicknameChecked=false;
+let checkedUsername='',checkedNickname='';
 
-let emailVerified = false;
+function message(text,ok=false){const el=$('message');el.textContent=text||'';el.classList.toggle('on',!!text);el.classList.toggle('ok',!!text&&ok)}
+function help(id,text,type=''){const el=$(id);el.textContent=text||'';el.classList.remove('ok','error');if(type)el.classList.add(type)}
+async function jsonFetch(url,options={}){
+ const r=await fetch(url,{credentials:'include',cache:'no-store',...options,headers:{'Accept':'application/json',...(options.headers||{})}});
+ let d={};try{d=await r.json()}catch{}
+ if(!r.ok)throw new Error(d.error||d.message||'요청 처리에 실패했습니다.');
+ return d;
+}
+function hasTripleSame(v){return /(.)\1\1/i.test(v)}
+function hasTripleSequence(v){
+ const s=v.toLowerCase();
+ for(let i=0;i<s.length-2;i++){const a=s.charCodeAt(i),b=s.charCodeAt(i+1),c=s.charCodeAt(i+2);if((b===a+1&&c===b+1)||(b===a-1&&c===b-1))return true}
+ return false;
+}
+function validateUsername(v){
+ if(!/^[A-Za-z]{5,}$/.test(v))return '아이디는 영문 5자 이상이어야 합니다.';
+ if(hasTripleSame(v)||hasTripleSequence(v))return '동일하거나 연속된 문자 3개 이상은 사용할 수 없습니다.';
+ return '';
+}
+function validateNickname(v){
+ if(v.length<2)return '닉네임은 2자 이상이어야 합니다.';
+ if(!/^[가-힣]+$/.test(v))return '닉네임은 완성형 한글 2자 이상으로 입력하세요.';
+ return '';
+}
+function validatePassword(v){
+ if(v.length<8||!/[A-Za-z]/.test(v)||!/\d/.test(v))return '비밀번호는 영문과 숫자를 포함한 8자 이상이어야 합니다.';
+ if(hasTripleSame(v)||hasTripleSequence(v))return '동일하거나 연속된 문자/숫자 3개 이상은 사용할 수 없습니다.';
+ return '';
+}
+function validEmail(v){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)}
 
-
-/* ================================
-   인증번호 발송
-================================ */
-
+async function checkUsername(){
+ const v=$('username').value.trim(),err=validateUsername(v);
+ usernameChecked=false;checkedUsername='';
+ if(err){help('usernameHelp',err,'error');return false}
+ const b=$('usernameCheckBtn');b.disabled=true;
+ try{
+  const d=await jsonFetch('/api/check-username?username='+encodeURIComponent(v));
+  if(d.available===false||d.exists===true)throw new Error('이미 사용 중인 아이디입니다.');
+  usernameChecked=true;checkedUsername=v;help('usernameHelp','사용 가능한 아이디입니다.','ok');return true;
+ }catch(e){help('usernameHelp',e.message,'error');return false}
+ finally{b.disabled=false}
+}
+async function checkNickname(){
+ const v=$('nickname').value.trim(),err=validateNickname(v);
+ nicknameChecked=false;checkedNickname='';
+ if(err){help('nicknameHelp',err,'error');return false}
+ const b=$('nicknameCheckBtn');b.disabled=true;
+ try{
+  const d=await jsonFetch('/api/check-nickname?nickname='+encodeURIComponent(v));
+  if(d.available===false||d.exists===true)throw new Error('이미 사용 중인 닉네임입니다.');
+  nicknameChecked=true;checkedNickname=v;help('nicknameHelp','사용 가능한 닉네임입니다.','ok');return true;
+ }catch(e){help('nicknameHelp',e.message,'error');return false}
+ finally{b.disabled=false}
+}
 async function sendEmailCode(){
-
-    const email =
-        document.getElementById('email')
-        .value
-        .trim()
-        .toLowerCase();
-
-    if(!email){
-        showMessage('이메일을 입력해주세요.');
-        return;
-    }
-
-    try{
-
-        const response =
-            await fetch('/api/email/send-code',{
-
-                method:'POST',
-
-                headers:{
-                    'Content-Type':'application/json'
-                },
-
-                body:JSON.stringify({
-                    email
-                })
-
-            });
-
-        const data = await response.json();
-
-        if(!response.ok){
-
-            showMessage(
-                data.error ||
-                '인증번호 발송에 실패했습니다.'
-            );
-
-            return;
-        }
-
-        emailVerified = false;
-
-        showMessage(
-            '인증번호를 발송했습니다. 이메일을 확인해주세요.'
-        );
-
-    }catch(error){
-
-        console.error(error);
-
-        showMessage(
-            '서버 연결 중 오류가 발생했습니다.'
-        );
-    }
+ const email=$('email').value.trim().toLowerCase();emailVerified=false;verifiedEmail='';
+ if(!validEmail(email)){help('emailHelp','올바른 이메일 주소를 입력하세요.','error');return}
+ const b=$('sendEmailBtn');b.disabled=true;b.textContent='발송 중...';
+ try{
+  await jsonFetch('/api/email/send-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+  help('emailHelp','인증번호를 발송했습니다. 이메일을 확인하세요.','ok');help('emailCodeHelp','인증번호 6자리를 입력하세요.');
+ }catch(e){help('emailHelp',e.message,'error')}
+ finally{b.disabled=false;b.textContent='인증번호 발송'}
 }
-
-
-/* ================================
-   이메일 인증번호 확인
-================================ */
-
 async function verifyEmailCode(){
-
-    const email =
-        document.getElementById('email')
-        .value
-        .trim()
-        .toLowerCase();
-
-    const code =
-        document.getElementById('emailCode')
-        .value
-        .trim();
-
-    if(!email || !code){
-
-        showMessage(
-            '이메일과 인증번호를 입력해주세요.'
-        );
-
-        return;
-    }
-
-    try{
-
-        const response =
-            await fetch('/api/email/verify-code',{
-
-                method:'POST',
-
-                headers:{
-                    'Content-Type':'application/json'
-                },
-
-                body:JSON.stringify({
-                    email,
-                    code
-                })
-
-            });
-
-        const data = await response.json();
-
-        if(!response.ok){
-
-            emailVerified = false;
-
-            showMessage(
-                data.error ||
-                '인증번호가 올바르지 않습니다.'
-            );
-
-            return;
-        }
-
-        emailVerified = true;
-
-        showMessage(
-            '이메일 인증이 완료되었습니다.'
-        );
-
-    }catch(error){
-
-        console.error(error);
-
-        showMessage(
-            '서버 연결 중 오류가 발생했습니다.'
-        );
-    }
+ const email=$('email').value.trim().toLowerCase(),code=$('emailCode').value.trim();
+ emailVerified=false;verifiedEmail='';
+ if(!validEmail(email)||!/^\d{6}$/.test(code)){help('emailCodeHelp','이메일과 인증번호 6자리를 확인하세요.','error');return}
+ const b=$('verifyEmailBtn');b.disabled=true;
+ try{
+  await jsonFetch('/api/email/verify-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,code})});
+  emailVerified=true;verifiedEmail=email;help('emailCodeHelp','이메일 인증이 완료되었습니다.','ok');
+ }catch(e){help('emailCodeHelp',e.message,'error')}
+ finally{b.disabled=false}
+}
+async function register(e){
+ e.preventDefault();message('');
+ const username=$('username').value.trim(),nickname=$('nickname').value.trim(),password=$('password').value,passwordCheck=$('passwordCheck').value,email=$('email').value.trim().toLowerCase();
+ let err=validateUsername(username)||validateNickname(nickname)||validatePassword(password);
+ if(err){message(err);return}
+ if(password!==passwordCheck){message('비밀번호가 서로 일치하지 않습니다.');return}
+ if(!usernameChecked||checkedUsername!==username){message('아이디 중복 확인을 완료해주세요.');return}
+ if(!nicknameChecked||checkedNickname!==nickname){message('닉네임 중복 확인을 완료해주세요.');return}
+ if(!emailVerified||verifiedEmail!==email){message('현재 이메일의 인증을 완료해주세요.');return}
+ const b=$('registerBtn');b.disabled=true;b.textContent='가입 처리 중...';
+ try{
+  await jsonFetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password,nickname,email})});
+  message('회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.',true);
+  setTimeout(()=>{const next=new URLSearchParams(location.search).get('next');location.href='account.html'+(next?'?next='+encodeURIComponent(next):'')},500);
+ }catch(e2){message(e2.message)}
+ finally{b.disabled=false;b.textContent='회원가입'}
 }
 
+$('usernameCheckBtn').addEventListener('click',checkUsername);
+$('nicknameCheckBtn').addEventListener('click',checkNickname);
+$('sendEmailBtn').addEventListener('click',sendEmailCode);
+$('verifyEmailBtn').addEventListener('click',verifyEmailCode);
+$('registerForm').addEventListener('submit',register);
 
-/* ================================
-   회원가입
-================================ */
+$('username').addEventListener('input',()=>{usernameChecked=false;checkedUsername='';help('usernameHelp','영문 5자 이상 · 동일/연속 문자 3개 이상 사용 불가')});
+$('nickname').addEventListener('input',()=>{nicknameChecked=false;checkedNickname='';help('nicknameHelp','한글 2자 이상 · 자음/모음만으로 구성된 닉네임 사용 불가')});
+$('password').addEventListener('input',()=>{const e=validatePassword($('password').value);help('passwordHelp',e||'사용 가능한 비밀번호 형식입니다.',e?'error':'ok')});
+$('passwordCheck').addEventListener('input',()=>{const ok=$('passwordCheck').value===$('password').value&&$('passwordCheck').value;help('passwordCheckHelp',ok?'비밀번호가 일치합니다.':'비밀번호가 일치하지 않습니다.',ok?'ok':'error')});
+$('email').addEventListener('input',()=>{emailVerified=false;verifiedEmail='';help('emailHelp','이메일이 변경되면 다시 인증해야 합니다.');help('emailCodeHelp','')});
 
-async function register(){
+const next=new URLSearchParams(location.search).get('next');if(next)$('loginLink').href='account.html?next='+encodeURIComponent(next);
+})();
 
-    const username =
-        document.getElementById('username')
-        .value
-        .trim();
-
-    const nickname =
-        document.getElementById('nickname')
-        .value
-        .trim();
-
-    const password =
-        document.getElementById('password')
-        .value;
-
-    const passwordCheck =
-        document.getElementById('passwordCheck')
-        .value;
-
-    const email =
-        document.getElementById('email')
-        .value
-        .trim()
-        .toLowerCase();
-
-
-    if(
-        !username ||
-        !nickname ||
-        !password ||
-        !passwordCheck ||
-        !email
-    ){
-        showMessage('모든 항목을 입력해주세요.');
-        return;
-    }
-
-
-    if(password !== passwordCheck){
-
-        showMessage(
-            '비밀번호가 서로 일치하지 않습니다.'
-        );
-
-        return;
-    }
-
-
-    if(!emailVerified){
-
-        showMessage(
-            '이메일 인증을 먼저 완료해주세요.'
-        );
-
-        return;
-    }
-
-
-    try{
-
-        const response =
-            await fetch('/api/register',{
-
-                method:'POST',
-
-                headers:{
-                    'Content-Type':'application/json'
-                },
-
-                body:JSON.stringify({
-                    username,
-                    password,
-                    nickname,
-                    email
-                })
-
-            });
-
-
-        const data = await response.json();
-
-
-        if(!response.ok){
-
-            showMessage(
-                data.error ||
-                '회원가입에 실패했습니다.'
-            );
-
-            return;
-        }
-
-
-        alert('회원가입이 완료되었습니다.');
-
-        location.href = 'index.html';
-
-
-    }catch(error){
-
-        console.error(error);
-
-        showMessage(
-            '서버 연결 중 오류가 발생했습니다.'
-        );
-    }
-}
-
-
-/* ================================
-   안내 메시지
-================================ */
-
-function showMessage(text){
-
-    document.getElementById('message')
-        .textContent = text;
-}
-
-
-/* 이메일을 바꾸면 다시 인증해야 함 */
-
-document
-.getElementById('email')
-.addEventListener('input',function(){
-
-    emailVerified = false;
-
-});
-
+function openMainMenu(){const m=document.getElementById('mainMenuOverlay');if(!m)return;m.classList.add('on');document.body.style.overflow='hidden'}
+function closeMainMenu(e){const m=document.getElementById('mainMenuOverlay');if(!m)return;if(e&&e.target!==m)return;m.classList.remove('on');document.body.style.overflow=''}
+function openAlerts(){alert('알림센터는 준비 중입니다.')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMainMenu()});
 </script>
-
-<script src="auth.js"></script>
-
-<script>
-function openMainMenu() {
-    const menu = document.getElementById('mainMenuOverlay');
-
-    if (!menu) return;
-
-    menu.classList.add('on');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeMainMenu(event) {
-    const menu = document.getElementById('mainMenuOverlay');
-
-    if (!menu) return;
-
-    if (event && event.target !== menu) {
-        return;
-    }
-
-    menu.classList.remove('on');
-    document.body.style.overflow = '';
-}
-</script>
-
-<script src="auth.js"></script>
-    
 </body>
 </html>
