@@ -687,25 +687,172 @@ function updateMyPick() {
         `홀짝 ${oddEvenText} · 언오버 ${underOverText}`;
 }
 
+async function submitPick() {
 
-function submitPick() {
-
+    // 홀짝 / 언오버 모두 선택했는지 확인
     if (
         !currentPick.oddEven ||
         !currentPick.underOver
     ) {
-
-        alert(
-            '홀짝과 언더/오버를 모두 선택해주세요.'
-        );
-
+        alert('홀짝과 언더/오버를 모두 선택해주세요.');
         return;
     }
 
 
-    alert(
-        'PICK 저장 기능은 다음 단계에서 연결합니다.'
-    );
+    // 현재 회차 가져오기
+    const roundElement =
+        document.getElementById('pickRound');
+
+    if (!roundElement) {
+        alert('현재 회차 정보를 찾을 수 없습니다.');
+        return;
+    }
+
+
+    const roundNumber =
+        Number(
+            roundElement.textContent
+                .replace(/[^0-9]/g, '')
+        );
+
+
+    // 회차가 아직 연결되지 않았으면 중단
+    if (
+        !Number.isInteger(roundNumber) ||
+        roundNumber <= 0
+    ) {
+        alert('현재 회차 정보를 불러오는 중입니다.');
+        return;
+    }
+
+
+    const submitButton =
+        document.getElementById('pickSubmitBtn');
+
+
+    // 중복 클릭 방지
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = '등록 중...';
+    }
+
+
+    try {
+
+        const response = await fetch('/api/picks', {
+
+            method: 'POST',
+
+            headers: {
+                'Content-Type': 'application/json'
+            },
+
+            credentials: 'include',
+
+            body: JSON.stringify({
+
+                roundNumber: roundNumber,
+
+                oddEven:
+                    currentPick.oddEven,
+
+                underOver:
+                    currentPick.underOver
+
+            })
+
+        });
+
+
+        const data = await response.json();
+
+
+        // 로그인 안 되어 있음
+        if (response.status === 401) {
+
+            alert('로그인 후 PICK을 등록할 수 있습니다.');
+            return;
+        }
+
+
+        // 같은 회차 중복 등록
+        if (response.status === 409) {
+
+            alert('이미 해당 회차에 PICK을 등록했습니다.');
+            return;
+        }
+
+
+        // 기타 오류
+        if (!response.ok) {
+
+            alert(
+                data.error ||
+                'PICK 등록에 실패했습니다.'
+            );
+
+            return;
+        }
+
+
+        // 성공
+        alert('PICK이 등록되었습니다.');
+
+
+        const myPickText =
+            document.getElementById('myPickText');
+
+        if (myPickText) {
+
+            const oddEvenText =
+                currentPick.oddEven === 'odd'
+                    ? '홀'
+                    : '짝';
+
+            const underOverText =
+                currentPick.underOver === 'under'
+                    ? '언더'
+                    : '오버';
+
+
+            myPickText.textContent =
+                `${roundNumber}회차 · ${oddEvenText} · ${underOverText} · 등록완료`;
+        }
+
+
+        if (submitButton) {
+            submitButton.textContent = 'PICK 등록완료';
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            'PICK 등록 오류:',
+            error
+        );
+
+        alert('PICK 서버 연결에 실패했습니다.');
+
+
+    } finally {
+
+        if (submitButton) {
+
+            submitButton.disabled = false;
+
+            // 성공한 경우에는 "등록완료" 유지
+            if (
+                submitButton.textContent !==
+                'PICK 등록완료'
+            ) {
+                submitButton.textContent =
+                    'PICK 등록하기';
+            }
+        }
+
+    }
+
 }
     
 async function sendChat() {
