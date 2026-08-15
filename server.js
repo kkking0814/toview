@@ -1394,4 +1394,83 @@ app.get('/api/results',async(req,res)=>{
   catch(e){console.error('/api/results 오류:',e);return res.status(e.status||502).json({error:e.message})}
 });
 
+
+// ========================================
+// TOVIEW UNIFIED GAME STATE API V6
+// index.html / results.html 이 동일한 현재회차·타이머·최근결과·통계를 사용한다.
+// ========================================
+const TOVIEW_STATE_META = {
+  dh_randomball:{name:'동행파워볼(랜덤볼)',type:'powerball',cycleSeconds:300,roundsPerDay:288},
+  dh_speedkeno:{name:'동행스피드키노',type:'keno',cycleSeconds:300,roundsPerDay:288},
+  speedkeno_ladder:{name:'스피드키노사다리',type:'ladder',cycleSeconds:300,roundsPerDay:288},
+  bubble_powerball:{name:'보글파워볼',type:'powerball',cycleSeconds:120,roundsPerDay:720},
+  bubble_ladder:{name:'보글사다리',type:'ladder',cycleSeconds:180,roundsPerDay:480}
+};
+const stateCache=new Map();
+
+function seoulClock(){
+  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
+  const x=Object.fromEntries(parts.map(p=>[p.type,p.value]));
+  return {date:`${x.year}-${x.month}-${x.day}`,hour:+x.hour,minute:+x.minute,second:+x.second};
+}
+function clockState(gameId){
+  const m=TOVIEW_STATE_META[gameId], k=seoulClock();
+  const elapsed=k.hour*3600+k.minute*60+k.second;
+  const completed=Math.floor(elapsed/m.cycleSeconds);
+  const currentRound=Math.min(m.roundsPerDay,completed+1);
+  const remaining=m.cycleSeconds-(elapsed%m.cycleSeconds);
+  return {date:k.date,currentRound,remainingSeconds:remaining===m.cycleSeconds?m.cycleSeconds:remaining};
+}
+function summarizeRecords(gameId,records){
+  const meta=TOVIEW_STATE_META[gameId];
+  const s={total:records.length};
+  if(meta.type==='ladder'){
+    s.left=records.filter(r=>r.ladder?.start==='left').length;
+    s.right=records.filter(r=>r.ladder?.start==='right').length;
+    s.line3=records.filter(r=>Number(r.ladder?.lines)===3).length;
+    s.line4=records.filter(r=>Number(r.ladder?.lines)===4).length;
+    s.odd=records.filter(r=>r.ladder?.result==='odd'||r.pOddEven===1).length;
+    s.even=records.filter(r=>r.ladder?.result==='even'||r.pOddEven===2).length;
+  }else{
+    s.powerOdd=records.filter(r=>r.pOddEven===1).length;
+    s.powerEven=records.filter(r=>r.pOddEven===2).length;
+    s.powerUnder=records.filter(r=>r.pUnderOver===1).length;
+    s.powerOver=records.filter(r=>r.pUnderOver===2).length;
+    s.normalOdd=records.filter(r=>r.oddEven===1).length;
+    s.normalEven=records.filter(r=>r.oddEven===2).length;
+  }
+  return s;
+}
+async function getUnifiedState(gameId){
+  const meta=TOVIEW_STATE_META[gameId];
+  if(!meta)throw Object.assign(new Error('지원하지 않는 게임입니다.'),{status:404});
+  const clock=clockState(gameId);
+  let records=[],source='result-api',live=null,error=null;
+  try{
+    const payload=await gamePayload(gameId);
+    live=payload.data; source=payload.source||'result-api';
+    records=[live];
+    stateCache.set(gameId,{live,records,source,at:Date.now()});
+  }catch(e){
+    error=e.message;
+    const cached=stateCache.get(gameId);
+    if(cached){live=cached.live;records=cached.records;source='cache';}
+  }
+  const lastRound=Number(live?.AllRound??live?.Round??0);
+  // API가 최신 확정회차를 제공하면 다음 회차는 그 다음 번호를 우선한다.
+  const currentRound=lastRound>0 ? ((lastRound % meta.roundsPerDay)+1) : clock.currentRound;
+  return {
+    ok:!!live,game:gameId,name:meta.name,type:meta.type,
+    cycleSeconds:meta.cycleSeconds,roundsPerDay:meta.roundsPerDay,
+    currentRound,remainingSeconds:clock.remainingSeconds,
+    lastCompletedRound:lastRound||null,lastResult:live||null,
+    recentResults:records.slice(0,30),stats:summarizeRecords(gameId,records),
+    source,error
+  };
+}
+app.get('/api/game-state/:game',async(req,res)=>{
+  try{return res.json(await getUnifiedState(String(req.params.game||'').toLowerCase()))}
+  catch(e){return res.status(e.status||500).json({ok:false,error:e.message})}
+});
+
 app.listen(PORT,()=>console.log(`TOVIEW http://localhost:${PORT}`));
