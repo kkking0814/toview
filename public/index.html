@@ -2928,5 +2928,49 @@ window.addEventListener('DOMContentLoaded', updateLoginButton);
 </script>
 
 <script src="auth.js"></script>    
+
+<style id="toview-index-live-v6">
+#live .live-status-line{font-weight:800;color:#8eb4e7}
+#live .live-status-line b{color:#fff}
+</style>
+<script id="toview-index-live-v6-script">
+(function(){
+const GAME='dh_randomball';
+let state=null,timer=null;
+const $=id=>document.getElementById(id);
+function mmss(sec){sec=Math.max(0,Number(sec)||0);return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')}
+function pct(n,t){return t?Math.round(n/t*100):0}
+function render(s){
+ state=s;
+ const r=s.lastResult;
+ const countdown=document.querySelector('.countdown');
+ if(countdown)countdown.textContent=mmss(s.remainingSeconds);
+ const sub=document.querySelector('.countdown-sub');
+ if(sub)sub.textContent=s.currentRound+'회차 결과까지';
+ const liveTitle=document.querySelector('.live-center .live-game-name');
+ if(liveTitle)liveTitle.textContent='동행파워볼(랜덤볼) · '+s.currentRound+'회차';
+ if(r){
+   const balls=[r.nBall1,r.nBall2,r.nBall3,r.nBall4,r.nBall5,r.PowerBall];
+   document.querySelectorAll('.balls .ball').forEach((b,i)=>{if(balls[i]!=null)b.textContent=balls[i]});
+ }
+ // 기존 홈 로더가 사용하는 전역 배열을 동일 데이터로 공급
+ window.__TOVIEW_HOME_RESULTS=s.recentResults||[];
+ const total=s.stats?.total||0;
+ const statBoxes=document.querySelectorAll('.stat-value');
+ if(statBoxes.length>=4){
+   statBoxes[0].textContent=(s.stats.powerOdd??0)+' ('+pct(s.stats.powerOdd,total)+'%)';
+   statBoxes[1].textContent=(s.stats.powerEven??0)+' ('+pct(s.stats.powerEven,total)+'%)';
+   statBoxes[2].textContent=(s.stats.powerUnder??0)+' ('+pct(s.stats.powerUnder,total)+'%)';
+   statBoxes[3].textContent=(s.stats.powerOver??0)+' ('+pct(s.stats.powerOver,total)+'%)';
+ }
+}
+async function load(){
+ try{const r=await fetch('/api/game-state/'+GAME,{credentials:'include'}),d=await r.json();if(!r.ok)throw new Error(d.error||'state error');render(d)}
+ catch(e){console.error('홈 게임 상태 오류',e)}
+}
+document.addEventListener('DOMContentLoaded',()=>{load();setInterval(load,5000);setInterval(()=>{if(state){state.remainingSeconds=Math.max(0,state.remainingSeconds-1);const c=document.querySelector('.countdown');if(c)c.textContent=mmss(state.remainingSeconds);if(state.remainingSeconds===0)load()}},1000)});
+})();
+</script>
+
 </body>
 </html>
