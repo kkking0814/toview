@@ -1105,7 +1105,7 @@ const TOVIEW_GAMES = {
     powerball: {
         id: 'powerball',
         name: '파워볼',
-        enabled: false
+        enabled: true
     },
 
     ladder: {
@@ -1181,25 +1181,98 @@ app.get('/api/games/:game/live', async (req, res) => {
 
         }
 
+// ========================================
+// 파워볼 실제 데이터
+// ========================================
 
-        /*
-            나중에 실제 외부 API를 여기서 호출한다.
+if (gameId === 'powerball') {
 
-            예:
+    const apiResponse = await fetch(
+        'https://www.powerballgame.co.kr/json/powerball.json',
+        {
+            headers: {
+                'User-Agent': 'Mozilla/5.0'
+            }
+        }
+    );
 
-            const response = await fetch(...);
-            const data = await response.json();
 
-            return res.json({
-                ok: true,
-                connected: true,
-                game: game.id,
-                roundNumber: 실제회차,
-                remainingSeconds: 남은시간,
-                status: 'OPEN'
-            });
-        */
+    if (!apiResponse.ok) {
 
+        return res.status(502).json({
+            ok: false,
+            connected: false,
+            error: '파워볼 데이터 서버 연결 실패'
+        });
+
+    }
+
+
+    const data =
+        await apiResponse.json();
+
+
+    const roundNumber =
+        Number(data.round);
+
+
+    if (
+        !Number.isInteger(roundNumber) ||
+        roundNumber <= 0
+    ) {
+
+        return res.status(502).json({
+            ok: false,
+            connected: false,
+            error: '회차 정보를 확인할 수 없습니다.'
+        });
+
+    }
+
+
+    return res.json({
+
+        ok: true,
+
+        connected: true,
+
+        game: 'powerball',
+
+        name: '파워볼',
+
+        roundNumber: roundNumber,
+
+        todayRound:
+            Number(data.todayRound),
+
+        drawDate:
+            data.date,
+
+        drawTime:
+            data.time,
+
+        result: {
+
+            powerball:
+                data.powerball,
+
+            powerballOddEven:
+                data.oddEven_powerball,
+
+            powerballUnderOver:
+                data.underOver_powerball,
+
+            number:
+                data.number,
+
+            numberSum:
+                data.numberSum
+
+        }
+
+    });
+
+}
 
         return res.status(503).json({
             ok: false,
