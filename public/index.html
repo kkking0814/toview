@@ -1918,193 +1918,50 @@ document.addEventListener('keydown', function(event){
     }
 
 });
-const API='/api/results';
-let records=[];
+const HOME_GAME='dh_randomball';
+let records=[],homeState=null;
 
-function normalize(payload){
-    let list=[];
+function normalizeHomeRecord(x){return x||{}}
+function renderHomeState(s){
+    homeState=s;
+    records=(s.recentResults||[]).map(normalizeHomeRecord);
+    const p=s.lastResult||records[0];
 
-    if(Array.isArray(payload)){
-        list=payload;
-    }else if(payload && Array.isArray(payload.data)){
-        list=payload.data;
-    }else if(payload && Array.isArray(payload.results)){
-        list=payload.results;
-    }else if(payload && payload.data && typeof payload.data==='object'){
-        list=[payload.data];
-    }else if(payload && typeof payload==='object'){
-        list=[payload];
+    const timerEl=document.getElementById('timer');
+    if(timerEl) timerEl.textContent=mmssHome(s.remainingSeconds);
+    const roundEl=document.getElementById('round');
+    if(roundEl) roundEl.textContent=(s.currentRound||'-')+'회차';
+    const api=document.getElementById('apiState');
+    if(api) api.innerHTML=s.ok?'<span class="apiok">● 결과 데이터 연결됨</span>':'<span class="apifail">● 확정 결과 대기 중</span>';
+
+    if(p){
+        const balls=document.getElementById('balls');
+        if(balls) balls.innerHTML=[p.nBall1,p.nBall2,p.nBall3,p.nBall4,p.nBall5].map(n=>`<span class="ball">${n??'-'}</span>`).join('')+`<span class="ball power">${p.PowerBall??'-'}</span>`;
+        const tags=document.getElementById('tags');
+        if(tags) tags.innerHTML=`<span class="tag">일반합 ${p.nBallSum??'-'} · ${p.oddEven===1?'홀':p.oddEven===2?'짝':'-'}</span><span class="tag">파워볼 ${p.PowerBall??'-'} · ${p.pOddEven===1?'홀':p.pOddEven===2?'짝':'-'}</span><span class="tag">${p.pUnderOver===1?'언더':p.pUnderOver===2?'오버':'-'}</span>`;
     }
-
-    return list
-        .map(item=>{
-            if(!item || typeof item!=='object') return null;
-
-            // 현재 server.js 평면 구조를 기준으로 하되, 과거 중첩 구조도 안전하게 흡수.
-            const legacy=(item.PowerBall && typeof item.PowerBall==='object') ? item.PowerBall : null;
-
-            const allRound=Number(item.AllRound ?? item.todayRound ?? item.today_round);
-            const roundNumber=Number(item.Round ?? item.roundNumber ?? item.round_number);
-
-            const nBall1=Number(item.nBall1 ?? legacy?.nBall1);
-            const nBall2=Number(item.nBall2 ?? legacy?.nBall2);
-            const nBall3=Number(item.nBall3 ?? legacy?.nBall3);
-            const nBall4=Number(item.nBall4 ?? legacy?.nBall4);
-            const nBall5=Number(item.nBall5 ?? legacy?.nBall5);
-            const nBallSum=Number(item.nBallSum ?? item.numberSum ?? legacy?.nBallSum);
-
-            const powerRaw=(typeof item.PowerBall==='number' || typeof item.PowerBall==='string')
-                ? item.PowerBall
-                : (item.powerball ?? item.pBall ?? legacy?.pBall);
-
-            const powerBall=Number(powerRaw);
-            const oddEven=Number(item.oddEven ?? item.nOddEven ?? legacy?.nOddEven);
-            const pOddEven=Number(item.pOddEven ?? legacy?.pOddEven);
-            const pUnderOver=Number(item.pUnderOver ?? legacy?.pUnderOver);
-
-            if(!Number.isFinite(allRound) || allRound <= 0) return null;
-            if(!Number.isFinite(roundNumber) || roundNumber <= 0) return null;
-            if(![nBall1,nBall2,nBall3,nBall4,nBall5,nBallSum,powerBall].every(Number.isFinite)) return null;
-            if(![1,2].includes(oddEven) || ![1,2].includes(pOddEven) || ![1,2].includes(pUnderOver)) return null;
-
-            return {
-                AllRound:allRound,
-                Round:roundNumber,
-                Date:String(item.Date ?? item.drawDate ?? item.draw_date ?? ''),
-                Time:String(item.Time ?? item.drawTime ?? item.draw_time ?? ''),
-                nBall1,nBall2,nBall3,nBall4,nBall5,nBallSum,
-                PowerBall:powerBall,
-                oddEven,pOddEven,pUnderOver
-            };
-        })
-        .filter(Boolean)
-        .sort((a,b)=>b.AllRound-a.AllRound);
+    renderRows(records);renderStats(records);renderPatterns(records);
 }
-
-function render(a){
-    records=a.slice();
-
-    if(!records.length){
-        document.getElementById('round').textContent='오늘 저장된 결과 없음';
-        document.getElementById('balls').innerHTML='<span class="sub">결과 대기 중</span>';
-        document.getElementById('tags').innerHTML='';
-        renderRows([]);
-        renderStats([]);
-        renderPatterns([]);
-        return;
-    }
-
-    const p=records[0];
-    document.getElementById('round').textContent=
-        `${p.Date} · 전체 ${p.Round}회 · 오늘 ${p.AllRound}회`;
-
-    document.getElementById('balls').innerHTML=
-        [p.nBall1,p.nBall2,p.nBall3,p.nBall4,p.nBall5]
-            .map(n=>`<span class="ball">${n}</span>`)
-            .join('')+
-        `<span class="ball power">${p.PowerBall}</span>`;
-
-    const normalOddEven=p.oddEven===1?'홀':'짝';
-    const powerOddEven=p.pOddEven===1?'홀':'짝';
-    const powerUnderOver=p.pUnderOver===1?'언더':'오버';
-
-    document.getElementById('tags').innerHTML=
-        `<span class="tag">일반합 ${p.nBallSum} · ${normalOddEven}</span>`+
-        `<span class="tag">파워볼 ${p.PowerBall} · ${powerOddEven}</span>`+
-        `<span class="tag">${powerUnderOver}</span>`;
-
-    renderRows(records);
-    renderStats(records);
-    renderPatterns(records);
-}
-
-function renderStats(a){
-    const n=a.length;
-    const odd=a.filter(x=>x.pOddEven===1).length;
-    const even=a.filter(x=>x.pOddEven===2).length;
-    const under=a.filter(x=>x.pUnderOver===1).length;
-    const over=a.filter(x=>x.pUnderOver===2).length;
-
-    document.getElementById('sampleN').textContent=n?`오늘 ${n}회 집계`:'오늘 0회';
-    document.getElementById('resultCount').textContent=n?`오늘 ${n}회 · 최신순`:'오늘 0회';
-    document.getElementById('sOdd').textContent=String(odd);
-    document.getElementById('sEven').textContent=String(even);
-    document.getElementById('sUnder').textContent=String(under);
-    document.getElementById('sOver').textContent=String(over);
-}
-
-function renderPatterns(a){
-    const p1=document.getElementById('p1');
-    const p2=document.getElementById('p2');
-
-    if(!p1 || !p2) return;
-
-    if(!a.length){
-        p1.innerHTML='<div class="sub">결과 없음</div>';
-        p2.innerHTML='<div class="sub">결과 없음</div>';
-        return;
-    }
-
-    p1.innerHTML=a.map(x=>{
-        const value=x.pOddEven===1?'홀':'짝';
-        const cls=x.pOddEven===1?'':' red';
-        return `<div class="pattern-item"><span class="pattern-round">${x.AllRound}회</span><span class="pattern-value${cls}">${value}</span></div>`;
-    }).join('');
-
-    p2.innerHTML=a.map(x=>{
-        const value=x.pUnderOver===1?'언더':'오버';
-        const cls=x.pUnderOver===1?'':' red';
-        return `<div class="pattern-item"><span class="pattern-round">${x.AllRound}회</span><span class="pattern-value${cls}">${value}</span></div>`;
-    }).join('');
-}
-
+function mmssHome(s){s=Math.max(0,Number(s)||0);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
 async function load(){
     try{
-        const response=await fetch(API,{cache:'no-store'});
-
-        if(!response.ok){
-            throw new Error(`API HTTP ${response.status}`);
-        }
-
-        const payload=await response.json();
-        const normalized=normalize(payload);
-
-        if(!normalized.length){
-            throw new Error('오늘 저장된 결과가 없습니다.');
-        }
-
-        render(normalized);
-        document.getElementById('apiState').innerHTML=
-            '<span class="apiok">● 실시간 API 연결됨</span>';
+        const response=await fetch('/api/game-state/'+HOME_GAME,{credentials:'include',cache:'no-store'});
+        const s=await response.json();if(!response.ok)throw new Error(s.error||'state error');
+        renderHomeState(s);
     }catch(error){
-        console.error('홈 결과 불러오기 오류:',error);
-        document.getElementById('apiState').innerHTML=
-            '<span class="apifail">● 결과 데이터를 불러오지 못했습니다.</span>';
+        console.error('홈 게임 상태 오류:',error);
+        const api=document.getElementById('apiState');if(api)api.innerHTML='<span class="apifail">● 결과 데이터 연결 대기</span>';
     }
 }
-
 function tick(){
-    const d=new Date();
-    const sec=(d.getMinutes()%5)*60+d.getSeconds();
-    let left=300-sec;
-
-    if(left===300) left=0;
-
-    document.getElementById('timer').textContent=
-        String(Math.floor(left/60)).padStart(2,'0')+':'+
-        String(left%60).padStart(2,'0');
-
-    document.getElementById('clock').textContent=d.toLocaleTimeString('ko-KR');
-
-    if(left===0){
-        setTimeout(load,1500);
+    const d=new Date(),clock=document.getElementById('clock');if(clock)clock.textContent=d.toLocaleTimeString('ko-KR');
+    if(homeState){
+        homeState.remainingSeconds=Math.max(0,Number(homeState.remainingSeconds||0)-1);
+        const t=document.getElementById('timer');if(t)t.textContent=mmssHome(homeState.remainingSeconds);
+        if(homeState.remainingSeconds===0)load();
     }
 }
-
-setInterval(tick,1000);
-tick();
-load();
-setInterval(load,60000);
+setInterval(tick,1000);tick();load();setInterval(load,5000);
 
 const modal=document.getElementById('modal');
 
@@ -2928,49 +2785,5 @@ window.addEventListener('DOMContentLoaded', updateLoginButton);
 </script>
 
 <script src="auth.js"></script>    
-
-<style id="toview-index-live-v6">
-#live .live-status-line{font-weight:800;color:#8eb4e7}
-#live .live-status-line b{color:#fff}
-</style>
-<script id="toview-index-live-v6-script">
-(function(){
-const GAME='dh_randomball';
-let state=null,timer=null;
-const $=id=>document.getElementById(id);
-function mmss(sec){sec=Math.max(0,Number(sec)||0);return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')}
-function pct(n,t){return t?Math.round(n/t*100):0}
-function render(s){
- state=s;
- const r=s.lastResult;
- const countdown=document.querySelector('.countdown');
- if(countdown)countdown.textContent=mmss(s.remainingSeconds);
- const sub=document.querySelector('.countdown-sub');
- if(sub)sub.textContent=s.currentRound+'회차 결과까지';
- const liveTitle=document.querySelector('.live-center .live-game-name');
- if(liveTitle)liveTitle.textContent='동행파워볼(랜덤볼) · '+s.currentRound+'회차';
- if(r){
-   const balls=[r.nBall1,r.nBall2,r.nBall3,r.nBall4,r.nBall5,r.PowerBall];
-   document.querySelectorAll('.balls .ball').forEach((b,i)=>{if(balls[i]!=null)b.textContent=balls[i]});
- }
- // 기존 홈 로더가 사용하는 전역 배열을 동일 데이터로 공급
- window.__TOVIEW_HOME_RESULTS=s.recentResults||[];
- const total=s.stats?.total||0;
- const statBoxes=document.querySelectorAll('.stat-value');
- if(statBoxes.length>=4){
-   statBoxes[0].textContent=(s.stats.powerOdd??0)+' ('+pct(s.stats.powerOdd,total)+'%)';
-   statBoxes[1].textContent=(s.stats.powerEven??0)+' ('+pct(s.stats.powerEven,total)+'%)';
-   statBoxes[2].textContent=(s.stats.powerUnder??0)+' ('+pct(s.stats.powerUnder,total)+'%)';
-   statBoxes[3].textContent=(s.stats.powerOver??0)+' ('+pct(s.stats.powerOver,total)+'%)';
- }
-}
-async function load(){
- try{const r=await fetch('/api/game-state/'+GAME,{credentials:'include'}),d=await r.json();if(!r.ok)throw new Error(d.error||'state error');render(d)}
- catch(e){console.error('홈 게임 상태 오류',e)}
-}
-document.addEventListener('DOMContentLoaded',()=>{load();setInterval(load,5000);setInterval(()=>{if(state){state.remainingSeconds=Math.max(0,state.remainingSeconds-1);const c=document.querySelector('.countdown');if(c)c.textContent=mmss(state.remainingSeconds);if(state.remainingSeconds===0)load()}},1000)});
-})();
-</script>
-
 </body>
 </html>
