@@ -1367,6 +1367,206 @@ setInterval(function() {
 
 </script>
     
+
+<style id="toview-results-sync-v2">
+/* server.js 동기화 보정 */
+.live-center-grid{display:grid!important;grid-template-columns:minmax(0,2fr) minmax(320px,1fr)!important;gap:16px!important;align-items:stretch!important}
+.results-left-stack{display:grid;grid-template-rows:auto auto;gap:16px;min-width:0}
+.live-chat-card{height:100%!important;max-height:none!important;min-height:0!important;display:grid!important;grid-template-rows:auto auto minmax(0,1fr) auto!important}
+.chat-messages{min-height:0!important;overflow-y:auto!important}
+.game-video-area iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#07101f}
+.game-video-area{position:relative;overflow:hidden}
+.game-api-error{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:25px;color:#91a5c2;background:#07101f}
+.game-api-error strong{display:block;color:#fff;margin-bottom:7px}
+.game-tab.api-error{opacity:.72}
+@media(max-width:900px){.live-center-grid{grid-template-columns:1fr!important}.live-chat-card{height:500px!important}}
+</style>
+<script>
+/* =========================================================
+   TOVIEW RESULTS SYNC V2
+   게임 버튼 → server.js 게임 API → 실제 회차/중계/결과 → 게임별 PICK
+   ========================================================= */
+(function(){
+'use strict';
+
+const GAME={
+ powerball:{name:'파워볼',eng:'POWERBALL',mode:'powerball'},
+ ladder:{name:'사다리',eng:'LADDER',mode:'ladder'},
+ eos:{name:'EOS 파워볼',eng:'EOS POWERBALL',mode:'powerball'},
+ speedkeno:{name:'스피드키노',eng:'SPEED KENO',mode:'keno'},
+ kenoladder:{name:'키노사다리',eng:'KENO LADDER',mode:'ladder'}
+};
+let activeGame='powerball';
+let activeLive=null;
+let activeRecords=[];
+let syncPick={oddEven:null,underOver:null};
+
+const el=id=>document.getElementById(id);
+const safe=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+async function json(url,opt={}){
+ const r=await fetch(url,{credentials:'include',...opt});
+ let d={};try{d=await r.json()}catch{}
+ if(!r.ok)throw Object.assign(new Error(d.error||('HTTP '+r.status)),{status:r.status,data:d});
+ return d;
+}
+function fixLayout(){
+ const grid=document.querySelector('.live-center-grid');
+ const live=document.querySelector('.live-game-card');
+ const chat=document.querySelector('.live-chat-card');
+ const pick=document.querySelector('.pick-center');
+ if(!grid||!live||!chat||!pick||grid.querySelector('.results-left-stack'))return;
+ const left=document.createElement('div');left.className='results-left-stack';
+ grid.insertBefore(left,live);left.appendChild(live);left.appendChild(pick);grid.appendChild(chat);
+}
+function gameTab(game){return document.querySelector('.game-tab[data-game="'+game+'"]')}
+function setText(id,v){const n=el(id);if(n)n.textContent=v}
+function setPickLabels(){
+ const cfg=GAME[activeGame]; if(!cfg)return;
+ const cats=document.querySelectorAll('.pick-category-title strong');
+ if(cats[0])cats[0].textContent=cfg.mode==='ladder'?'사다리 결과 홀짝':cfg.mode==='keno'?'숫자합 홀짝':cfg.name+' 홀짝';
+ if(cats[1])cats[1].textContent=cfg.mode==='ladder'?'출발 방향 (좌/우)':cfg.mode==='keno'?'숫자합 언더 / 오버':cfg.name+' 언더 / 오버';
+ const u=document.querySelector('.pick-option[data-type="underOver"][data-value="under"]');
+ const o=document.querySelector('.pick-option[data-type="underOver"][data-value="over"]');
+ if(u){u.querySelector('strong').textContent=cfg.mode==='ladder'?'좌':'언더';u.querySelector('small').textContent=cfg.mode==='ladder'?'LEFT':'UNDER'}
+ if(o){o.querySelector('strong').textContent=cfg.mode==='ladder'?'우':'오버';o.querySelector('small').textContent=cfg.mode==='ladder'?'RIGHT':'OVER'}
+}
+function clearPick(){
+ syncPick={oddEven:null,underOver:null};
+ if(window.currentPick){window.currentPick.oddEven=null;window.currentPick.underOver=null}
+ document.querySelectorAll('.pick-option').forEach(b=>b.classList.remove('selected'));
+ const t=el('myPickText');if(t)t.textContent='홀짝과 두 번째 PICK 항목을 선택해주세요.';
+}
+window.selectPick=function(button){
+ const type=button.dataset.type,value=button.dataset.value;
+ document.querySelectorAll('.pick-option[data-type="'+type+'"]').forEach(b=>b.classList.remove('selected'));
+ button.classList.add('selected');syncPick[type]=value;
+ const a=syncPick.oddEven==='odd'?'홀':syncPick.oddEven==='even'?'짝':'미선택';
+ const cfg=GAME[activeGame], b=syncPick.underOver==='under'?(cfg.mode==='ladder'?'좌':'언더'):syncPick.underOver==='over'?(cfg.mode==='ladder'?'우':'오버'):'미선택';
+ setText('myPickText','홀짝 '+a+' · '+(cfg.mode==='ladder'?'출발 ':'언오버 ')+b);
+};
+
+function renderVideo(url){
+ const area=el('gameVideoArea');if(!area)return;
+ if(!url){area.innerHTML='<div class="game-api-error"><div><strong>중계 URL 없음</strong><span>서버에서 중계 URL을 받지 못했습니다.</span></div></div>';return}
+ area.innerHTML='<iframe src="'+safe(url)+'" title="'+safe(GAME[activeGame].name)+' LIVE" allow="autoplay; fullscreen" referrerpolicy="no-referrer-when-downgrade"></iframe>';
+}
+function renderLive(d){
+ activeLive=d;
+ setText('liveGameName',d.name||GAME[activeGame].name);
+ setText('liveRound',(d.roundNumber||d.todayRound||'-')+'회차');
+ setText('pickRound',d.roundNumber||d.todayRound||'---');
+ const small=document.querySelector('.round-info-panel small');if(small)small.textContent=GAME[activeGame].eng;
+ const x=d.data||d.result||{};
+ const p=x.PowerBall??x.powerball??x.sourceFirstNumber??'-';setText('previewPower',p);
+ renderVideo(d.videoUrl);
+ const balls=el('liveResultBalls');if(balls){
+   if(activeGame==='powerball'||activeGame==='eos'){
+     const ns=[x.nBall1,x.nBall2,x.nBall3,x.nBall4,x.nBall5];
+     balls.innerHTML=ns.map(n=>'<span class="mini-ball">'+safe(n??'-')+'</span>').join('')+'<b>+</b><span class="mini-ball power-mini">'+safe(x.PowerBall??'-')+'</span>';
+   }else if(activeGame==='speedkeno'){
+     const ns=Array.isArray(x.numbers)?x.numbers.slice(0,10):[];
+     balls.innerHTML=(ns.length?ns.map(n=>'<span class="mini-ball">'+safe(n)+'</span>').join(''):'<span>결과 확인 중</span>');
+   }else{
+     const l=x.ladder||{};
+     balls.innerHTML='<span class="mini-ball">'+(l.start==='left'?'좌':'우')+'</span><span class="mini-ball">'+safe(l.lines||'-')+'줄</span><span class="mini-ball power-mini">'+(l.result==='odd'?'홀':'짝')+'</span>';
+   }
+ }
+ loadPickStats();
+}
+function renderApiError(error){
+ const area=el('gameVideoArea');if(area)area.innerHTML='<div class="game-api-error"><div><strong>'+safe(GAME[activeGame].name)+' API 연결 실패</strong><span>'+safe(error.message||'외부 API를 확인해주세요.')+'</span></div></div>';
+ setText('liveRound','연결 실패');setText('pickRound','---');
+ gameTab(activeGame)?.classList.add('api-error');
+}
+async function loadGameLive(){
+ try{
+   const d=await json('/api/games/'+activeGame+'/live');
+   gameTab(activeGame)?.classList.remove('api-error');renderLive(d);
+ }catch(e){console.error(activeGame+' LIVE',e);renderApiError(e)}
+}
+window.loadPowerballLive=loadGameLive;
+
+async function loadGameResults(){
+ try{
+  let d;
+  if(activeGame==='powerball')d=await json('/api/results');
+  else d=await json('/api/games/'+activeGame+'/results');
+  activeRecords=Array.isArray(d)?d:(Array.isArray(d.records)?d.records:[]);
+  renderResultTable();
+ }catch(e){console.error('결과 API',e);activeRecords=[];renderResultTable()}
+}
+function recordOE(r){return (r.pOddEven??r.oddEven)===1?'홀':'짝'}
+function recordUO(r){return r.pUnderOver===1?'언더':'오버'}
+function renderResultTable(){
+ const body=el('rows');if(!body)return;
+ const q=String(el('q')?.value||'').trim(), f=el('f')?.value||'all';
+ let arr=activeRecords.filter(r=>{
+   const round=String(r.Round??r.AllRound??'');
+   const oe=(r.pOddEven??r.oddEven)===1?'odd':'even';
+   return (!q||round.includes(q))&&(f==='all'||f===oe);
+ }).slice(0,100);
+ body.innerHTML=arr.map(r=>{
+   const round=r.AllRound??r.Round??'-';
+   if(activeGame==='powerball'||activeGame==='eos'){
+    const b=[r.nBall1,r.nBall2,r.nBall3,r.nBall4,r.nBall5].filter(v=>v!==undefined);
+    return '<tr><td>'+safe(round)+'</td><td>'+safe(b.join(' · '))+'</td><td>'+safe(r.nBallSum??'-')+'</td><td><b>'+safe(r.PowerBall??'-')+'</b></td><td>'+recordOE(r)+'</td><td>'+recordUO(r)+'</td></tr>';
+   }
+   if(activeGame==='speedkeno')return '<tr><td>'+safe(round)+'</td><td colspan="2">'+safe((r.numbers||[]).join(' · '))+'</td><td><b>'+safe(r.nBallSum??'-')+'</b></td><td>'+((r.oddEven===1)?'홀':'짝')+'</td><td>'+recordUO(r)+'</td></tr>';
+   const l=r.ladder||{};return '<tr><td>'+safe(round)+'</td><td colspan="2">출발 '+(l.start==='left'?'좌':'우')+'</td><td><b>'+safe(l.lines??'-')+'줄</b></td><td>'+(l.result==='odd'?'홀':'짝')+'</td><td>-</td></tr>';
+ }).join('')||'<tr><td colspan="6">표시할 결과가 없습니다.</td></tr>';
+ setText('state',arr.length+'개 표시');
+}
+if(el('q'))el('q').addEventListener('input',renderResultTable);
+if(el('f'))el('f').addEventListener('change',renderResultTable);
+
+window.loadPickStats=async function(){
+ const round=Number(String(el('pickRound')?.textContent||'').replace(/\D/g,''));
+ if(!round)return;
+ try{
+  const d=await json('/api/picks/'+round+'/stats?game='+encodeURIComponent(activeGame));
+  setText('oddEvenParticipants','참여 '+d.participants+'명');setText('underOverParticipants','참여 '+d.participants+'명');
+  setText('oddPercent',d.oddEven.oddPercent+'%');setText('evenPercent',d.oddEven.evenPercent+'%');
+  setText('underPercent',d.underOver.underPercent+'%');setText('overPercent',d.underOver.overPercent+'%');
+  if(el('oddBar'))el('oddBar').style.width=d.oddEven.oddPercent+'%';
+  if(el('underBar'))el('underBar').style.width=d.underOver.underPercent+'%';
+ }catch(e){console.warn('PICK stats',e)}
+};
+window.submitPick=async function(){
+ const round=Number(String(el('pickRound')?.textContent||'').replace(/\D/g,''));
+ if(!round)return alert('현재 회차를 먼저 불러와야 합니다.');
+ if(!syncPick.oddEven||!syncPick.underOver)return alert('PICK 항목을 모두 선택해주세요.');
+ const btn=el('pickSubmitBtn');if(btn){btn.disabled=true;btn.textContent='등록 중...'}
+ try{
+  await json('/api/picks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gameId:activeGame,roundNumber:round,oddEven:syncPick.oddEven,underOver:syncPick.underOver})});
+  if(btn)btn.textContent='PICK 등록완료';await loadPickStats();alert('PICK이 등록되었습니다.');
+ }catch(e){alert(e.status===401?'로그인 후 PICK을 등록할 수 있습니다.':e.message)}
+ finally{if(btn){btn.disabled=false;if(btn.textContent!=='PICK 등록완료')btn.textContent='PICK 등록하기'}}
+};
+
+window.changeGame=async function(game,button){
+ if(game==='more'){alert('추가 게임은 server.js에 API를 등록하면 같은 방식으로 연결됩니다.');return}
+ if(!GAME[game])return;
+ activeGame=game;document.querySelectorAll('.game-tab').forEach(b=>b.classList.remove('active'));button?.classList.add('active');
+ clearPick();setPickLabels();setText('liveGameName',GAME[game].name);setText('liveRound','회차 확인 중');setText('pickRound','---');
+ await Promise.allSettled([loadGameLive(),loadGameResults()]);
+};
+
+async function checkGames(){
+ try{
+  const d=await json('/api/games');
+  (d.games||[]).forEach(g=>{const b=gameTab(g.id);if(b)b.title=g.enabled===false?'API 연결 준비 중':''});
+ }catch(e){console.warn('/api/games',e)}
+}
+
+document.addEventListener('DOMContentLoaded',async()=>{
+ fixLayout();setPickLabels();await checkGames();
+ await Promise.allSettled([loadGameLive(),loadGameResults()]);
+ setInterval(loadGameLive,5000);setInterval(loadGameResults,15000);
+});
+})();
+</script>
+
 <script src="auth.js">
     
 </script>
