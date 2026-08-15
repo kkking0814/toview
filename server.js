@@ -1436,4 +1436,125 @@ if (gameId === 'powerball') {
 
 });
 
+// ========================================
+// 기존 홈 화면용 파워볼 결과 API
+// ========================================
+
+app.get('/api/results', async (req, res) => {
+
+    try {
+
+        const apiResponse = await fetch(
+            'https://www.powerballgame.co.kr/json/powerball.json',
+            {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0'
+                }
+            }
+        );
+
+        if (!apiResponse.ok) {
+
+            return res.status(502).json({
+                error: '파워볼 데이터를 불러오지 못했습니다.'
+            });
+
+        }
+
+        const data = await apiResponse.json();
+
+
+        // 일반번호 문자열
+        // 예: "1909011107"
+        // → 19, 09, 01, 11, 07
+        const numberString =
+            String(data.number || '')
+                .padStart(10, '0');
+
+
+        const numbers = [];
+
+        for (let i = 0; i < 10; i += 2) {
+
+            numbers.push(
+                Number(numberString.slice(i, i + 2))
+            );
+
+        }
+
+
+        // index.html 기존 구조에 맞춰서 반환
+        const result = {
+
+            AllRound:
+                Number(data.todayRound),
+
+            Round:
+                Number(data.round),
+
+            Date:
+                data.date,
+
+            Time:
+                data.time,
+
+            nBall1:
+                numbers[0],
+
+            nBall2:
+                numbers[1],
+
+            nBall3:
+                numbers[2],
+
+            nBall4:
+                numbers[3],
+
+            nBall5:
+                numbers[4],
+
+            nBallSum:
+                Number(data.numberSum),
+
+            PowerBall:
+                Number(data.powerball),
+
+            oddEven:
+                data.oddEven_number === 'odd'
+                    ? 1
+                    : 2,
+
+            pOddEven:
+                data.oddEven_powerball === 'odd'
+                    ? 1
+                    : 2,
+
+            pUnderOver:
+                data.underOver_powerball === 'under'
+                    ? 1
+                    : 2
+
+        };
+
+
+        return res.json([
+            result
+        ]);
+
+
+    } catch (error) {
+
+        console.error(
+            '홈 파워볼 결과 API 오류:',
+            error
+        );
+
+        return res.status(500).json({
+            error: '파워볼 결과 처리 중 오류가 발생했습니다.'
+        });
+
+    }
+
+});
+
 app.listen(PORT,()=>console.log(`TOVIEW http://localhost:${PORT}`));
