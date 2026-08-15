@@ -1,188 +1,131 @@
 /* ========================================
-   TOVIEW 공통 상단 버튼
+   TOVIEW COMMON.CSS — 2026-08 통합본
+   index.html / results.html 공통 UI
 ======================================== */
 
-/* 헤더를 버튼 위치의 기준으로 설정 */
-.top .bar {
-    position: relative !important;
+*,
+*::before,
+*::after{
+    box-sizing:border-box;
 }
 
-/* 전체메뉴 버튼 */
-.menu-btn {
-    position: absolute !important;
-    right: 120px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-
-    width: 110px !important;
-    min-width: 110px !important;
-    max-width: 110px !important;
-
-    height: 40px !important;
-    min-height: 40px !important;
-    max-height: 40px !important;
-
-    padding: 0 14px !important;
-    margin: 0 !important;
-
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 7px !important;
-
-    box-sizing: border-box !important;
-
-    border: 1px solid #334761 !important;
-    border-radius: 8px !important;
-
-    background: #111d30 !important;
-    color: #ffffff !important;
-
-    font-size: 13px !important;
-    font-weight: 700 !important;
-    line-height: 1 !important;
-
-    white-space: nowrap !important;
-    cursor: pointer !important;
-
-    z-index: 100 !important;
+html{
+    -webkit-text-size-adjust:100%;
 }
 
-/* 로그인 / 닉네임 버튼 */
+body{
+    margin:0;
+}
+
+button,
+input,
+select,
+textarea{
+    font:inherit;
+}
+
+button,
+a{
+    -webkit-tap-highlight-color:transparent;
+}
+
+/* ========================================
+   공통 상단 헤더 / 계정 / 전체메뉴
+======================================== */
+
+.top .bar{
+    position:relative !important;
+}
+
+.brand{
+    position:relative;
+    z-index:101;
+}
+
+.menu-btn,
 #loginBtn,
-#userBtn {
-    position: absolute !important;
-    right: 0 !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
+#userBtn{
+    position:absolute !important;
+    top:50% !important;
+    transform:translateY(-50%) !important;
 
-    width: 110px !important;
-    min-width: 110px !important;
-    max-width: 110px !important;
+    width:110px !important;
+    min-width:110px !important;
+    max-width:110px !important;
+    height:40px !important;
+    min-height:40px !important;
+    max-height:40px !important;
 
-    height: 40px !important;
-    min-height: 40px !important;
-    max-height: 40px !important;
+    margin:0 !important;
+    padding:0 14px !important;
 
-    padding: 0 14px !important;
-    margin: 0 !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
 
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    box-sizing:border-box !important;
+    border-radius:8px !important;
 
-    box-sizing: border-box !important;
+    color:#fff !important;
+    font-size:13px !important;
+    font-weight:700 !important;
+    line-height:1 !important;
+    white-space:nowrap !important;
 
-    border: 1px solid #3b82f6 !important;
-    border-radius: 8px !important;
-
-    background: #2563eb !important;
-    color: #ffffff !important;
-
-    font-size: 13px !important;
-    font-weight: 700 !important;
-    line-height: 1 !important;
-
-    white-space: nowrap !important;
-    cursor: pointer !important;
-
-    z-index: 100 !important;
+    cursor:pointer !important;
+    z-index:100 !important;
 }
 
-/* 메뉴 하단 */
-.menu-panel-bottom{
-    padding:20px 0 28px;
+.menu-btn{
+    right:120px !important;
+    gap:7px !important;
+    border:1px solid #334761 !important;
+    background:#111d30 !important;
+}
 
-    border-top:1px solid rgba(255,255,255,.07);
+.menu-btn:hover{
+    background:#17263d !important;
+    border-color:#46607f !important;
+}
 
-    color:#475569;
-    font-size:9px;
-    font-weight:700;
-    letter-spacing:1px;
+#loginBtn,
+#userBtn{
+    right:0 !important;
+    border:1px solid #3b82f6 !important;
+    background:#2563eb !important;
+}
+
+#loginBtn:hover,
+#userBtn:hover{
+    background:#1d4ed8 !important;
+}
+
+#loginBtn[hidden],
+#userBtn[hidden]{
+    display:none !important;
 }
 
 @media(max-width:600px){
-
-    .menu-btn span:last-child{
-        display:none;
-    }
-
     .menu-btn{
         width:38px !important;
         min-width:38px !important;
         max-width:38px !important;
         padding:0 !important;
-        justify-content:center !important;
-        flex:0 0 38px !important;
+        right:50px !important;
     }
 
-    .menu-panel{
-        width:100%;
-        padding:0 20px;
+    .menu-btn span:last-child{
+        display:none !important;
     }
-}
 
-/* ========================================
-   전체메뉴 + 계정버튼 위치 완전 고정
-======================================== */
-
-/* 헤더 자체를 기준점으로 사용 */
-.top .bar {
-    position: relative !important;
-}
-
-/* 전체메뉴 버튼 */
-.menu-btn {
-    position: absolute !important;
-
-    right: 120px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-
-    width: 110px !important;
-    height: 40px !important;
-
-    min-width: 110px !important;
-    max-width: 110px !important;
-
-    margin: 0 !important;
-    padding: 0 14px !important;
-
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 7px !important;
-
-    box-sizing: border-box !important;
-
-    z-index: 100 !important;
-}
-
-/* 로그인 / 닉네임 버튼 */
-#loginBtn,
-#userBtn {
-    position: absolute !important;
-
-    right: 0 !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-
-    width: 110px !important;
-    height: 40px !important;
-
-    min-width: 110px !important;
-    max-width: 110px !important;
-
-    margin: 0 !important;
-    padding: 0 14px !important;
-
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-
-    box-sizing: border-box !important;
-
-    z-index: 100 !important;
+    #loginBtn,
+    #userBtn{
+        width:42px !important;
+        min-width:42px !important;
+        max-width:42px !important;
+        padding:0 6px !important;
+        overflow:hidden !important;
+    }
 }
 
 /* ========================================
@@ -1797,5 +1740,189 @@
 
     .pick-submit-btn{
         width:100%;
+    }
+}
+
+/* ========================================
+   RESULTS / GAME STATE 공통 동기화 보정
+   server.js /api/game-state/:game 구조 대응
+======================================== */
+
+.game-video-area{
+    isolation:isolate;
+}
+
+.tv-round-badge,
+.tv-countdown{
+    pointer-events:none;
+    user-select:none;
+}
+
+.tv-round-badge{
+    position:absolute;
+    top:14px;
+    left:14px;
+    z-index:12;
+
+    padding:7px 10px;
+    border:1px solid #274665;
+    border-radius:7px;
+
+    background:rgba(8,25,44,.92);
+    color:#a9c7e8;
+
+    font-size:11px;
+    font-weight:800;
+
+    box-shadow:0 8px 24px rgba(0,0,0,.18);
+    backdrop-filter:blur(5px);
+}
+
+.tv-countdown{
+    position:absolute;
+    top:14px;
+    right:14px;
+    z-index:12;
+
+    min-width:66px;
+    padding:7px 10px;
+
+    border:1px solid #31537a;
+    border-radius:7px;
+
+    background:rgba(8,25,44,.92);
+    color:#fff;
+
+    text-align:center;
+    font-size:12px;
+    font-weight:900;
+    font-variant-numeric:tabular-nums;
+
+    box-shadow:0 8px 24px rgba(0,0,0,.18);
+    backdrop-filter:blur(5px);
+}
+
+/* results.html이 JS로 생성하는 좌측 LIVE + PICK 묶음 */
+.results-left-stack{
+    min-width:0;
+    display:grid;
+    grid-template-rows:auto auto;
+    gap:16px;
+}
+
+/* 채팅은 LIVE만큼 짧거나 페이지 끝까지 길어지지 않고
+   좌측 LIVE + 회차 PICK 영역의 끝에 맞춘다. */
+.live-center-grid:has(.results-left-stack){
+    align-items:stretch;
+}
+
+.live-center-grid:has(.results-left-stack) > .live-chat-card{
+    height:100% !important;
+    min-height:0 !important;
+    max-height:none !important;
+
+    display:grid !important;
+    grid-template-rows:auto auto minmax(0,1fr) auto !important;
+}
+
+.live-center-grid:has(.results-left-stack) > .live-chat-card .chat-messages{
+    min-height:0 !important;
+    overflow-y:auto !important;
+}
+
+/* 게임별 탭 텍스트가 길어져도 깨지지 않게 */
+.game-tab{
+    min-width:0;
+    padding:0 8px;
+}
+
+.game-tab strong,
+.game-tab small{
+    max-width:100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+/* 현재 회차/남은시간 숫자 흔들림 방지 */
+.round-info-panel > b,
+.pick-timer strong{
+    font-variant-numeric:tabular-nums;
+}
+
+/* 최근 결과 공 영역 */
+.last-result-balls{
+    min-width:0;
+    overflow-x:auto;
+    scrollbar-width:thin;
+}
+
+.last-result-balls::-webkit-scrollbar{
+    height:4px;
+}
+
+.last-result-balls::-webkit-scrollbar-thumb{
+    background:#334155;
+    border-radius:10px;
+}
+
+/* API 로딩/오류 상태도 카드 디자인 안에서 유지 */
+.tv-error,
+.video-placeholder{
+    min-height:100%;
+}
+
+.tv-error{
+    width:100%;
+    height:100%;
+    display:grid;
+    place-items:center;
+    padding:28px;
+    text-align:center;
+    color:#7890b2;
+}
+
+.tv-error > div{
+    max-width:520px;
+}
+
+.tv-error strong{
+    display:block;
+    margin-bottom:8px;
+    color:#e8eef8;
+    font-size:17px;
+}
+
+.tv-error span{
+    display:block;
+    color:#7890b2;
+    font-size:12px;
+    line-height:1.6;
+}
+
+/* 작은 화면에서는 LIVE/PICK 다음에 채팅이 자연스럽게 배치 */
+@media(max-width:1000px){
+    .live-center-grid:has(.results-left-stack){
+        grid-template-columns:1fr !important;
+    }
+
+    .live-center-grid:has(.results-left-stack) > .live-chat-card{
+        height:500px !important;
+    }
+}
+
+@media(max-width:650px){
+    .tv-round-badge{
+        top:10px;
+        left:10px;
+    }
+
+    .tv-countdown{
+        top:10px;
+        right:10px;
+    }
+
+    .game-tabs{
+        scrollbar-width:thin;
     }
 }
