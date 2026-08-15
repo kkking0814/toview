@@ -936,4 +936,164 @@ app.post('/api/chat', async (req, res) => {
 
 });
 
+// ========================================
+// TOVIEW MEMBER PICK 등록
+// ========================================
+
+app.post('/api/picks', async (req, res) => {
+
+    try {
+
+        // 로그인 확인
+        if (!req.session || !req.session.user) {
+
+            return res.status(401).json({
+                error: '로그인이 필요합니다.'
+            });
+
+        }
+
+
+        const username = req.session.user;
+
+        const roundNumber =
+            Number(req.body?.roundNumber);
+
+        const oddEven =
+            String(req.body?.oddEven || '').trim();
+
+        const underOver =
+            String(req.body?.underOver || '').trim();
+
+
+        // 회차 확인
+        if (
+            !Number.isInteger(roundNumber) ||
+            roundNumber <= 0
+        ) {
+
+            return res.status(400).json({
+                error: '올바른 회차가 아닙니다.'
+            });
+
+        }
+
+
+        // 홀짝 값 확인
+        if (
+            oddEven !== 'odd' &&
+            oddEven !== 'even'
+        ) {
+
+            return res.status(400).json({
+                error: '홀 또는 짝을 선택해주세요.'
+            });
+
+        }
+
+
+        // 언더/오버 값 확인
+        if (
+            underOver !== 'under' &&
+            underOver !== 'over'
+        ) {
+
+            return res.status(400).json({
+                error: '언더 또는 오버를 선택해주세요.'
+            });
+
+        }
+
+
+        // 로그인 회원 정보 확인
+        const userResult = await pool.query(
+            `
+            SELECT username, nickname
+            FROM users
+            WHERE username = $1
+            LIMIT 1
+            `,
+            [username]
+        );
+
+
+        if (userResult.rows.length === 0) {
+
+            return res.status(401).json({
+                error: '회원 정보를 찾을 수 없습니다.'
+            });
+
+        }
+
+
+        const nickname =
+            userResult.rows[0].nickname;
+
+
+        // PICK 저장
+        const pickResult = await pool.query(
+            `
+            INSERT INTO member_picks
+                (
+                    username,
+                    nickname,
+                    round_number,
+                    odd_even,
+                    under_over
+                )
+
+            VALUES
+                ($1, $2, $3, $4, $5)
+
+            RETURNING
+                id,
+                username,
+                nickname,
+                round_number,
+                odd_even,
+                under_over,
+                created_at
+            `,
+            [
+                username,
+                nickname,
+                roundNumber,
+                oddEven,
+                underOver
+            ]
+        );
+
+
+        return res.json({
+            ok: true,
+            pick: pickResult.rows[0]
+        });
+
+
+    } catch (error) {
+
+        // 같은 회원이 같은 회차에 또 등록한 경우
+        if (error.code === '23505') {
+
+            return res.status(409).json({
+                error: '이미 해당 회차에 PICK을 등록했습니다.'
+            });
+
+        }
+
+
+        console.error(
+            'PICK 등록 DB 오류:',
+            error
+        );
+
+
+        return res.status(500).json({
+            error: 'PICK 등록에 실패했습니다.'
+        });
+
+    }
+
+});
+
 app.listen(PORT,()=>console.log(`TOVIEW http://localhost:${PORT}`));
