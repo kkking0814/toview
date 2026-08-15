@@ -1599,6 +1599,8 @@ try {
 
 app.get('/api/results', async (req, res) => {
 
+    console.log('[/api/results] 요청 들어옴');
+    
     try {
 
         // 먼저 실제 파워볼 API에서 현재 날짜 확인
