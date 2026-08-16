@@ -1,1 +1,100 @@
-
+<!doctype html>
+<html lang="ko">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>스포츠 | TOVIEW</title>
+        <link rel="stylesheet" href="css/core.css">
+        <link rel="stylesheet" href="css/sports.css">
+    </head>
+    <body>
+        <header class="top">
+            <div class="bar">
+                <a class="brand" href="index.html">
+                    <span class="brand-mark">T</span>
+                    <span>TOVIEW</span>
+                </a>
+                <nav class="nav">
+                    <a href="index.html">홈</a>
+                    <a href="results.html">결과</a>
+                    <a href="analysis.html">분석</a>
+                    <a href="pattern.html">패턴</a>
+                    <a href="sports.html">스포츠</a>
+                    <a href="community.html">커뮤니티</a>
+                    <a href="ranking.html">랭킹</a>
+                    <a href="verified.html">보증업체</a>
+                </nav>
+                <div class="header-actions">
+                    <button class="btn primary" id="loginBtn">로그인</button>
+                    <button class="btn" id="userBtn" hidden>내 계정</button>
+                </div>
+                <div class="profile-menu" id="profileMenu">
+                </div>
+            </div>
+        </header>
+        <main class="wrap">
+            <div class="page-title">
+                <h1>스포츠 LIVE</h1>
+                <p class="muted">공식/허가 영상과 실시간 경기 데이터</p>
+            </div>
+            <div class="sports-main">
+                <section>
+                    <div class="card sports-player" id="sportsPlayer">
+                    </div>
+                    <div class="sports-previews" id="sportsPreviews">
+                    </div>
+                    <div class="home-mid-ads">
+                        <div class="ad" data-ad-slot="SPORTS_MID_A">
+                        </div>
+                        <div class="ad" data-ad-slot="SPORTS_MID_B">
+                        </div>
+                    </div>
+                    <section class="card sports-events">
+                        <div class="card-head">LIVE · 예정 · 종료</div>
+                        <div id="sportsEvents">
+                        </div>
+                    </section>
+                </section>
+                <aside class="card">
+                    <div class="card-head">스포츠 PICK</div>
+                    <div class="card-body" id="sportsPickBox">
+                        <div id="sportsPickMatch" class="muted">경기를 선택해 주세요.</div>
+                        <div class="pick-options" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px">
+                            <button class="btn" data-sports-pick="HOME">홈승</button>
+                            <button class="btn" data-sports-pick="DRAW">무승부</button>
+                            <button class="btn" data-sports-pick="AWAY">원정승</button>
+                        </div>
+                        <select class="btn" id="sportsPickVisibility" style="width:100%;margin-top:10px">
+                            <option value="FOLLOWERS">팔로워 공개</option>
+                            <option value="PUBLIC">전체 공개</option>
+                            <option value="MUTUALS">맞팔 공개</option>
+                            <option value="PRIVATE">나만 보기</option>
+                        </select>
+                        <button class="btn primary" id="sportsPickSubmit" style="width:100%;margin-top:10px">PICK 확정</button>
+                        <div id="sportsPickStats" class="muted" style="margin-top:10px">
+                        </div>
+                        <p class="muted">등록 후 수정·삭제할 수 없습니다.</p>
+                    </div>
+                </aside>
+            </div>
+        </main>
+        <div class="modal" id="moreGames">
+            <div class="modal-box">
+                <h3>미니게임 더보기</h3>
+                <div class="game-tabs more-body">
+                </div>
+                <button class="btn" data-close-more="1">닫기</button>
+            </div>
+        </div>
+        <script src="js/core.js">
+        </script>
+        <script src="js/gate.js">
+        </script>
+        <script src="js/auth.js">
+        </script>
+        <script src="js/ads.js">
+        </script>
+        <script src="js/sports.js">
+        </script>
+    </body>
+</html>
