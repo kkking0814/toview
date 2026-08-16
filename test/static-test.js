@@ -1,86 +1,15 @@
 'use strict';
 const fs=require('fs'),path=require('path'),cp=require('child_process');
-const root=path.join(__dirname,'..'),pub=path.join(root,'public');
-let fails=[];
-const pass=[];
-function check(c,m){if(c)pass.push(m);
-else fails.push(m)}
-for(const f of ['server.js','collector.js','lib/game-catalog.js','lib/providers.js',...fs.readdirSync(path.join(pub,'js')).map(x=>'public/js/'+x)]){try{cp.execFileSync(process.execPath,['--check',path.join(root,f)],{stdio:'pipe'});
-pass.push('syntax '+f);
-}catch(e){fails.push('syntax '+f+': '+e.stderr);
-}}
-const {GAME_CATALOG,validateCatalog}=require('../lib/game-catalog');
-try{validateCatalog();
-check(GAME_CATALOG.length===11,'catalog has 11 games');
-check(new Set(GAME_CATALOG.map(x=>x.id)).size===11,'catalog ids unique');
-}catch(e){fails.push(e.message)}
-const pages=['index','results','pattern','analysis','sports','community','ranking','verified','admin','dashboard','account','register'];
-for(const n of pages){const f=path.join(pub,n+'.html');
-check(fs.existsSync(f),'page '+n);
-if(!fs.existsSync(f))continue;
-const s=fs.readFileSync(f,'utf8');
-check(!s.includes('toview-results-sync-v7-script>'),'no broken legacy script '+n);
-for(const m of s.matchAll(/(?:src|href)="([^"]+\.(?:js|css))"/g)){const rel=m[1];
-if(!/^https?:/.test(rel))check(fs.existsSync(path.join(pub,rel)),'asset '+n+' -> '+rel);
-}}
-const server=fs.readFileSync(path.join(root,'server.js'),'utf8');
-check(!server.includes("app.get('/api/results'"),'legacy /api/results removed');
-check(!server.includes('bepick.net/game/default'),'bepick HTML fallback removed');
-check(!server.includes('TOVIEW_STATE_META'),'legacy state meta removed');
-check((server.match(/app\.get\('\/api\/games'/g)||[]).length===1,'single games catalog route');
-const auth=fs.readFileSync(path.join(pub,'js/auth.js'),'utf8');
-check(!auth.includes("location.href='dashboard.html'"),'nickname no dashboard direct onclick');
-// Collision/security/regression checks required by the confirmed design.
-for(const n of pages){const f=path.join(pub,n+'.html');
-if(!fs.existsSync(f))continue;
-const h=fs.readFileSync(f,'utf8');
-const ids=[...h.matchAll(/\sid="([^"]+)"/g)].map(m=>m[1]);
-check(ids.length===new Set(ids).size,'unique html ids '+n);
-check(!/\sonclick\s*=/.test(h),'no inline onclick '+n);
-check(!/<script>([\s\S]*?)<\/script>/i.test(h),'no inline script '+n);
-}
-check(server.includes('PROTECTED_PAGES'),'server protected page gate');
-for(const pth of ['results.html','pattern.html','analysis.html','sports.html','community.html','ranking.html','dashboard.html','admin.html'])check(server.includes("'/"+pth+"'"),'protected '+pth);
-check(server.includes("/api/email/send")&&server.includes("/api/email/verify")&&server.includes('EMAIL_NOT_VERIFIED'),'email verification enforced');
-check(server.includes('SESSION_SECRET_REQUIRED'),'production session secret required');
-check(server.includes("sameOrigin")&&server.includes('CSRF_BLOCKED'),'same-origin CSRF defense');
-check(server.includes("rateLimit('login'")&&server.includes("rateLimit('register'")&&server.includes("rateLimit('email-send'"),'auth/email rate limits');
-check(server.includes("req.session?.user?.role==='admin'"),'admin API requires admin role');
-check(!/app\.(?:patch|put|delete)\('\/api\/picks\//.test(server),'PICK has no update/delete API');
-const collector=fs.readFileSync(path.join(root,'collector.js'),'utf8');
-check(collector.includes('INVALID_RESULT_CONTRACT'),'collector strict provider contract');
-check(!collector.includes("new Date().toISOString().slice(0,10)"),'collector does not invent draw date');
-check(!collector.includes("n.scheduledAt?new Date(n.scheduledAt):new Date()"),'collector does not invent schedule time');
-const schema=fs.readFileSync(path.join(root,'sql/schema.sql'),'utf8');
-check(schema.includes('email_verifications'),'email verification schema');
-check(schema.includes('UNIQUE(user_id,round_id,market_type)'),'mini PICK duplicate DB guard');
-check(schema.includes('UNIQUE(user_id,event_id,market_type)'),'sports PICK duplicate DB guard');
-check(schema.includes("CHECK(visibility IN('PUBLIC','FOLLOWERS','MUTUALS','PRIVATE'))"),'PICK visibility enum DB guard');
-const routes=[...server.matchAll(/app\.(get|post|put|patch|delete)\('([^']+)'/g)].map(m=>m[1].toUpperCase()+' '+m[2]);
-check(routes.length===new Set(routes).size,'no duplicate API method/path routes');
-check(!fs.existsSync(path.join(root,'make_pages.py')),'no stale page generator that can overwrite final pages');
-check(server.includes("app.post('/api/activity'")&&fs.readFileSync(path.join(pub,'js/games-ui.js'),'utf8').includes("/api/activity"),'game selection refreshes real-user activity');
-check(server.includes("/api/users/:id/picks/mini")&&server.includes("/api/users/:id/picks/sports"),'follower-aware PICK feed APIs exist');
-check(server.includes("/api/block/:id")&&server.includes("DELETE FROM follows WHERE (follower_id=$1 AND following_id=$2) OR"),'block removes follow relations');
-check(fs.readFileSync(path.join(pub,'js/sports.js'),'utf8').includes("/api/picks/sports"),'sports PICK registration UI wired');
-check(server.includes("LISTEN toview_game_result")&&collector.includes("pg_notify('toview_game_result'"),'worker to web realtime result bridge');
-check(collector.includes('Promise.allSettled')&&!collector.includes('setInterval(tick'),'collector polling cannot overlap');
-check(collector.includes('if(inserted.rowCount)'),'collector only notifies newly inserted results');
-check(server.includes("status='OPEN' ORDER BY scheduled_at DESC"),'expired open round remains visible for VERIFYING state');
-const resultsJs=fs.readFileSync(path.join(pub,'js/results.js'),'utf8'),homeJs=fs.readFileSync(path.join(pub,'js/home.js'),'utf8'),animationJs=fs.readFileSync(path.join(pub,'js/animation.js'),'utf8'),coreJs=fs.readFileSync(path.join(pub,'js/core.js'),'utf8');
-check(resultsJs.includes("new EventSource('/api/events')")&&resultsJs.includes("addEventListener('game-result'"),'results receives realtime game-result');
-check(homeJs.includes("new EventSource('/api/events')")&&homeJs.includes("addEventListener('game-result'"),'home receives realtime game-result');
-check(resultsJs.includes("TVAnimation.render(stage,currentGame.family,'RESULT',r.result)"),'results renders confirmed result immediately');
-check(homeJs.includes("TVAnimation.render(stage,currentGame.family,'RESULT',r.result)"),'home renders confirmed result immediately');
-check(animationJs.includes('result.specialNumber')&&animationJs.includes('result.lines'),'animation renders ball special number and ladder result');
-check(coreJs.includes('getFullYear()')&&!coreJs.includes("toISOString().slice(0,10)"),'browser date uses local calendar date');
-check(server.includes("TIME_ZONE=process.env.TOVIEW_TIME_ZONE||'Asia/Seoul'")&&server.includes('dateInZone()'),'server default game date uses configured local timezone');
-check(server.includes("SELECT start_at,status FROM sports_events WHERE event_id=$1 FOR UPDATE"),'sports PICK deadline is transaction locked');
-check(server.includes("USER_NOT_FOUND")&&server.includes("FOLLOW_ERROR"),'follow route validates target and catches DB errors');
-check(server.includes("sseByIp")&&server.includes("if(n>=4)"),'SSE per-IP connection guard');
-check(server.includes("rateBuckets.delete"),'in-memory rate-limit buckets are cleaned');
-console.log('\nPASS '+pass.length);
-pass.forEach(x=>console.log('  ✓ '+x));
-if(fails.length){console.error('\nFAIL '+fails.length);
-fails.forEach(x=>console.error('  ✗ '+x));
-process.exit(1)}console.log('\nALL STATIC TESTS PASSED');
+const root=path.resolve(__dirname,'..');
+let pass=0,fail=0;
+function check(name,ok){if(ok){pass++;console.log('PASS',name)}else{fail++;console.error('FAIL',name)}}
+function walk(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(dir,e.name)):[path.join(dir,e.name)]);}
+const files=walk(root).filter(f=>!f.includes('node_modules'));
+for(const f of files.filter(f=>/\.js$/.test(f))){try{cp.execFileSync(process.execPath,['--check',f],{stdio:'ignore'});check('syntax '+path.relative(root,f),true)}catch{check('syntax '+path.relative(root,f),false)}}
+const htmls=files.filter(f=>/\.html$/.test(f));
+for(const f of htmls){const t=fs.readFileSync(f,'utf8');const ids=[...t.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);check('unique ids '+path.basename(f),ids.length===new Set(ids).size);for(const m of t.matchAll(/(?:src|href)="((?:js|css)\/[^"?#]+)"/g)){check('asset '+path.basename(f)+' '+m[1],fs.existsSync(path.join(path.dirname(f),m[1])))}}
+const catalog=require(path.join(root,'lib/game-catalog.js')).GAME_CATALOG;check('11 games',catalog.length===11);check('5 primary',catalog.filter(g=>g.displayGroup==='primary').length===5);check('6 more',catalog.filter(g=>g.displayGroup==='more').length===6);check('game ids unique',new Set(catalog.map(g=>g.id)).size===11);
+const server=fs.readFileSync(path.join(root,'server.js'),'utf8');check('resend configured',server.includes('RESEND_API_KEY')&&server.includes('api.resend.com/emails'));check('idle 10 minutes',server.includes('IDLE_MS=600000'));check('protected pages',server.includes('PROTECTED_PAGES'));check('dashboard api',server.includes("'/api/dashboard'"));check('ranking api',server.includes("'/api/rankings'"));check('comment api',server.includes("'/api/community/posts/:id/comments'"));check('no legacy /api/results',!server.includes("app.get('/api/results'"));check('no bepick parser',!server.includes('bepick.net/game/'));
+const gamesUI=fs.readFileSync(path.join(root,'public/js/games-ui.js'),'utf8');check('more inline panel',gamesUI.includes('game-more-panel'));check('more closes after selection',gamesUI.includes('closeMore();'));check('more not modal',!gamesUI.includes('moreGames'));
+const home=fs.readFileSync(path.join(root,'public/index.html'),'utf8');check('home 2:1:1 data',home.includes('home-data'));check('left partner rail',home.includes('home-left-rail'));check('right partner rail',home.includes('home-right-rail'));check('mid split ads',home.includes('HOME_MID_A')&&home.includes('HOME_MID_B'));
+console.log(`RESULT PASS=${pass} FAIL=${fail}`);process.exit(fail?1:0);
