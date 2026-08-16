@@ -1,409 +1,73 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>커뮤니티 | TOVIEW</title><style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,'Noto Sans KR',sans-serif;background:#07101f;color:#eef4ff}button,input{font:inherit}a{color:inherit;text-decoration:none}.top{position:sticky;top:0;z-index:10;background:#08111fee;border-bottom:1px solid #24324a;backdrop-filter:blur(10px)}.bar{max-width:1200px;margin:auto;height:68px;display:flex;align-items:center;gap:26px;padding:0 18px}.logo{font-size:26px;font-weight:900}.logo b{color:#4f9cff}.badge{font-size:10px;background:#15345e;color:#8fc3ff;padding:3px 6px;border-radius:5px}.nav{display:flex;gap:18px;color:#aebbd1;font-size:14px}.nav a:hover{color:#fff}.login{margin-left:auto;background:#2563eb;color:#fff;border:0;padding:10px 16px;border-radius:9px;cursor:pointer}.wrap{max-width:1200px;margin:22px auto;padding:0 18px}.notice{padding:11px 14px;background:#0c1a30;border:1px solid #213655;border-radius:10px;color:#9fb3d2;font-size:13px;margin-bottom:16px}.hero{display:grid;grid-template-columns:1.55fr 1fr;gap:18px}.card{background:#0e192b;border:1px solid #22334e;border-radius:14px;overflow:hidden}.head{padding:14px 16px;border-bottom:1px solid #22334e;font-weight:700;display:flex;justify-content:space-between;align-items:center}.sub{font-size:12px;color:#8294b1}.live{padding:23px;text-align:center}.round{color:#92a4c2;font-size:14px}.timer{font-size:42px;font-weight:900;margin:8px}.balls{display:flex;justify-content:center;gap:9px;margin:20px 0}.ball{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#334155;font-weight:900;box-shadow:inset 0 -5px 10px #0003}.power{background:#2563eb}.tags{display:flex;justify-content:center;gap:7px;flex-wrap:wrap}.tag{padding:7px 11px;border-radius:20px;background:#17243a;font-size:13px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}.stat{background:#091426;border-radius:10px;padding:15px;color:#9badc9}.stat strong{display:block;font-size:25px;color:#fff;margin-top:5px}.grid{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-top:18px}.table{width:100%;border-collapse:collapse;font-size:13px}.table th,.table td{padding:11px;text-align:center;border-bottom:1px solid #1c2a40}.table th{color:#899ab6;background:#091426}.blue{color:#60a5fa}.red{color:#fb7185}.sideitem{padding:13px 16px;border-bottom:1px solid #1c2a40;font-size:14px;cursor:pointer}.sideitem:hover{background:#132039}.pattern{padding:16px}.patternrow{display:flex;gap:5px;flex-wrap:wrap;margin:9px 0}.dot{min-width:28px;height:28px;border-radius:6px;background:#2563eb;display:grid;place-items:center;font-size:11px}.dot.r{background:#d9465f}.status{display:inline-flex;align-items:center;gap:6px}.pulse{width:8px;height:8px;border-radius:50%;background:#22c55e}.foot{text-align:center;color:#63748f;padding:35px;font-size:12px}.modal{display:none;position:fixed;inset:0;background:#0009;z-index:20;place-items:center}.modal.on{display:grid}.modalbox{width:min(390px,90vw);background:#0e192b;border:1px solid #2b3d5c;border-radius:14px;padding:22px}.modalbox input{width:100%;margin:7px 0;padding:12px;border-radius:8px;border:1px solid #2b3d5c;background:#091426;color:#fff}.modalbox button{width:100%;margin-top:8px;padding:11px;border:0;border-radius:8px;background:#2563eb;color:#fff}.close{text-align:right;color:#93a4c0;cursor:pointer}.err{color:#fda4af;font-size:12px;margin-top:10px}.apiok{color:#86efac}.apifail{color:#fbbf24}body.light{background:#eef3f9;color:#172033}body.light .top{background:#ffffffee}body.light .card,body.light .modalbox{background:#fff;border-color:#d5deea}body.light .notice,body.light .stat,body.light .table th,body.light .modalbox input{background:#f5f8fc;color:#334155}body.light .head,body.light .table th,body.light .table td,body.light .sideitem{border-color:#e2e8f0}body.light .stat strong{color:#172033}body.light .nav{color:#64748b}body.light .nav a:hover{color:#111827}@media(max-width:800px){.nav{display:none}.hero,.grid{grid-template-columns:1fr}.balls{gap:5px}.ball{width:40px;height:40px}.timer{font-size:34px}.table th:nth-child(2),.table td:nth-child(2){font-size:11px}}
-</style>
-
-<link rel="stylesheet" href="common.css">
-
-</head>
-<body>
-
-<header class="top">
-    <div class="bar">
-
-        <a href="index.html" class="brand">
-            <div class="brand-mark">T</div>
-            <div class="brand-name">
-                <strong>TO<span>VIEW</span></strong>
-                <small>DATA & COMMUNITY</small>
-            </div>
-        </a>
-
-        <nav class="nav">
-            <a href="index.html">실시간</a>
-            <a href="results.html">결과</a>
-            <a href="analysis.html">분석</a>
-            <a href="pattern.html">패턴</a>
-            <a href="community.html">커뮤니티</a>
-            <a href="dashboard.html">대시보드</a>
-        </nav>
-
-        <button class="menu-btn" type="button" onclick="openMainMenu()">
-            <span class="menu-icon">☰</span>
-            <span>전체메뉴</span>
-        </button>
-
-        <button class="login"
-                id="loginBtn"
-                onclick="location.href='account.html'">
-            로그인
-        </button>
-
-    </div>
-</header>
-
-<div class="menu-overlay" id="mainMenuOverlay" onclick="closeMainMenu(event)">
-
-    <div class="menu-panel">
-
-        <div class="menu-panel-top">
-            <div>
-                <strong>전체 메뉴</strong>
-                <span>TOVIEW SERVICE</span>
-            </div>
-
-            <button type="button" class="menu-close" onclick="closeMainMenu()">
-                ✕
-            </button>
-        </div>
-
-        <div class="menu-sections">
-
-            <div class="menu-section">
-                <div class="menu-section-title">GAME</div>
-
-                <a href="index.html#live">
-                    <b>실시간 게임</b>
-                    <span>실시간 회차 및 결과</span>
+<!doctype html>
+<html lang="ko">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>커뮤니티 | TOVIEW</title>
+        <link rel="stylesheet" href="css/core.css">
+        <link rel="stylesheet" href="css/community.css">
+    </head>
+    <body>
+        <header class="top">
+            <div class="bar">
+                <a class="brand" href="index.html">
+                    <span class="brand-mark">T</span>
+                    <span>TOVIEW</span>
                 </a>
-
-                <a href="results.html">
-                    <b>게임 결과</b>
-                    <span>최근 회차 결과 조회</span>
-                </a>
-
-                <a href="pattern.html">
-                    <b>패턴 분석</b>
-                    <span>결과 흐름 및 패턴</span>
-                </a>
-            </div>
-
-            <div class="menu-section">
-                <div class="menu-section-title">ANALYSIS</div>
-
-                <a href="analysis.html#daily">
-                    <b>일별 분석</b>
-                    <span>날짜별 데이터 분석</span>
-                </a>
-
-                <a href="analysis.html#range">
-                    <b>구간 분석</b>
-                    <span>구간별 결과 통계</span>
-                </a>
-
-                <a href="analysis.html#round">
-                    <b>회차 분석</b>
-                    <span>회차별 상세 데이터</span>
-                </a>
-            </div>
-
-            <div class="menu-section">
-                <div class="menu-section-title">COMMUNITY</div>
-
-                <a href="community.html?board=자유게시판">
-                    <b>자유게시판</b>
-                    <span>자유로운 커뮤니티</span>
-                </a>
-
-                <a href="community.html?board=분석%20토론">
-                    <b>분석 토론</b>
-                    <span>데이터 및 분석 토론</span>
-                </a>
-
-                <a href="community.html#rank">
-                    <b>활동 랭킹</b>
-                    <span>회원 활동 순위</span>
-                </a>
-            </div>
-
-            <div class="menu-section">
-                <div class="menu-section-title">MY TOVIEW</div>
-
-                <a href="dashboard.html">
-                    <b>대시보드</b>
-                    <span>내 활동 한눈에 보기</span>
-                </a>
-
-                <a href="javascript:void(0)" onclick="openAlerts(); closeMainMenu();">
-                    <b>알림센터</b>
-                    <span>새로운 알림 확인</span>
-                </a>
-
-                <a href="javascript:void(0)" onclick="document.getElementById('loginBtn').click(); closeMainMenu();">
-                    <b>내 계정</b>
-                    <span>로그인 및 계정 관리</span>
-                </a>
-            </div>
-
-        </div>
-
-        <div class="menu-panel-bottom">
-            TOVIEW · DATA & COMMUNITY PLATFORM
-        </div>
-
-    </div>
-
-</div>
-    
-<main class="wrap"><div class="grid"><div class="card"><div class="head"><span id="boardName">자유게시판</span><button class="login" onclick="writePost()">글쓰기</button></div><div id="posts"></div></div><aside><div class="card"><div class="head">게시판</div><div class="sideitem" onclick="setBoard('자유게시판')">💬 자유게시판</div><div class="sideitem" onclick="setBoard('분석게시판')">🔥 분석 토론</div><div class="sideitem" onclick="setBoard('공지사항')">📢 공지사항</div></div><div class="card" id="rank" style="margin-top:18px"><div class="head">활동 랭킹</div><div id="ranking"></div></div></aside></div></main><footer class="foot">TOVIEW V7 · 페이지 이동형 프로토타입 · © 2026 TOVIEW</footer><script>function user(){let u=localStorage.getItem('toviewUser');if(u)document.getElementById('userBtn').textContent=u+' 님'};function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}window.addEventListener('DOMContentLoaded',user)</script><script>let board =
-    new URLSearchParams(location.search).get('board')
-    || '자유게시판';
-
-
-async function render(){
-
-    const boardName = document.getElementById('boardName');
-    const postsBox = document.getElementById('posts');
-
-    if(boardName){
-        boardName.textContent = board;
-    }
-
-    try{
-
-        const r = await fetch(
-            '/api/posts?board=' + encodeURIComponent(board)
-        );
-
-        const data = await r.json();
-
-        if(!r.ok){
-            throw new Error(data.error || '게시글을 불러오지 못했습니다.');
-        }
-
-        const list = data.posts || [];
-
-        if(!list.length){
-
-            postsBox.innerHTML = `
-                <div class="sideitem sub">
-                    아직 글이 없습니다.
-                    로그인 후 첫 글을 작성해보세요.
+                <nav class="nav">
+                    <a href="index.html">홈</a>
+                    <a href="results.html">결과</a>
+                    <a href="analysis.html">분석</a>
+                    <a href="pattern.html">패턴</a>
+                    <a href="sports.html">스포츠</a>
+                    <a href="community.html">커뮤니티</a>
+                    <a href="ranking.html">랭킹</a>
+                    <a href="verified.html">보증업체</a>
+                </nav>
+                <div class="header-actions">
+                    <button class="btn primary" id="loginBtn">로그인</button>
+                    <button class="btn" id="userBtn" hidden>내 계정</button>
                 </div>
-            `;
-
-            renderRanking([]);
-
-            return;
-        }
-
-
-        postsBox.innerHTML = list.map(post => {
-
-            const time = new Date(post.createdAt)
-                .toLocaleString('ko-KR');
-
-            return `
-                <div class="sideitem" style="cursor:default">
-
-                    <b>${esc(post.title)}</b>
-
-                    <div class="sub">
-                        ${esc(post.nickname || post.username)}
-                        ·
-                        ${time}
-                    </div>
-
-                    <p>${esc(post.content)}</p>
-
+                <div class="profile-menu" id="profileMenu">
                 </div>
-            `;
-
-        }).join('');
-
-
-        renderRanking(list);
-
-    }catch(error){
-
-        console.error(error);
-
-        postsBox.innerHTML = `
-            <div class="sideitem sub">
-                게시글을 불러오는 중 오류가 발생했습니다.
             </div>
-        `;
-    }
-}
-
-
-function renderRanking(list){
-
-    const ranking = document.getElementById('ranking');
-
-    if(!ranking) return;
-
-    const counts = {};
-
-    list.forEach(post => {
-
-        const name =
-            post.nickname ||
-            post.username ||
-            '알 수 없음';
-
-        counts[name] = (counts[name] || 0) + 1;
-
-    });
-
-
-    const sorted = Object.entries(counts)
-        .sort((a,b) => b[1] - a[1])
-        .slice(0,5);
-
-
-    if(!sorted.length){
-
-        ranking.innerHTML =
-            '<div class="sideitem sub">활동 데이터 없음</div>';
-
-        return;
-    }
-
-
-    ranking.innerHTML = sorted.map((item,index) => `
-        <div class="sideitem">
-
-            ${index + 1}위 ${esc(item[0])}
-
-            <span
-                class="sub"
-                style="float:right"
-            >
-                ${item[1]}글
-            </span>
-
+        </header>
+        <main class="wrap">
+            <div class="page-title">
+                <h1>커뮤니티</h1>
+                <p class="muted">공지 · 자유게시판 · 분석토론</p>
+            </div>
+            <div class="community-tabs" id="communityTabs">
+                <button class="btn" data-board="notice">공지</button>
+                <button class="btn primary" data-board="free">자유게시판</button>
+                <button class="btn" data-board="analysis">분석토론</button>
+            </div>
+            <section class="card" id="communityList">
+            </section>
+            <form class="card card-body community-compose" id="postForm">
+                <input id="postTitle" maxlength="160" placeholder="제목">
+                <textarea id="postBody" maxlength="20000" placeholder="내용">
+                </textarea>
+                <button class="btn primary">글 등록</button>
+            </form>
+        </main>
+        <div class="modal" id="moreGames">
+            <div class="modal-box">
+                <h3>미니게임 더보기</h3>
+                <div class="game-tabs more-body">
+                </div>
+                <button class="btn" data-close-more="1">닫기</button>
+            </div>
         </div>
-    `).join('');
-}
-
-
-function setBoard(name){
-
-    board = name;
-
-    history.replaceState(
-        null,
-        '',
-        '?board=' + encodeURIComponent(name)
-    );
-
-    render();
-}
-
-
-async function writePost(){
-
-    /*
-       공지사항은 일반 회원 작성 금지
-    */
-    if(board === '공지사항'){
-
-        alert('공지사항은 관리자만 작성할 수 있습니다.');
-
-        return;
-    }
-
-
-    const title = prompt('제목을 입력하세요');
-
-    if(!title) return;
-
-
-    const content = prompt('내용을 입력하세요');
-
-    if(!content) return;
-
-
-    try{
-
-        const r = await fetch('/api/posts',{
-
-            method:'POST',
-
-            headers:{
-                'Content-Type':'application/json'
-            },
-
-            body:JSON.stringify({
-                board:board,
-                title:title,
-                content:content
-            })
-
-        });
-
-
-        const data = await r.json();
-
-
-        if(!r.ok){
-
-            /*
-               로그인하지 않은 경우
-            */
-            if(r.status === 401){
-
-                alert('로그인이 필요합니다.');
-
-                location.href =
-                    'account.html?next=' +
-                    encodeURIComponent(
-                        'community.html?board=' + board
-                    );
-
-                return;
-            }
-
-
-            alert(
-                data.error ||
-                '게시글 등록에 실패했습니다.'
-            );
-
-            return;
-        }
-
-
-        alert('게시글이 등록되었습니다.');
-
-        await render();
-
-
-    }catch(error){
-
-        console.error(error);
-
-        alert('서버 연결 중 오류가 발생했습니다.');
-
-    }
-}
-
-</script>
-
-<script>
-function openMainMenu() {
-    const menu = document.getElementById('mainMenuOverlay');
-
-    if (!menu) return;
-
-    menu.classList.add('on');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeMainMenu(event) {
-    const menu = document.getElementById('mainMenuOverlay');
-
-    if (!menu) return;
-
-    if (event && event.target !== menu) {
-        return;
-    }
-
-    menu.classList.remove('on');
-    document.body.style.overflow = '';
-}
-</script>
-    
-<script src="auth.js"></script>
-</body>
+        <script src="js/core.js">
+        </script>
+        <script src="js/gate.js">
+        </script>
+        <script src="js/auth.js">
+        </script>
+        <script src="js/ads.js">
+        </script>
+        <script src="js/community.js">
+        </script>
+    </body>
 </html>
