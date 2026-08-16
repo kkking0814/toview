@@ -1,1354 +1,359 @@
-const express=require('express'); const session=require('express-session'); const bcrypt=require('bcryptjs'); const fs=require('fs'); const path=require('path');
-
-const { Pool } = require('pg');
-
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false
-    }
-});
-
-// ========================================
-// 파워볼 결과 누적 저장 테이블
-// ========================================
-
-async function initPowerballResultsTable() {
-
-    try {
-
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS powerball_results (
-
-                id SERIAL PRIMARY KEY,
-
-                round_number BIGINT UNIQUE NOT NULL,
-
-                today_round INTEGER,
-
-                draw_date VARCHAR(20),
-
-                draw_time VARCHAR(20),
-
-                n_ball1 INTEGER,
-                n_ball2 INTEGER,
-                n_ball3 INTEGER,
-                n_ball4 INTEGER,
-                n_ball5 INTEGER,
-
-                number_sum INTEGER,
-
-                number_odd_even VARCHAR(10),
-
-                powerball INTEGER,
-
-                powerball_odd_even VARCHAR(10),
-
-                powerball_under_over VARCHAR(10),
-
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-
-        console.log(
-            'POWERBALL 결과 테이블 준비 완료'
-        );
-
-    } catch (error) {
-
-        console.error(
-            'POWERBALL 결과 테이블 생성 오류:',
-            error
-        );
-
-    }
-
+'use strict';
+const path=require('path'),crypto=require('crypto');
+const express=require('express'),session=require('express-session'),bcrypt=require('bcryptjs'),helmet=require('helmet'),nodemailer=require('nodemailer');
+const {Pool,Client}=require('pg');
+const {validateCatalog,publicCatalog,gameById}=require('./lib/game-catalog');
+validateCatalog();
+const app=express(),pool=new Pool({connectionString:process.env.DATABASE_URL,ssl:process.env.NODE_ENV==='production'?{rejectUnauthorized:false}:undefined});
+class PgSessionStore extends session.Store{get(sid,cb){pool.query('SELECT sess FROM web_sessions WHERE sid=$1 AND expire_at>now()',[sid]).then(r=>cb(null,r.rows[0]?.sess||null)).catch(cb)}set(sid,sess,cb){const exp=new Date(Date.now()+(sess.cookie?.maxAge||600000));
+pool.query('INSERT INTO web_sessions(sid,sess,expire_at) VALUES($1,$2,$3) ON CONFLICT(sid) DO UPDATE SET sess=EXCLUDED.sess,expire_at=EXCLUDED.expire_at',[sid,sess,exp]).then(()=>cb?.()).catch(cb)}destroy(sid,cb){pool.query('DELETE FROM web_sessions WHERE sid=$1',[sid]).then(()=>cb?.()).catch(cb)}touch(sid,sess,cb){this.set(sid,sess,cb)}}
+const PORT=process.env.PORT||3000,IDLE_MS=600000,TIME_ZONE=process.env.TOVIEW_TIME_ZONE||'Asia/Seoul';
+function dateInZone(d=new Date()){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:TIME_ZONE,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d);
+const v=Object.fromEntries(parts.map(x=>[x.type,x.value]));
+return `${v.year}-${v.month}-${v.day}`;
 }
-
-
-// 서버 시작 시 테이블 확인
-
-initPowerballResultsTable();
-
-// ========================================
-// MEMBER PICK 게임 구분 컬럼 자동 보정
-// 기존 DB를 그대로 사용해도 실행 시 game_id 컬럼/인덱스를 준비한다.
-// ========================================
-async function initMemberPickGameColumn() {
-    try {
-        await pool.query(`
-            ALTER TABLE member_picks
-            ADD COLUMN IF NOT EXISTS game_id VARCHAR(30) DEFAULT 'powerball'
-        `);
-
-        // 예전 (username, round_number) UNIQUE 제약은 게임별 PICK을 막을 수 있으므로
-        // 알려진 제약 이름이 있으면 제거하고 게임 포함 UNIQUE INDEX를 사용한다.
-        await pool.query(`
-            DO $$
-            DECLARE r RECORD;
-            BEGIN
-                FOR r IN
-                    SELECT conname
-                    FROM pg_constraint
-                    WHERE conrelid = 'member_picks'::regclass
-                      AND contype = 'u'
-                LOOP
-                    IF pg_get_constraintdef(
-                        (SELECT oid FROM pg_constraint WHERE conname = r.conname AND conrelid='member_picks'::regclass LIMIT 1)
-                    ) ILIKE '%username%'
-                    AND pg_get_constraintdef(
-                        (SELECT oid FROM pg_constraint WHERE conname = r.conname AND conrelid='member_picks'::regclass LIMIT 1)
-                    ) ILIKE '%round_number%'
-                    AND pg_get_constraintdef(
-                        (SELECT oid FROM pg_constraint WHERE conname = r.conname AND conrelid='member_picks'::regclass LIMIT 1)
-                    ) NOT ILIKE '%game_id%'
-                    THEN
-                        EXECUTE format('ALTER TABLE member_picks DROP CONSTRAINT %I', r.conname);
-                    END IF;
-                END LOOP;
-            END $$;
-        `).catch(() => {});
-
-        await pool.query(`
-            CREATE UNIQUE INDEX IF NOT EXISTS member_picks_user_game_round_uidx
-            ON member_picks (username, game_id, round_number)
-        `);
-
-        console.log('MEMBER PICK game_id 준비 완료');
-    } catch (error) {
-        console.error('MEMBER PICK game_id 준비 오류:', error);
-    }
-}
-setTimeout(initMemberPickGameColumn, 1500);
-
-
-const app=express(); const PORT=process.env.PORT||3000; const dbPath=path.join(__dirname,'data.json');
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-function db(){try{return JSON.parse(fs.readFileSync(dbPath,'utf8'))}catch{return {users:[],posts:[]}}} 
-function save(x){fs.writeFileSync(dbPath,JSON.stringify(x,null,2))}
-
-const emailCodes = new Map();
-const emailRateLimits = new Map();
-
-function createEmailCode(){
-    return String(Math.floor(100000 + Math.random() * 900000));
-}
-
-const EMAIL_CODE_EXPIRE_MS = 5 * 60 * 1000;
-function checkEmailRateLimit(ip){
-    const now = Date.now();
-    const windowMs = 10 * 60 * 1000;
-    const maxRequests = 5;
-
-    let record = emailRateLimits.get(ip);
-
-    if(!record || now - record.startedAt >= windowMs){
-        record = {
-            startedAt: now,
-            count: 0
-        };
-    }
-
-    if(record.count >= maxRequests){
-        const remainingMs = windowMs - (now - record.startedAt);
-        const remainingMinutes = Math.ceil(remainingMs / 60000);
-
-        return {
-            allowed: false,
-            remainingMinutes
-        };
-    }
-
-    record.count += 1;
-    emailRateLimits.set(ip, record);
-
-    return {
-        allowed: true
-    };
-}
-
-app.set('trust proxy', 1);
-
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'change-this-in-production',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    maxAge: 1000 * 60 * 60 * 24 * 7,
-    httpOnly: true,
-    secure: true,
-    sameSite: 'lax'
-  }
-}));
-app.post('/api/email/send-code', async (req, res) => {
-    try {
-        const email = String(req.body?.email || '').trim().toLowerCase();
-        const ip = req.ip;
-
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            return res.status(400).json({
-                error: '올바른 이메일 주소를 입력해주세요.'
-            });
-        }
-const rateLimit = checkEmailRateLimit(ip);
-
-if(!rateLimit.allowed){
-    return res.status(429).json({
-        error: `인증번호 요청이 너무 많습니다. 약 ${rateLimit.remainingMinutes}분 후 다시 시도해주세요.`
-    });
-}
-const previous = emailCodes.get(email);
-
-if (previous && Date.now() - previous.sentAt < 60 * 1000) {
-    const remaining = Math.ceil(
-        (60 * 1000 - (Date.now() - previous.sentAt)) / 1000
-    );
-
-    return res.status(429).json({
-        error: `인증번호는 ${remaining}초 후 다시 요청할 수 있습니다.`
-    });
-}
-        const d = db();
-
-        // 이미 가입된 이메일인지 확인
-        if (d.users.some(u =>
-            String(u.email || '').toLowerCase() === email
-        )) {
-            return res.status(409).json({
-                error: '이미 가입된 이메일입니다.'
-            });
-        }
-
-        const code = createEmailCode();
-
-emailCodes.set(email, {
-    code,
-    expiresAt: Date.now() + EMAIL_CODE_EXPIRE_MS,
-    sentAt: Date.now(),
-    attempts: 0,
-    verified: false
-});
-
-const resendResponse = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json'
-    },     
-    body: JSON.stringify({
-        from: 'TOVIEW <onboarding@resend.dev>',
-        to: [email],
-        subject: '[TOVIEW] 이메일 인증번호',
-        text: `TOVIEW 이메일 인증번호는 ${code} 입니다.\n\n인증번호는 5분 동안 유효합니다.`
-    })
-});
-
-const resendData = await resendResponse.json();
-
-if (!resendResponse.ok) {
-    console.error('RESEND ERROR:', resendData);
-
-    emailCodes.delete(email);
-
-    return res.status(500).json({
-        error: '인증번호 이메일 발송에 실패했습니다.'
-    });
-}
-
-        return res.json({
-            ok: true
-        });
-
-    } catch (error) {
-        console.error('이메일 발송 오류:', error);
-
-        return res.status(500).json({
-            error: '인증번호 이메일 발송에 실패했습니다.'
-        });
-    }
-});
-app.post('/api/email/verify-code', (req, res) => {
-    const email = String(req.body?.email || '').trim().toLowerCase();
-    const code = String(req.body?.code || '').trim();
-
-    if (!email || !code) {
-        return res.status(400).json({
-            error: '이메일과 인증번호를 입력해주세요.'
-        });
-    }
-
-    const saved = emailCodes.get(email);
-
-    if (!saved) {
-        return res.status(400).json({
-            error: '인증번호를 먼저 발급받아주세요.'
-        });
-    }
-
-    if (Date.now() > saved.expiresAt) {
-        emailCodes.delete(email);
-
-        return res.status(400).json({
-            error: '인증번호가 만료되었습니다. 다시 발급받아주세요.'
-        });
-    }
-
-if (saved.attempts >= 5) {
-    emailCodes.delete(email);
-
-    return res.status(429).json({
-        error: '인증번호 입력 횟수를 초과했습니다. 새 인증번호를 발급받아주세요.'
-    });
-}
-
-if (saved.code !== code) {
-    saved.attempts += 1;
-    emailCodes.set(email, saved);
-
-    const remaining = 5 - saved.attempts;
-
-    if (remaining <= 0) {
-        emailCodes.delete(email);
-
-        return res.status(429).json({
-            error: '인증번호 입력 횟수를 초과했습니다. 새 인증번호를 발급받아주세요.'
-        });
-    }
-
-    return res.status(400).json({
-        error: `인증번호가 일치하지 않습니다. ${remaining}회 남았습니다.`
-    });
-}
-
-    saved.verified = true;
-
-    emailCodes.set(email, saved);
-
-    return res.json({
-        ok: true
-    });
-});
-app.get('/api/check-username', (req, res) => {
-    const username = String(req.query.username || '').trim();
-
-    if (!validUsername(username)) {
-        return res.status(400).json({
-            available: false,
-            error: '아이디는 영문으로만 5자 이상 입력하고, 같은 영문자를 3번 이상 연속 사용할 수 없습니다.'
-        });
-    }
-
-    const d = db();
-    const exists = d.users.some(u => u.username === username);
-
-    res.json({
-        available: !exists
-    });
-});
-
-app.get('/api/check-nickname', (req, res) => {
-    const nickname = String(req.query.nickname || '').trim();
-
-    if (!validNickname(nickname)) {
-        return res.status(400).json({
-            available: false,
-            error: '닉네임은 완성된 한글로 2글자 이상 입력하고, 같은 글자를 3번 이상 연속 사용할 수 없습니다.'
-        });
-    }
-
-    const d = db();
-    const exists = d.users.some(u => u.nickname === nickname);
-
-    res.json({
-        available: !exists
-    });
-});
-function validUsername(username){
-    return typeof username === 'string' &&
-           /^[A-Za-z]{5,}$/.test(username) &&
-           !/([A-Za-z])\1\1/i.test(username);
-}
-
-function validPassword(password){
-    return typeof password === 'string' &&
-           password.length >= 8 &&
-           /^[A-Za-z0-9]+$/.test(password) &&
-           /[A-Za-z]/.test(password) &&
-           /[0-9]/.test(password) &&
-           !/(.)\1\1/.test(password);
-}
-
-function validNickname(nickname){
-    return typeof nickname === 'string' &&
-           /^[가-힣]{2,}$/.test(nickname) &&
-           !/(.)\1\1/.test(nickname);
-}
-
-app.post('/api/register', async (req, res) => {
-    try {
-        const { username, password, nickname } = req.body || {};
-        const email = String(req.body?.email || '').trim().toLowerCase();
-
-        // 아이디 검사
-        if (!validUsername(username)) {
-            return res.status(400).json({
-                error: '아이디는 영문으로만 5자 이상 입력하고, 같은 영문자를 3번 이상 연속 사용할 수 없습니다.'
-            });
-        }
-
-        // 비밀번호 검사
-        if (!validPassword(password)) {
-            return res.status(400).json({
-                error: '비밀번호는 영문과 숫자를 포함해 8자 이상 입력하고, 같은 문자를 3번 이상 연속 사용할 수 없습니다.'
-            });
-        }
-
-        // 닉네임 검사
-        if (!validNickname(nickname)) {
-            return res.status(400).json({
-                error: '닉네임은 완성된 한글로 2글자 이상 입력하고, 같은 글자를 3번 이상 연속 사용할 수 없습니다.'
-            });
-        }
-
-        // 이메일 검사
-        if (
-            !email ||
-            !email.includes('@') ||
-            email.startsWith('@') ||
-            email.endsWith('@') ||
-            !email.substring(email.indexOf('@') + 1).includes('.')
-        ) {
-            return res.status(400).json({
-                error: '올바른 이메일 주소가 필요합니다.'
-            });
-        }
-
-        // 이메일 인증 여부 확인
-        const emailAuth = emailCodes.get(email);
-
-        if (
-            !emailAuth ||
-            !emailAuth.verified ||
-            Date.now() > emailAuth.expiresAt
-        ) {
-            return res.status(403).json({
-                error: '이메일 인증을 완료해주세요.'
-            });
-        }
-
-        // Neon에서 중복 회원 확인
-        const duplicate = await pool.query(
-            `
-            SELECT username, nickname, email
-            FROM users
-            WHERE username = $1
-               OR nickname = $2
-               OR LOWER(email) = LOWER($3)
-            `,
-            [username, nickname, email]
-        );
-
-        if (duplicate.rows.length > 0) {
-            const users = duplicate.rows;
-
-            if (users.some(u => u.username === username)) {
-                return res.status(409).json({
-                    error: '이미 존재하는 아이디입니다.'
-                });
-            }
-
-            if (users.some(u => u.nickname === nickname)) {
-                return res.status(409).json({
-                    error: '이미 존재하는 닉네임입니다.'
-                });
-            }
-
-            if (users.some(u =>
-                String(u.email).toLowerCase() === email
-            )) {
-                return res.status(409).json({
-                    error: '이미 가입된 이메일입니다.'
-                });
-            }
-        }
-
-        // 비밀번호 암호화
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // ★ Neon DB에 실제 회원 저장
-        await pool.query(
-            `
-            INSERT INTO users
-                (username, password, nickname, email)
-            VALUES
-                ($1, $2, $3, $4)
-            `,
-            [
-                username,
-                hashedPassword,
-                nickname,
-                email
-            ]
-        );
-
-        // 사용한 이메일 인증정보 삭제
-        emailCodes.delete(email);
-
-        // 가입과 동시에 로그인 세션 생성
-        req.session.user = username;
-
-        console.log('Neon 회원가입 성공:', username);
-
-        return res.json({
-            ok: true,
-            username,
-            nickname
-        });
-
-    } catch (error) {
-        console.error('회원가입 Neon DB 오류:', error);
-
-        // DB UNIQUE 중복 오류
-        if (error.code === '23505') {
-            return res.status(409).json({
-                error: '이미 사용 중인 회원정보입니다.'
-            });
-        }
-
-        return res.status(500).json({
-            error: '회원가입 처리 중 오류가 발생했습니다.'
-        });
-    }
-});
-
-app.post('/api/login', async (req, res) => {
-    try {
-        const username = String(req.body?.username || '').trim();
-        const password = String(req.body?.password || '');
-
-        if (!username || !password) {
-            return res.status(400).json({
-                error: '아이디와 비밀번호를 입력해주세요.'
-            });
-        }
-
-        // Neon DB에서 회원 찾기
-        const result = await pool.query(
-            `
-            SELECT
-                username,
-                password,
-                nickname,
-                email
-            FROM users
-            WHERE username = $1
-            LIMIT 1
-            `,
-            [username]
-        );
-
-        const user = result.rows[0];
-
-        // 아이디 없음
-        if (!user) {
-            console.log('로그인 실패: 존재하지 않는 아이디');
-
-            return res.status(401).json({
-                error: '아이디 또는 비밀번호가 올바르지 않습니다.'
-            });
-        }
-
-        // 비밀번호 확인
-        const passwordOK = await bcrypt.compare(
-            password,
-            user.password
-        );
-
-        if (!passwordOK) {
-            console.log('로그인 실패: 비밀번호 불일치');
-
-            return res.status(401).json({
-                error: '아이디 또는 비밀번호가 올바르지 않습니다.'
-            });
-        }
-
-        // 로그인 세션 저장
-        req.session.user = user.username;
-
-        console.log('로그인 성공:', user.username);
-
-        return res.json({
-            ok: true,
-            username: user.username,
-            nickname: user.nickname
-        });
-
-    } catch (error) {
-        console.error('로그인 DB 오류:', error);
-
-        return res.status(500).json({
-            error: '로그인 처리 중 오류가 발생했습니다.'
-        });
-    }
-});
-
-app.post('/api/logout',(req,res)=>req.session.destroy(()=>res.json({ok:true})));
-app.get('/api/me', async (req, res) => {
-    try {
-
-        // 로그인하지 않은 상태
-        if (!req.session.user) {
-            return res.json({
-                username: null,
-                nickname: null
-            });
-        }
-
-        // Neon에서 현재 로그인 회원 찾기
-        const result = await pool.query(
-            `SELECT username, nickname
-             FROM users
-             WHERE username = $1
-             LIMIT 1`,
-            [req.session.user]
-        );
-
-        const user = result.rows[0];
-
-        // DB에 회원이 없는 경우
-        if (!user) {
-            req.session.user = null;
-
-            return res.json({
-                username: null,
-                nickname: null
-            });
-        }
-
-        // 회원정보 반환
-        return res.json({
-            username: user.username,
-            nickname: user.nickname
-        });
-
-    } catch (error) {
-
-        console.error('회원정보 조회 DB 오류:', error);
-
-        return res.status(500).json({
-            error: '회원정보를 불러오지 못했습니다.'
-        });
-    }
-});
-
-app.use(express.static(path.join(__dirname,'public')));
-
-// ========================================
-// 게시글 목록 - Neon DB
-// ========================================
-
-app.get('/api/posts', async (req, res) => {
-    try {
-
-        const board = String(req.query.board || '').trim();
-
-        let result;
-
-        if (board) {
-
-            result = await pool.query(
-                `
-                SELECT
-                    p.id,
-                    p.board,
-                    p.title,
-                    p.content,
-                    p.username,
-                    u.nickname,
-                    p.views,
-                    p.likes,
-                    p.created_at
-                FROM posts p
-                JOIN users u
-                    ON u.username = p.username
-                WHERE p.board = $1
-                ORDER BY p.created_at DESC
-                `,
-                [board]
-            );
-
-        } else {
-
-            result = await pool.query(
-                `
-                SELECT
-                    p.id,
-                    p.board,
-                    p.title,
-                    p.content,
-                    p.username,
-                    u.nickname,
-                    p.views,
-                    p.likes,
-                    p.created_at
-                FROM posts p
-                JOIN users u
-                    ON u.username = p.username
-                ORDER BY p.created_at DESC
-                `
-            );
-
-        }
-
-        const posts = result.rows.map(post => ({
-            id: post.id,
-            board: post.board,
-            title: post.title,
-            content: post.content,
-
-            username: post.username,
-            nickname: post.nickname,
-
-            views: post.views,
-            likes: post.likes,
-
-            createdAt: post.created_at
-        }));
-
-        return res.json({
-            ok: true,
-            posts
-        });
-
-    } catch (error) {
-
-        console.error('게시글 목록 DB 오류:', error);
-
-        return res.status(500).json({
-            error: '게시글을 불러오지 못했습니다.'
-        });
-    }
-});
-
-
-// ========================================
-// 게시글 작성 - Neon DB
-// ========================================
-
-app.post('/api/posts', async (req, res) => {
-    try {
-
-        // 로그인 확인
-        if (!req.session.user) {
-            return res.status(401).json({
-                error: '로그인이 필요합니다.'
-            });
-        }
-
-        const board =
-            String(req.body?.board || '자유게시판').trim();
-
-        const title =
-            String(req.body?.title || '').trim();
-
-        const content =
-            String(req.body?.content || '').trim();
-
-
-        // 제목 확인
-        if (!title) {
-            return res.status(400).json({
-                error: '제목을 입력해주세요.'
-            });
-        }
-
-
-        // 내용 확인
-        if (!content) {
-            return res.status(400).json({
-                error: '내용을 입력해주세요.'
-            });
-        }
-
-
-        // 제목 최대 100자
-        if (title.length > 100) {
-            return res.status(400).json({
-                error: '제목은 100자 이하로 입력해주세요.'
-            });
-        }
-
-
-        // 허용 게시판
-        const allowedBoards = [
-            '자유게시판',
-            '분석게시판'
-        ];
-
-        if (!allowedBoards.includes(board)) {
-            return res.status(400).json({
-                error: '올바르지 않은 게시판입니다.'
-            });
-        }
-
-
-        // 현재 로그인 회원이 실제 Neon에 있는지 확인
-        const userResult = await pool.query(
-            `
-            SELECT username, nickname
-            FROM users
-            WHERE username = $1
-            LIMIT 1
-            `,
-            [req.session.user]
-        );
-
-        const user = userResult.rows[0];
-
-
-        if (!user) {
-            return res.status(401).json({
-                error: '사용자 정보를 찾을 수 없습니다.'
-            });
-        }
-
-
-        // Neon posts 테이블에 글 저장
-        const result = await pool.query(
-            `
-            INSERT INTO posts
-                (board, title, content, username)
-            VALUES
-                ($1, $2, $3, $4)
-
-            RETURNING
-                id,
-                board,
-                title,
-                content,
-                username,
-                views,
-                likes,
-                created_at
-            `,
-            [
-                board,
-                title,
-                content,
-                user.username
-            ]
-        );
-
-
-        const saved = result.rows[0];
-
-
-        return res.json({
-            ok: true,
-
-            post: {
-                id: saved.id,
-                board: saved.board,
-                title: saved.title,
-                content: saved.content,
-
-                username: saved.username,
-                nickname: user.nickname,
-
-                views: saved.views,
-                likes: saved.likes,
-
-                createdAt: saved.created_at
-            }
-        });
-
-
-    } catch (error) {
-
-        console.error('게시글 작성 DB 오류:', error);
-
-        return res.status(500).json({
-            error: '게시글 등록 중 오류가 발생했습니다.'
-        });
-    }
-});
-
-app.get('/api/db-test', async (req, res) => {
-    try {
-        const result = await pool.query('SELECT NOW() AS now');
-
-        res.json({
-            ok: true,
-            message: 'Neon DB 연결 성공',
-            time: result.rows[0].now
-        });
-
-    } catch (error) {
-        console.error('NEON DB ERROR:', error);
-
-        res.status(500).json({
-            ok: false,
-            message: 'Neon DB 연결 실패'
-        });
-    }
-});
-
-// ========================================
-// TOVIEW 공용 실시간 채팅
-// ========================================
-
-
-// 최근 채팅 불러오기
-app.get('/api/chat', async (req, res) => {
-
-    try {
-
-        const result = await pool.query(`
-            SELECT
-                c.id,
-                c.username,
-                c.nickname,
-                c.message,
-                c.created_at
-            FROM chat_messages c
-            ORDER BY c.created_at DESC
-            LIMIT 100
-        `);
-
-        // DB에서는 최신순으로 가져오고
-        // 화면에는 오래된 글 → 최신 글 순서로 전달
-        const messages = result.rows.reverse();
-
-        return res.json({
-            ok: true,
-            messages
-        });
-
-    } catch (error) {
-
-        console.error('채팅 불러오기 DB 오류:', error);
-
-        return res.status(500).json({
-            error: '채팅을 불러오지 못했습니다.'
-        });
-
-    }
-
-});
-
-
-// ========================================
-// 채팅 전송
-// ========================================
-
-app.post('/api/chat', async (req, res) => {
-
-    try {
-
-        // 로그인 확인
-        if (!req.session || !req.session.user) {
-
-            return res.status(401).json({
-                error: '로그인이 필요합니다.'
-            });
-
-        }
-
-
-        const username = req.session.user;
-
-        const message =
-            String(req.body?.message || '').trim();
-
-
-        // 빈 메시지 방지
-        if (!message) {
-
-            return res.status(400).json({
-                error: '메시지를 입력해주세요.'
-            });
-
-        }
-
-
-        // 너무 긴 메시지 방지
-        if (message.length > 200) {
-
-            return res.status(400).json({
-                error: '메시지는 200자 이하로 입력해주세요.'
-            });
-
-        }
-
-
-        // 현재 로그인 회원의 닉네임을 DB에서 직접 가져옴
-        const userResult = await pool.query(
-            `
-            SELECT username, nickname
-            FROM users
-            WHERE username = $1
-            LIMIT 1
-            `,
-            [username]
-        );
-
-
-        if (userResult.rows.length === 0) {
-
-            return res.status(401).json({
-                error: '회원 정보를 찾을 수 없습니다.'
-            });
-
-        }
-
-
-        const nickname =
-            userResult.rows[0].nickname;
-
-
-        // 채팅 저장
-        const result = await pool.query(
-            `
-            INSERT INTO chat_messages
-                (username, nickname, message)
-            VALUES
-                ($1, $2, $3)
-            RETURNING
-                id,
-                username,
-                nickname,
-                message,
-                created_at
-            `,
-            [
-                username,
-                nickname,
-                message
-            ]
-        );
-
-
-        return res.json({
-            ok: true,
-            message: result.rows[0]
-        });
-
-
-    } catch (error) {
-
-        console.error('채팅 전송 DB 오류:', error);
-
-        return res.status(500).json({
-            error: '채팅 전송에 실패했습니다.'
-        });
-
-    }
-
-});
-
-// ========================================
-// TOVIEW MEMBER PICK 등록 - 게임별 분리
-// ========================================
-app.post('/api/picks', async (req, res) => {
-    try {
-        if (!req.session || !req.session.user) {
-            return res.status(401).json({ error: '로그인이 필요합니다.' });
-        }
-
-        const username = req.session.user;
-        const gameId = String(req.body?.gameId || 'dh_randomball').trim().toLowerCase();
-        const roundNumber = Number(req.body?.roundNumber);
-        const oddEven = String(req.body?.oddEven || '').trim().toLowerCase();
-        const underOver = String(req.body?.underOver || '').trim().toLowerCase();
-
-        if (!['dh_randomball','dh_speedkeno','speedkeno_ladder','bubble_powerball','bubble_ladder'].includes(gameId)) {
-            return res.status(400).json({ error: '지원하지 않는 게임입니다.' });
-        }
-        if (!Number.isInteger(roundNumber) || roundNumber <= 0) {
-            return res.status(400).json({ error: '올바른 회차가 아닙니다.' });
-        }
-        if (!['odd','even'].includes(oddEven)) {
-            return res.status(400).json({ error: '홀 또는 짝을 선택해주세요.' });
-        }
-        if (!['under','over'].includes(underOver)) {
-            return res.status(400).json({ error: '두 번째 PICK 항목을 선택해주세요.' });
-        }
-
-        const userResult = await pool.query(
-            `SELECT username, nickname FROM users WHERE username=$1 LIMIT 1`,
-            [username]
-        );
-        if (userResult.rows.length === 0) {
-            return res.status(401).json({ error: '회원 정보를 찾을 수 없습니다.' });
-        }
-
-        const nickname = userResult.rows[0].nickname;
-        const pickResult = await pool.query(
-            `INSERT INTO member_picks
-                (username,nickname,game_id,round_number,odd_even,under_over)
-             VALUES ($1,$2,$3,$4,$5,$6)
-             RETURNING id,username,nickname,game_id,round_number,odd_even,under_over,created_at`,
-            [username,nickname,gameId,roundNumber,oddEven,underOver]
-        );
-
-        return res.json({ ok:true, pick:pickResult.rows[0] });
-    } catch (error) {
-        if (error.code === '23505') {
-            return res.status(409).json({ error:'이미 해당 게임의 해당 회차에 PICK을 등록했습니다.' });
-        }
-        console.error('PICK 등록 DB 오류:', error);
-        return res.status(500).json({ error:'PICK 등록에 실패했습니다.' });
-    }
-});
-
-// ========================================
-// TOVIEW MEMBER PICK 회차별 통계 - 게임별 분리
-// ========================================
-app.get('/api/picks/:round/stats', async (req, res) => {
-    try {
-        const roundNumber = Number(req.params.round);
-        const gameId = String(req.query.game || 'dh_randomball').trim().toLowerCase();
-
-        if (!Number.isInteger(roundNumber) || roundNumber <= 0) {
-            return res.status(400).json({ error:'올바른 회차가 아닙니다.' });
-        }
-
-        const result = await pool.query(
-            `SELECT
-                COUNT(*)::int AS total,
-                COUNT(*) FILTER (WHERE odd_even='odd')::int AS odd,
-                COUNT(*) FILTER (WHERE odd_even='even')::int AS even,
-                COUNT(*) FILTER (WHERE under_over='under')::int AS under,
-                COUNT(*) FILTER (WHERE under_over='over')::int AS over
-             FROM member_picks
-             WHERE round_number=$1
-               AND COALESCE(NULLIF(game_id,'powerball'),'dh_randomball')=$2`,
-            [roundNumber, gameId]
-        );
-
-        const s=result.rows[0]||{};
-        const total=Number(s.total)||0, odd=Number(s.odd)||0, even=Number(s.even)||0;
-        const under=Number(s.under)||0, over=Number(s.over)||0;
-        const oddPercent=total?Math.round(odd/total*100):50;
-        const underPercent=total?Math.round(under/total*100):50;
-
-        return res.json({
-            ok:true, gameId, roundNumber, participants:total,
-            oddEven:{odd,even,oddPercent,evenPercent:total?100-oddPercent:50},
-            underOver:{under,over,underPercent,overPercent:total?100-underPercent:50}
-        });
-    } catch (error) {
-        console.error('PICK 통계 조회 오류:', error);
-        return res.status(500).json({ error:'PICK 통계를 불러오지 못했습니다.' });
-    }
-});
-
-// ========================================
-// TOVIEW GAME STATE API V7
-// 단일 데이터 계약: index / results / pattern / analysis / dashboard
-// 외부 공급처 실패 시 임의 당첨번호를 생성하지 않는다.
-// 정상 수신한 확정 결과는 PostgreSQL에 누적 저장하고 이후 캐시로 사용한다.
-// ========================================
-
-const TOVIEW_GAMES = {
-  dh_randomball:{id:'dh_randomball',name:'동행파워볼(랜덤볼)',type:'powerball',cycleSeconds:300,roundsPerDay:288,url:process.env.DH_RANDOMBALL_API_URL||'https://bepick.nupro765.com/bepick/dh/rand.powerball.asp'},
-  dh_speedkeno:{id:'dh_speedkeno',name:'동행스피드키노',type:'keno',cycleSeconds:300,roundsPerDay:288,url:process.env.DH_SPEEDKENO_API_URL||'https://www.powerballgame.co.kr/json/speedkeno.json'},
-  speedkeno_ladder:{id:'speedkeno_ladder',name:'스피드키노사다리',type:'ladder',cycleSeconds:300,roundsPerDay:288,url:process.env.SPEEDKENO_LADDER_API_URL||'https://bepick.nupro765.com/bepick/speedkeno/rand.ladder.asp'},
-  bubble_powerball:{id:'bubble_powerball',name:'보글파워볼',type:'powerball',cycleSeconds:120,roundsPerDay:720,url:process.env.BUBBLE_POWERBALL_API_URL||'https://bepick.net/game/default/bubble_power'},
-  bubble_ladder:{id:'bubble_ladder',name:'보글사다리',type:'ladder',cycleSeconds:180,roundsPerDay:480,url:process.env.BUBBLE_LADDER_API_URL||'https://bepick.net/game/default/bubble_ladder3'}
+app.set('trust proxy',1);
+app.disable('x-powered-by');
+if(process.env.NODE_ENV==='production'&&!process.env.SESSION_SECRET)throw new Error('SESSION_SECRET_REQUIRED');
+app.use(helmet({contentSecurityPolicy:{directives:{defaultSrc:["'self'"],scriptSrc:["'self'"],styleSrc:["'self'","'unsafe-inline'"],imgSrc:["'self'",'https:','data:'],frameSrc:["'self'",'https://www.youtube.com','https://www.youtube-nocookie.com'],connectSrc:["'self'"],objectSrc:["'none'"],baseUri:["'self'"],frameAncestors:["'self'"]}}}));
+app.use(express.json({limit:'128kb'}));
+app.use(express.urlencoded({extended:false,limit:'128kb'}));
+const rateBuckets=new Map();
+function rateLimit(name,limit,windowMs){return(req,res,next)=>{const key=name+':'+(req.ip||req.socket.remoteAddress||'unknown'),now=Date.now();
+let b=rateBuckets.get(key);
+if(!b||now-b.start>=windowMs)b={start:now,count:0};
+b.count++;
+rateBuckets.set(key,b);
+if(b.count>limit)return res.status(429).json({ok:false,error:{code:'RATE_LIMITED',message:'요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.'}});
+next();
 };
-
-const gameMemory = new Map();
-
-async function initGameResultsTable(){
-  try{
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS game_results (
-        id BIGSERIAL PRIMARY KEY,
-        game_id VARCHAR(40) NOT NULL,
-        round_number BIGINT NOT NULL,
-        today_round INTEGER,
-        draw_date VARCHAR(20),
-        draw_time VARCHAR(20),
-        payload JSONB NOT NULL,
-        source VARCHAR(80),
-        created_at TIMESTAMPTZ DEFAULT NOW(),
-        UNIQUE(game_id, round_number)
-      )
-    `);
-    await pool.query(`CREATE INDEX IF NOT EXISTS game_results_game_created_idx ON game_results(game_id, created_at DESC)`);
-    console.log('GAME RESULTS 테이블 준비 완료');
-  }catch(e){console.error('GAME RESULTS 테이블 준비 오류:',e)}
 }
-initGameResultsTable();
-
-function seoulClock(){
-  const p=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
-  const x=Object.fromEntries(p.map(v=>[v.type,v.value]));
-  return {date:`${x.year}-${x.month}-${x.day}`,hour:+x.hour,minute:+x.minute,second:+x.second};
+setInterval(()=>{const now=Date.now();
+for(const [k,b] of rateBuckets){if(now-b.start>2*60*60*1000)rateBuckets.delete(k);
+}},10*60*1000).unref();
+function sameOrigin(req,res,next){if(!['POST','PUT','PATCH','DELETE'].includes(req.method))return next();
+const origin=req.get('origin');
+if(!origin)return next();
+try{const u=new URL(origin);
+const expected=req.protocol+'://'+req.get('host');
+if(u.origin!==expected)return res.status(403).json({ok:false,error:{code:'CSRF_BLOCKED',message:'허용되지 않은 요청입니다.'}});
+}catch{return res.status(403).json({ok:false,error:{code:'CSRF_BLOCKED',message:'허용되지 않은 요청입니다.'}});
+}next();
 }
-function clockState(gameId){
-  const g=TOVIEW_GAMES[gameId],k=seoulClock(),elapsed=k.hour*3600+k.minute*60+k.second;
-  const completed=Math.floor(elapsed/g.cycleSeconds);
-  return {date:k.date,currentRound:(completed%g.roundsPerDay)+1,remainingSeconds:g.cycleSeconds-(elapsed%g.cycleSeconds)};
-}
-function oe(v,n){
-  const s=String(v??'').toLowerCase();
-  if(v===1||v==='1'||/odd|홀/.test(s))return 1;
-  if(v===2||v==='2'||/even|짝/.test(s))return 2;
-  return Number(n)%2?1:2;
-}
-function uo(v,n){
-  const s=String(v??'').toLowerCase();
-  if(v===1||v==='1'||/under|언더/.test(s))return 1;
-  if(v===2||v==='2'||/over|오버/.test(s))return 2;
-  return Number(n)<=4?1:2;
-}
-function decodeEntities(s){
-  return String(s||'').replace(/&#91;|&lbrack;/gi,'[').replace(/&#93;|&rbrack;/gi,']').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'").replace(/&amp;/gi,'&');
-}
-function bracketParts(text){
-  const m=decodeEntities(text).match(/#?\s*\[([\s\S]*?)\]/);
-  if(!m)throw Object.assign(new Error('RESULT_FORMAT'),{status:502});
-  return m[1].split(',').map(v=>String(v).trim().replace(/^["']|["']$/g,''));
-}
-function dateFromKey(v){
-  const d=String(v||'').match(/(\d{8})/)?.[1]||'';
-  return d?`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`:'';
-}
-function normalizePowerball(parts){
-  const offset=parts.length>=10?3:2, balls=parts.slice(offset,offset+5).map(Number), power=Number(parts[offset+5]);
-  const sum=Number(parts[offset+6])||balls.reduce((a,b)=>a+(Number(b)||0),0);
-  if(balls.length!==5||balls.some(n=>!Number.isFinite(n))||!Number.isFinite(power))throw Object.assign(new Error('RESULT_FORMAT'),{status:502});
-  return {Round:Number(parts[1]),AllRound:Number(parts.length>=10?parts[2]:parts[1]),Date:dateFromKey(parts[0]),Time:'',
-    nBall1:balls[0],nBall2:balls[1],nBall3:balls[2],nBall4:balls[3],nBall5:balls[4],nBallSum:sum,PowerBall:power,
-    oddEven:oe(null,sum),pOddEven:oe(null,power),pUnderOver:uo(null,power)};
-}
-function normalizeLadder(parts){
-  const six=parts.length>=6, rawResult=parts[six?3:2], rawStart=parts[six?4:3], lines=Number(parts[six?5:4]);
-  const odd=/odd|홀/i.test(String(rawResult)), even=/even|짝/i.test(String(rawResult));
-  const left=/left|좌/i.test(String(rawStart)), right=/right|우/i.test(String(rawStart));
-  if((!odd&&!even)||(!left&&!right)||![3,4].includes(lines))throw Object.assign(new Error('RESULT_FORMAT'),{status:502});
-  return {Round:Number(parts[1]),AllRound:Number(six?parts[2]:parts[1]),Date:dateFromKey(parts[0]),Time:'',
-    oddEven:odd?1:2,pOddEven:odd?1:2,pUnderOver:left?1:2,ladder:{start:left?'left':'right',lines,result:odd?'odd':'even'}};
-}
-function normalizeJson(gameId,obj){
-  const g=TOVIEW_GAMES[gameId],x=Array.isArray(obj)?obj[0]:obj;
-  if(!x||typeof x!=='object')throw Object.assign(new Error('RESULT_FORMAT'),{status:502});
-  if(g.type==='ladder'){
-    const left=/left|좌/i.test(String(x.start??x.leftRight??x.startPosition??'')), right=/right|우/i.test(String(x.start??x.leftRight??x.startPosition??''));
-    const odd=/odd|홀/i.test(String(x.result??x.oddEven??'')), even=/even|짝/i.test(String(x.result??x.oddEven??''));
-    const lines=Number(x.lines??x.lineCount??x.ladderCount);
-    if((!left&&!right)||(!odd&&!even)||![3,4].includes(lines))throw Object.assign(new Error('RESULT_FORMAT'),{status:502});
-    return {Round:Number(x.Round??x.round),AllRound:Number(x.AllRound??x.todayRound??x.round),Date:x.Date??x.date??'',Time:x.Time??x.time??'',
-      oddEven:odd?1:2,pOddEven:odd?1:2,pUnderOver:left?1:2,ladder:{start:left?'left':'right',lines,result:odd?'odd':'even'}};
-  }
-  const rawNums=x.numbers??x.balls??x.number??[x.nBall1,x.nBall2,x.nBall3,x.nBall4,x.nBall5];
-  const nums=(Array.isArray(rawNums)?rawNums:String(rawNums||'').split(',')).map(v=>Number(String(v).trim())).filter(Number.isFinite);
-  if(gameId==='dh_speedkeno'){
-    if(!nums.length)throw Object.assign(new Error('RESULT_FORMAT'),{status:502});
-    const sum=Number(x.nBallSum??x.numberSum??x.sum)||nums.reduce((a,b)=>a+b,0);
-    return {Round:Number(x.Round??x.round),AllRound:Number(x.AllRound??x.todayRound??x.round),Date:x.Date??x.date??'',Time:x.Time??x.time??'',
-      numbers:nums,nBallSum:sum,oddEven:oe(x.oddEven??x.numberSumOddEven,sum),pOddEven:oe(x.pOddEven??x.numberSumOddEven,sum),
-      pUnderOver:uo(x.pUnderOver??x.underOver,sum)};
-  }
-  if(nums.length<5)throw Object.assign(new Error('RESULT_FORMAT'),{status:502});
-  const power=Number(x.PowerBall??x.powerball??x.powerBall),balls=nums.slice(0,5),sum=Number(x.nBallSum??x.sum)||balls.reduce((a,b)=>a+b,0);
-  if(!Number.isFinite(power))throw Object.assign(new Error('RESULT_FORMAT'),{status:502});
-  return {Round:Number(x.Round??x.round),AllRound:Number(x.AllRound??x.todayRound??x.round),Date:x.Date??x.date??'',Time:x.Time??x.time??'',
-    nBall1:balls[0],nBall2:balls[1],nBall3:balls[2],nBall4:balls[3],nBall5:balls[4],nBallSum:sum,PowerBall:power,
-    oddEven:oe(x.oddEven,sum),pOddEven:oe(x.pOddEven,power),pUnderOver:uo(x.pUnderOver,power)};
-}
-async function fetchProvider(gameId){
-  const g=TOVIEW_GAMES[gameId];
-  if(!g.url)throw Object.assign(new Error('PROVIDER_NOT_CONFIGURED'),{status:503});
-  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),7000);
-  try{
-    const r=await fetch(g.url,{signal:controller.signal,headers:{Accept:'application/json,text/plain,*/*'}});
-    const raw=(await r.text()).replace(/^\uFEFF/,'').trim();
-    if(!r.ok)throw Object.assign(new Error('PROVIDER_HTTP_'+r.status),{status:502});
-    // 차단 페이지를 우회하지 않는다.
-    if(/access denied|forbidden|unauthorized|접속.*차단|접속.*불가/i.test(raw))throw Object.assign(new Error('PROVIDER_UNAVAILABLE'),{status:502});
-    try{return normalizeJson(gameId,JSON.parse(raw))}catch(e){
-      if(e.message!=='RESULT_FORMAT' && !(e instanceof SyntaxError))throw e;
-      const parts=bracketParts(raw);
-      return g.type==='ladder'?normalizeLadder(parts):normalizePowerball(parts);
-    }
-  }finally{clearTimeout(timer)}
-}
-async function saveGameResult(gameId,data,source){
-  const round=Number(data.AllRound??data.Round);
-  if(!Number.isFinite(round)||round<=0)return;
-  gameMemory.set(gameId,{data,source,at:Date.now()});
-  try{
-    await pool.query(`INSERT INTO game_results(game_id,round_number,today_round,draw_date,draw_time,payload,source)
-      VALUES($1,$2,$3,$4,$5,$6::jsonb,$7)
-      ON CONFLICT(game_id,round_number) DO UPDATE SET payload=EXCLUDED.payload,source=EXCLUDED.source,draw_date=EXCLUDED.draw_date,draw_time=EXCLUDED.draw_time`,
-      [gameId,round,Number(data.Round)||null,data.Date||'',data.Time||'',JSON.stringify(data),source||'provider']);
-  }catch(e){console.error('게임 결과 저장 오류:',gameId,e.message)}
-}
-async function storedResults(gameId,limit=50){
-  try{
-    const q=await pool.query(`SELECT payload,source FROM game_results WHERE game_id=$1 ORDER BY round_number DESC LIMIT $2`,[gameId,limit]);
-    return q.rows.map(r=>({...r.payload,source:r.payload?.source||r.source||'stored'}));
-  }catch(e){
-    console.error('게임 결과 DB 조회 오류:',gameId,e.message);
-    const m=gameMemory.get(gameId); return m?[m.data]:[];
-  }
-}
-function summarize(gameId,records){
-  const g=TOVIEW_GAMES[gameId],s={total:records.length};
-  if(g.type==='ladder'){
-    s.left=records.filter(r=>r.ladder?.start==='left').length;s.right=records.filter(r=>r.ladder?.start==='right').length;
-    s.line3=records.filter(r=>Number(r.ladder?.lines)===3).length;s.line4=records.filter(r=>Number(r.ladder?.lines)===4).length;
-    s.odd=records.filter(r=>r.ladder?.result==='odd'||r.pOddEven===1).length;s.even=records.filter(r=>r.ladder?.result==='even'||r.pOddEven===2).length;
-  }else{
-    s.powerOdd=records.filter(r=>r.pOddEven===1).length;s.powerEven=records.filter(r=>r.pOddEven===2).length;
-    s.powerUnder=records.filter(r=>r.pUnderOver===1).length;s.powerOver=records.filter(r=>r.pUnderOver===2).length;
-    s.normalOdd=records.filter(r=>r.oddEven===1).length;s.normalEven=records.filter(r=>r.oddEven===2).length;
-  }
-  return s;
-}
-async function getUnifiedState(gameId){
-  const g=TOVIEW_GAMES[gameId]; if(!g)throw Object.assign(new Error('지원하지 않는 게임입니다.'),{status:404});
-  const clock=clockState(gameId);
-  let providerError=null,source='stored';
-  try{
-    const fresh=await fetchProvider(gameId);
-    await saveGameResult(gameId,fresh,'provider');
-    source='provider';
-  }catch(e){providerError=e.message}
-  const records=await storedResults(gameId,50);
-  const last=records[0]||null,lastRound=Number(last?.AllRound??last?.Round??0);
-  const currentRound=lastRound>0?((lastRound%g.roundsPerDay)+1):clock.currentRound;
-  return {ok:records.length>0,game:gameId,name:g.name,type:g.type,cycleSeconds:g.cycleSeconds,roundsPerDay:g.roundsPerDay,
-    currentRound,remainingSeconds:clock.remainingSeconds,lastCompletedRound:lastRound||null,lastResult:last,
-    recentResults:records,stats:summarize(gameId,records),source:records.length?(source==='provider'?'provider':'stored'):'waiting',
-    providerConfigured:!!g.url,providerError};
-}
-app.get('/api/games',(req,res)=>res.json({ok:true,games:Object.values(TOVIEW_GAMES).map(({url,...g})=>({...g,providerConfigured:!!url}))}));
-app.get('/api/game-state/:game',async(req,res)=>{
-  try{return res.json(await getUnifiedState(String(req.params.game||'').toLowerCase()))}
-  catch(e){return res.status(e.status||500).json({ok:false,error:e.message})}
+app.use('/api',sameOrigin);
+app.use(session({store:new PgSessionStore(),name:'toview.sid',secret:process.env.SESSION_SECRET||'toview-dev-only-change-me-please-32chars',resave:false,saveUninitialized:false,cookie:{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'lax',maxAge:IDLE_MS}}));
+const passive=['/api/events','/api/games','/api/sports','/api/ads'];
+app.use((req,res,next)=>{const s=req.session;
+if(!s?.user)return next();
+const now=Date.now();
+if(s.lastUserActivityAt&&now-s.lastUserActivityAt>IDLE_MS)return s.destroy(()=>{if(req.path.startsWith('/api/'))return res.status(401).json({ok:false,error:{code:'SESSION_EXPIRED',message:'로그인이 만료되었습니다.'}});
+return res.redirect('/account.html?reason=auth&next='+encodeURIComponent(req.originalUrl));
 });
-// 이전 프론트 호환. 이제 동일한 game-state를 사용한다.
-app.get('/api/games/:game/live',async(req,res)=>{
-  try{
-    const s=await getUnifiedState(String(req.params.game||'').toLowerCase());
-    return res.json({ok:s.ok,game:s.game,name:s.name,type:s.type,cycleSeconds:s.cycleSeconds,renderer:s.type==='ladder'?'toview-ladder':'toview-balls',
-      roundNumber:s.lastCompletedRound,todayRound:s.lastCompletedRound,source:s.source,data:s.lastResult,waiting:!s.lastResult});
-  }catch(e){return res.status(e.status||500).json({ok:false,error:e.message})}
+if(!(req.method==='GET'&&passive.some(p=>req.path.startsWith(p)))){s.lastUserActivityAt=now;
+s.cookie.maxAge=IDLE_MS;
+}next();
 });
-app.get('/api/games/:game/results',async(req,res)=>{
-  try{const s=await getUnifiedState(String(req.params.game||'').toLowerCase());return res.json({ok:true,game:s.game,records:s.recentResults})}
-  catch(e){return res.status(e.status||500).json({ok:false,error:e.message,records:[]})}
+const PROTECTED_PAGES=new Set(['/results.html','/pattern.html','/analysis.html','/sports.html','/community.html','/ranking.html','/dashboard.html','/admin.html']);
+app.get([...PROTECTED_PAGES],(req,res,next)=>{if(req.session?.user)return next();
+const nextPath=req.originalUrl;
+return res.redirect('/account.html?reason=auth&next='+encodeURIComponent(nextPath));
 });
-app.get('/api/results',async(req,res)=>{
-  try{const s=await getUnifiedState('dh_randomball');return res.json(s.recentResults)}
-  catch(e){return res.status(e.status||500).json({error:e.message})}
+app.use(express.static(path.join(__dirname,'public'),{extensions:['html']}));
+const ok=(res,data,meta)=>res.json({ok:true,data,...(meta?{meta}:{})});
+const fail=(res,status,code,message)=>res.status(status).json({ok:false,error:{code,message}});
+const auth=(req,res,next)=>req.session?.user?next():fail(res,401,'AUTH_REQUIRED','로그인이 필요합니다.');
+const admin=(req,res,next)=>req.session?.user?.role==='admin'?next():fail(res,403,'ADMIN_REQUIRED','관리자 권한이 필요합니다.');
+app.post('/api/activity',auth,(req,res)=>ok(res,{active:true}));
+app.get('/api/health',(req,res)=>ok(res,{status:'ok',time:new Date().toISOString()}));
+app.get('/api/games',(req,res)=>ok(res,publicCatalog()));
+app.get('/api/me',(req,res)=>req.session?.user?ok(res,req.session.user):fail(res,401,'AUTH_REQUIRED','로그인이 필요합니다.'));
+app.post('/api/login',rateLimit('login',12,10*60*1000),async(req,res)=>{try{const r=await pool.query('SELECT id,username,nickname,email,role,password_hash FROM users WHERE username=$1 LIMIT 1',[String(req.body.username||'').trim()]);
+const u=r.rows[0];
+if(!u||!(await bcrypt.compare(String(req.body.password||''),u.password_hash)))return fail(res,401,'INVALID_LOGIN','아이디 또는 비밀번호를 확인해 주세요.');
+req.session.regenerate(err=>{if(err)return fail(res,500,'SESSION_ERROR','로그인 처리에 실패했습니다.');
+req.session.user={id:u.id,username:u.username,nickname:u.nickname,email:u.email,role:u.role};
+req.session.lastUserActivityAt=Date.now();
+req.session.cookie.maxAge=IDLE_MS;
+ok(res,req.session.user);
 });
-
-app.listen(PORT,()=>console.log(`TOVIEW http://localhost:${PORT}`));
+}catch(e){console.error(e);
+fail(res,500,'LOGIN_ERROR','로그인 처리에 실패했습니다.');
+}});
+app.post('/api/logout',(req,res)=>req.session.destroy(()=>ok(res,{loggedOut:true})));
+const hasTripleRepeat=s=>/(.)\1\1/i.test(s);
+function hasTripleSequence(s){const t=String(s).toLowerCase();
+for(let i=0;
+i<t.length-2;
+i++){const a=t.charCodeAt(i),b=t.charCodeAt(i+1),c=t.charCodeAt(i+2);
+if((b===a+1&&c===b+1)||(b===a-1&&c===b-1))return true;
+}return false;
+}
+function mailTransport(){if(!process.env.SMTP_HOST)return null;
+return nodemailer.createTransport({host:process.env.SMTP_HOST,port:Number(process.env.SMTP_PORT||587),secure:String(process.env.SMTP_SECURE)==='true',auth:process.env.SMTP_USER?{user:process.env.SMTP_USER,pass:process.env.SMTP_PASS}:undefined});
+}
+app.post('/api/email/send',rateLimit('email-send',5,10*60*1000),async(req,res)=>{try{const email=String(req.body.email||'').trim().toLowerCase();
+if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return fail(res,400,'INVALID_EMAIL','이메일을 확인해 주세요.');
+const exists=await pool.query('SELECT 1 FROM users WHERE email=$1 LIMIT 1',[email]);
+if(exists.rowCount)return fail(res,409,'EMAIL_IN_USE','이미 가입된 이메일입니다.');
+const code=String(Math.floor(100000+Math.random()*900000)),hash=crypto.createHash('sha256').update(code).digest('hex');
+await pool.query("INSERT INTO email_verifications(email,code_hash,expires_at) VALUES($1,$2,now()+interval '10 minutes') ON CONFLICT(email) DO UPDATE SET code_hash=EXCLUDED.code_hash,expires_at=EXCLUDED.expires_at,verified_at=NULL",[email,hash]);
+const tx=mailTransport();
+if(!tx){if(process.env.NODE_ENV==='production')return fail(res,503,'EMAIL_NOT_CONFIGURED','이메일 인증 서비스가 준비되지 않았습니다.');
+console.log('[DEV EMAIL CODE]',email,code);
+return ok(res,{sent:true,devCode:code});
+}await tx.sendMail({from:process.env.SMTP_FROM||process.env.SMTP_USER,to:email,subject:'TOVIEW 이메일 인증번호',text:`TOVIEW 인증번호는 ${code} 입니다. 10분 안에 입력해 주세요.`});
+ok(res,{sent:true});
+}catch(e){console.error(e);
+fail(res,500,'EMAIL_SEND_ERROR','인증메일 발송에 실패했습니다.');
+}});
+app.post('/api/email/verify',rateLimit('email-verify',12,10*60*1000),async(req,res)=>{try{const email=String(req.body.email||'').trim().toLowerCase(),code=String(req.body.code||'').trim(),hash=crypto.createHash('sha256').update(code).digest('hex');
+const r=await pool.query('UPDATE email_verifications SET verified_at=now() WHERE email=$1 AND code_hash=$2 AND expires_at>now() RETURNING email',[email,hash]);
+if(!r.rowCount)return fail(res,400,'INVALID_CODE','인증번호가 올바르지 않거나 만료되었습니다.');
+req.session.verifiedEmail=email;
+ok(res,{verified:true,email});
+}catch(e){console.error(e);
+fail(res,500,'EMAIL_VERIFY_ERROR','이메일 인증에 실패했습니다.');
+}});
+app.post('/api/register',rateLimit('register',6,60*60*1000),async(req,res)=>{try{const username=String(req.body.username||'').trim(),nickname=String(req.body.nickname||'').trim(),email=String(req.body.email||'').trim().toLowerCase(),password=String(req.body.password||'');
+if(!/^[A-Za-z]{5,40}$/.test(username)||hasTripleRepeat(username)||hasTripleSequence(username))return fail(res,400,'INVALID_USERNAME','아이디 규칙을 확인해 주세요.');
+if(!/^[가-힣]{2,30}$/.test(nickname))return fail(res,400,'INVALID_NICKNAME','닉네임은 한글 2자 이상으로 입력해 주세요.');
+if(password.length<8||!/[A-Za-z]/.test(password)||!/\d/.test(password)||hasTripleRepeat(password)||hasTripleSequence(password))return fail(res,400,'INVALID_PASSWORD','비밀번호 규칙을 확인해 주세요.');
+if(req.session.verifiedEmail!==email)return fail(res,400,'EMAIL_NOT_VERIFIED','이메일 인증을 완료해 주세요.');
+const hash=await bcrypt.hash(password,12);
+const r=await pool.query('INSERT INTO users(username,password_hash,nickname,email) VALUES($1,$2,$3,$4) RETURNING id,username,nickname,email,role',[username,hash,nickname,email]);
+ok(res,r.rows[0]);
+}catch(e){if(e.code==='23505')return fail(res,409,'DUPLICATE_USER','이미 사용 중인 회원정보가 있습니다.');
+console.error(e);
+fail(res,500,'REGISTER_ERROR','회원가입에 실패했습니다.');
+}});
+const norm=r=>({resultId:r.result_id,gameId:r.game_id,drawDate:r.draw_date,roundNumber:r.round_number,scheduledAt:r.scheduled_at,status:r.status,result:r.result_json,publishedAt:r.published_at});
+app.get('/api/games/snapshot',async(req,res)=>{try{const r=await pool.query('SELECT DISTINCT ON(game_id) * FROM game_results ORDER BY game_id,draw_date DESC,round_number DESC'),m=new Map(r.rows.map(x=>[x.game_id,norm(x)]));
+ok(res,publicCatalog().map(g=>({...g,lastResult:m.get(g.id)||null})));
+}catch(e){console.error(e);
+fail(res,500,'SNAPSHOT_ERROR','게임 정보를 불러오지 못했습니다.');
+}});
+app.get('/api/games/:id/snapshot',async(req,res)=>{try{const g=gameById(req.params.id);
+if(!g)return fail(res,404,'GAME_NOT_FOUND','지원하지 않는 게임입니다.');
+const last=await pool.query('SELECT * FROM game_results WHERE game_id=$1 ORDER BY draw_date DESC,round_number DESC LIMIT 1',[g.id]);
+const next=await pool.query("SELECT round_id,game_id,draw_date,round_number,scheduled_at,status FROM game_rounds WHERE game_id=$1 AND status='OPEN' ORDER BY scheduled_at DESC LIMIT 1",[g.id]);
+ok(res,{game:g,lastResult:last.rowCount?norm(last.rows[0]):null,currentRound:next.rows[0]||null,serverNow:new Date().toISOString()});
+}catch(e){console.error(e);
+fail(res,500,'GAME_SNAPSHOT_ERROR','게임 상태를 불러오지 못했습니다.');
+}});
+app.get('/api/games/:id/results',async(req,res)=>{try{const g=gameById(req.params.id);
+if(!g)return fail(res,404,'GAME_NOT_FOUND','지원하지 않는 게임입니다.');
+const date=String(req.query.date||dateInZone()),limit=Math.min(1000,Math.max(1,Number(req.query.limit)||100));
+const r=await pool.query('SELECT * FROM game_results WHERE game_id=$1 AND draw_date=$2 ORDER BY round_number DESC LIMIT $3',[g.id,date,limit]);
+ok(res,r.rows.map(norm),{game:g.id,date});
+}catch(e){console.error(e);
+fail(res,500,'RESULTS_ERROR','결과를 불러오지 못했습니다.');
+}});
+app.get('/api/games/:id/pattern',async(req,res)=>{try{const g=gameById(req.params.id);
+if(!g)return fail(res,404,'GAME_NOT_FOUND','지원하지 않는 게임입니다.');
+const date=String(req.query.date||dateInZone());
+const r=await pool.query('SELECT * FROM game_results WHERE game_id=$1 AND draw_date=$2 ORDER BY round_number ASC',[g.id,date]);
+ok(res,r.rows.map(norm),{game:g.id,date,total:r.rowCount});
+}catch(e){console.error(e);
+fail(res,500,'PATTERN_ERROR','패턴 데이터를 불러오지 못했습니다.');
+}});
+app.get('/api/games/:id/analysis',async(req,res)=>{try{const g=gameById(req.params.id);
+if(!g)return fail(res,404,'GAME_NOT_FOUND','지원하지 않는 게임입니다.');
+const days=Math.min(30,Math.max(1,Number(req.query.days)||1));
+const r=await pool.query('SELECT * FROM game_results WHERE game_id=$1 AND draw_date>=CURRENT_DATE-($2::int-1) ORDER BY draw_date,round_number',[g.id,days]);
+const rows=r.rows.map(norm),summary={total:rows.length,odd:0,even:0,under:0,over:0};
+for(const x of rows){if(x.result?.oddEven==='odd')summary.odd++;
+if(x.result?.oddEven==='even')summary.even++;
+if(x.result?.underOver==='under')summary.under++;
+if(x.result?.underOver==='over')summary.over++;
+}ok(res,{summary,records:rows.slice(-200)},{game:g.id,days});
+}catch(e){console.error(e);
+fail(res,500,'ANALYSIS_ERROR','분석 데이터를 불러오지 못했습니다.');
+}});
+app.post('/api/picks/mini',auth,async(req,res)=>{const c=await pool.connect();
+try{await c.query('BEGIN');
+const roundId=Number(req.body.roundId),market=String(req.body.marketType||''),selection=String(req.body.selection||''),visibility=String(req.body.visibility||'FOLLOWERS');
+if(!['odd_even','under_over'].includes(market)||!['odd','even','under','over'].includes(selection)||(market==='odd_even'&&!['odd','even'].includes(selection))||(market==='under_over'&&!['under','over'].includes(selection)))throw Object.assign(new Error(),{status:400,code:'BAD_PICK'});
+if(!['PUBLIC','FOLLOWERS','MUTUALS','PRIVATE'].includes(visibility))throw Object.assign(new Error(),{status:400,code:'BAD_VISIBILITY'});
+const rr=await c.query('SELECT round_id,scheduled_at,status FROM game_rounds WHERE round_id=$1 FOR UPDATE',[roundId]);
+if(!rr.rowCount)throw Object.assign(new Error(),{status:404,code:'ROUND_NOT_FOUND'});
+if(rr.rows[0].status!=='OPEN'||Date.now()>=new Date(rr.rows[0].scheduled_at).getTime())throw Object.assign(new Error(),{status:409,code:'PICK_CLOSED'});
+const r=await c.query('INSERT INTO mini_game_picks(user_id,round_id,market_type,selection,visibility) VALUES($1,$2,$3,$4,$5) RETURNING *',[req.session.user.id,roundId,market,selection,visibility]);
+await c.query('COMMIT');
+ok(res,r.rows[0]);
+}catch(e){await c.query('ROLLBACK');
+if(e.code==='23505')return fail(res,409,'PICK_EXISTS','이미 등록한 PICK입니다.');
+if(e.status)return fail(res,e.status,e.code,e.code==='PICK_CLOSED'?'PICK 등록이 마감되었습니다.':'PICK을 등록할 수 없습니다.');
+console.error(e);
+fail(res,500,'PICK_ERROR','PICK 등록에 실패했습니다.');
+}finally{c.release();
+}});
+async function relation(a,b){const bl=await pool.query('SELECT 1 FROM blocks WHERE (blocker_id=$1 AND blocked_id=$2) OR (blocker_id=$2 AND blocked_id=$1) LIMIT 1',[a,b]);
+if(bl.rowCount)return {blocked:true,following:false,mutual:false};
+const r=await pool.query('SELECT follower_id,following_id FROM follows WHERE (follower_id=$1 AND following_id=$2) OR (follower_id=$2 AND following_id=$1)',[a,b]);
+const f=r.rows.some(x=>Number(x.follower_id)===Number(a)&&Number(x.following_id)===Number(b)),rev=r.rows.some(x=>Number(x.follower_id)===Number(b)&&Number(x.following_id)===Number(a));
+return {blocked:false,following:f,mutual:f&&rev};
+}
+async function canViewPick(viewerId,ownerId,visibility){if(Number(viewerId)===Number(ownerId))return true;
+if(visibility==='PUBLIC')return true;
+if(visibility==='PRIVATE')return false;
+const rel=await relation(viewerId,ownerId);
+if(rel.blocked)return false;
+if(visibility==='FOLLOWERS')return rel.following;
+if(visibility==='MUTUALS')return rel.mutual;
+return false;
+}
+app.get('/api/users/:id/picks/mini',auth,async(req,res)=>{try{const owner=Number(req.params.id),r=await pool.query(`SELECT p.pick_id,p.user_id,p.market_type,p.selection,p.visibility,p.verdict,p.created_at,gr.game_id,gr.draw_date,gr.round_number FROM mini_game_picks p JOIN game_rounds gr ON gr.round_id=p.round_id WHERE p.user_id=$1 ORDER BY p.created_at DESC LIMIT 100`,[owner]),out=[];
+for(const x of r.rows)if(await canViewPick(req.session.user.id,owner,x.visibility))out.push(x);
+ok(res,out);
+}catch(e){console.error(e);
+fail(res,500,'PICK_FEED_ERROR','PICK을 불러오지 못했습니다.');
+}});
+app.get('/api/users/:id/picks/sports',auth,async(req,res)=>{try{const owner=Number(req.params.id),r=await pool.query(`SELECT p.pick_id,p.user_id,p.market_type,p.selection,p.visibility,p.verdict,p.created_at,e.event_id,e.home_name,e.away_name,e.start_at,e.status FROM sports_picks p JOIN sports_events e ON e.event_id=p.event_id WHERE p.user_id=$1 ORDER BY p.created_at DESC LIMIT 100`,[owner]),out=[];
+for(const x of r.rows)if(await canViewPick(req.session.user.id,owner,x.visibility))out.push(x);
+ok(res,out);
+}catch(e){console.error(e);
+fail(res,500,'SPORTS_PICK_FEED_ERROR','스포츠 PICK을 불러오지 못했습니다.');
+}});
+app.get('/api/picks/mini/:roundId/stats',auth,async(req,res)=>{try{const r=await pool.query(`SELECT count(*)::int total,count(*) FILTER(WHERE selection='odd')::int odd,count(*) FILTER(WHERE selection='even')::int even,count(*) FILTER(WHERE selection='under')::int under,count(*) FILTER(WHERE selection='over')::int over FROM mini_game_picks WHERE round_id=$1`,[Number(req.params.roundId)]);
+ok(res,r.rows[0]);
+}catch(e){fail(res,500,'PICK_STATS_ERROR','PICK 통계를 불러오지 못했습니다.');
+}});
+app.get('/api/picks/sports/:eventId/stats',auth,async(req,res)=>{try{const r=await pool.query(`SELECT count(*)::int total,count(*) FILTER(WHERE selection='HOME')::int home,count(*) FILTER(WHERE selection='DRAW')::int draw,count(*) FILTER(WHERE selection='AWAY')::int away FROM sports_picks WHERE event_id=$1`,[Number(req.params.eventId)]);
+ok(res,r.rows[0]);
+}catch(e){fail(res,500,'SPORTS_PICK_STATS_ERROR','PICK 통계를 불러오지 못했습니다.');
+}});
+app.post('/api/follow/:id',auth,async(req,res)=>{try{const id=Number(req.params.id);
+if(!Number.isInteger(id)||id<=0||id===Number(req.session.user.id))return fail(res,400,'SELF_FOLLOW','팔로우할 수 없는 회원입니다.');
+const exists=await pool.query('SELECT 1 FROM users WHERE id=$1 LIMIT 1',[id]);
+if(!exists.rowCount)return fail(res,404,'USER_NOT_FOUND','회원을 찾을 수 없습니다.');
+if((await relation(req.session.user.id,id)).blocked)return fail(res,403,'BLOCKED','차단 관계에서는 팔로우할 수 없습니다.');
+await pool.query('INSERT INTO follows(follower_id,following_id) VALUES($1,$2) ON CONFLICT DO NOTHING',[req.session.user.id,id]);
+ok(res,{following:true});
+}catch(e){console.error(e);
+fail(res,500,'FOLLOW_ERROR','팔로우 처리에 실패했습니다.');
+}});
+app.delete('/api/follow/:id',auth,async(req,res)=>{try{const id=Number(req.params.id);
+if(!Number.isInteger(id)||id<=0)return fail(res,400,'BAD_USER','회원을 확인해 주세요.');
+await pool.query('DELETE FROM follows WHERE follower_id=$1 AND following_id=$2',[req.session.user.id,id]);
+ok(res,{following:false});
+}catch(e){console.error(e);
+fail(res,500,'UNFOLLOW_ERROR','언팔로우 처리에 실패했습니다.');
+}});
+app.post('/api/block/:id',auth,async(req,res)=>{const id=Number(req.params.id),me=Number(req.session.user.id);
+if(!id||id===me)return fail(res,400,'BAD_BLOCK','차단할 수 없는 회원입니다.');
+const c=await pool.connect();
+try{await c.query('BEGIN');
+await c.query('INSERT INTO blocks(blocker_id,blocked_id) VALUES($1,$2) ON CONFLICT DO NOTHING',[me,id]);
+await c.query('DELETE FROM follows WHERE (follower_id=$1 AND following_id=$2) OR (follower_id=$2 AND following_id=$1)',[me,id]);
+await c.query('COMMIT');
+ok(res,{blocked:true});
+}catch(e){await c.query('ROLLBACK');
+fail(res,500,'BLOCK_ERROR','차단 처리에 실패했습니다.');
+}finally{c.release();
+}});
+app.get('/api/community/posts',auth,async(req,res)=>{try{const board=String(req.query.board||'free');
+if(!['notice','free','analysis'].includes(board))return fail(res,400,'BAD_BOARD','게시판을 확인해 주세요.');
+const r=await pool.query('SELECT p.*,u.nickname,u.role FROM posts p LEFT JOIN users u ON u.id=p.user_id WHERE board_id=$1 ORDER BY is_pinned DESC,created_at DESC LIMIT 100',[board]);
+ok(res,r.rows);
+}catch(e){console.error(e);
+fail(res,500,'POSTS_ERROR','게시글을 불러오지 못했습니다.');
+}});
+app.post('/api/community/posts',auth,async(req,res)=>{try{const board=String(req.body.boardId||'free');
+if(!['free','analysis'].includes(board)&&req.session.user.role!=='admin')return fail(res,400,'BAD_BOARD','게시판을 확인해 주세요.');
+const title=String(req.body.title||'').trim().slice(0,160),body=String(req.body.body||'').trim().slice(0,20000);
+if(!title||!body)return fail(res,400,'EMPTY_POST','제목과 내용을 입력해 주세요.');
+const r=await pool.query('INSERT INTO posts(user_id,board_id,title,body) VALUES($1,$2,$3,$4) RETURNING *',[req.session.user.id,board,title,body]);
+ok(res,r.rows[0]);
+}catch(e){console.error(e);
+fail(res,500,'POST_ERROR','게시글 등록에 실패했습니다.');
+}});
+app.get('/api/verified',async(req,res)=>{try{const r=await pool.query('SELECT id,name,status,guarantee_period,last_reviewed_at,rating,url,logo_url FROM verified_partners ORDER BY id DESC');
+ok(res,r.rows);
+}catch(e){console.error(e);
+fail(res,500,'VERIFIED_ERROR','보증업체 정보를 불러오지 못했습니다.');
+}});
+app.get('/api/ads/:slot',async(req,res)=>{try{const r=await pool.query('SELECT id,advertiser,image_url,mobile_image_url,target_url,weight FROM ad_campaigns WHERE slot_id=$1 AND active=true AND (starts_at IS NULL OR starts_at<=now()) AND (ends_at IS NULL OR ends_at>=now()) ORDER BY random()*GREATEST(weight,1) DESC LIMIT 1',[String(req.params.slot).slice(0,64)]);
+ok(res,r.rows[0]||null);
+}catch(e){console.error(e);
+ok(res,null);
+}});
+app.get('/go/ad/:id',async(req,res)=>{try{const r=await pool.query('SELECT target_url FROM ad_campaigns WHERE id=$1 AND active=true',[Number(req.params.id)]);
+if(!r.rowCount)return res.redirect('/');
+const u=new URL(r.rows[0].target_url);
+return ['http:','https:'].includes(u.protocol)?res.redirect(u.toString()):res.redirect('/');
+}catch{return res.redirect('/');
+}});
+app.get('/api/sports/events',auth,async(req,res)=>{try{const r=await pool.query('SELECT event_id,name,sport,league,home_name,away_name,start_at,status,home_score,away_score,stream_provider,stream_ref FROM sports_events ORDER BY start_at DESC LIMIT 200');
+ok(res,r.rows);
+}catch(e){console.error(e);
+fail(res,500,'SPORTS_ERROR','스포츠 정보를 불러오지 못했습니다.');
+}});
+app.post('/api/picks/sports',auth,async(req,res)=>{const c=await pool.connect();
+try{await c.query('BEGIN');
+const eventId=Number(req.body.eventId),visibility=String(req.body.visibility||'FOLLOWERS');
+const market=String(req.body.marketType||'winner'),selection=String(req.body.selection||'');
+if(!Number.isInteger(eventId)||eventId<=0||market!=='winner'||!['HOME','DRAW','AWAY'].includes(selection))throw Object.assign(new Error(),{status:400,code:'BAD_PICK'});
+if(!['PUBLIC','FOLLOWERS','MUTUALS','PRIVATE'].includes(visibility))throw Object.assign(new Error(),{status:400,code:'BAD_VISIBILITY'});
+const e=await c.query('SELECT start_at,status FROM sports_events WHERE event_id=$1 FOR UPDATE',[eventId]);
+if(!e.rowCount)throw Object.assign(new Error(),{status:404,code:'EVENT_NOT_FOUND'});
+if(['LIVE','FINISHED','CANCELLED'].includes(String(e.rows[0].status).toUpperCase())||Date.now()>=new Date(e.rows[0].start_at).getTime())throw Object.assign(new Error(),{status:409,code:'PICK_CLOSED'});
+const r=await c.query('INSERT INTO sports_picks(user_id,event_id,market_type,selection,visibility) VALUES($1,$2,$3,$4,$5) RETURNING *',[req.session.user.id,eventId,market,selection,visibility]);
+await c.query('COMMIT');
+ok(res,r.rows[0]);
+}catch(e){await c.query('ROLLBACK');
+if(e.code==='23505')return fail(res,409,'PICK_EXISTS','이미 등록한 PICK입니다.');
+if(e.status)return fail(res,e.status,e.code,e.code==='PICK_CLOSED'?'PICK 등록이 마감되었습니다.':'PICK을 등록할 수 없습니다.');
+console.error(e);
+fail(res,500,'SPORTS_PICK_ERROR','PICK 등록에 실패했습니다.');
+}finally{c.release();
+}});
+const sse=new Set(),sseByIp=new Map();
+app.get('/api/events',(req,res)=>{const ip=req.ip||req.socket.remoteAddress||'unknown',n=sseByIp.get(ip)||0;
+if(n>=4)return res.status(429).end();
+res.set({'Content-Type':'text/event-stream','Cache-Control':'no-cache, no-transform','Connection':'keep-alive','X-Accel-Buffering':'no'});
+res.flushHeaders?.();
+sse.add(res);
+sseByIp.set(ip,n+1);
+res.write(`event: snapshot\ndata: ${JSON.stringify({time:Date.now()})}\n\n`);
+const k=setInterval(()=>{if(!res.writableEnded)res.write(': keepalive\n\n');
+},25000);
+const close=()=>{clearInterval(k);
+sse.delete(res);
+const left=Math.max(0,(sseByIp.get(ip)||1)-1);
+left?sseByIp.set(ip,left):sseByIp.delete(ip);
+};
+req.once('close',close);
+res.once('close',close);
+res.once('error',close);
+});
+function broadcast(type,data){for(const res of [...sse]){if(res.writableEnded){sse.delete(res);
+continue;
+}try{res.write(`event: ${type}\ndata: ${JSON.stringify(data)}\n\n`);
+}catch{sse.delete(res);
+}}}
+let notifyClient=null;
+async function startDbListener(){if(!process.env.DATABASE_URL)return;
+notifyClient=new Client({connectionString:process.env.DATABASE_URL,ssl:process.env.NODE_ENV==='production'?{rejectUnauthorized:false}:undefined});
+notifyClient.on('error',e=>{console.error('[db-listen]',e.message);
+setTimeout(startDbListener,3000).unref?.();
+});
+await notifyClient.connect();
+await notifyClient.query('LISTEN toview_game_result');
+notifyClient.on('notification',async msg=>{try{const key=JSON.parse(msg.payload||'{}');
+if(!key.gameId||!key.drawDate||!key.roundNumber)return;
+const r=await pool.query('SELECT * FROM game_results WHERE game_id=$1 AND draw_date=$2 AND round_number=$3 LIMIT 1',[key.gameId,key.drawDate,key.roundNumber]);
+if(r.rowCount)broadcast('game-result',norm(r.rows[0]));
+}catch(e){console.error('[game-result-notify]',e.message);
+}});
+}
+startDbListener().catch(e=>console.error('[db-listen-start]',e.message));
+app.post('/api/admin/broadcast',admin,(req,res)=>{broadcast('admin-notice',{message:String(req.body.message||'').slice(0,500)});
+ok(res,{sent:true});
+});
+app.get('/api/admin/status',admin,async(req,res)=>{try{const r=await pool.query('SELECT game_id,max(published_at) last_result_at FROM game_results GROUP BY game_id ORDER BY game_id');
+ok(res,{games:r.rows,sseClients:sse.size});
+}catch(e){fail(res,500,'ADMIN_STATUS_ERROR','상태 조회에 실패했습니다.');
+}});
+app.use('/api',(req,res)=>fail(res,404,'API_NOT_FOUND','요청한 API가 없습니다.'));
+app.listen(PORT,()=>console.log(`TOVIEW listening on ${PORT}`));
+module.exports={app,pool,broadcast};
