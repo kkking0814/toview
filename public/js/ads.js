@@ -1,0 +1,15 @@
+'use strict';
+(async()=>{for(const el of TV.qsa('[data-ad-slot]')){try{const ad=await TV.api('/api/ads/'+encodeURIComponent(el.dataset.adSlot));
+if(!ad)continue;
+const img=document.createElement('img');
+img.src=ad.image_url;
+img.alt=ad.advertiser||'제휴 배너';
+img.loading=el.dataset.eager==='1'?'eager':'lazy';
+const a=document.createElement('a');
+a.href='/go/ad/'+ad.id;
+a.target='_blank';
+a.rel='noopener noreferrer';
+a.append(img);
+el.replaceChildren(a);
+el.classList.add('on');
+}catch{}}})();
