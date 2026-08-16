@@ -1,0 +1,66 @@
+.home-shell{
+    display:grid;
+    grid-template-columns:150px minmax(0,1fr) 110px;
+    gap:16px;
+    align-items:start}
+    .home-left-rail,.home-right-rail{
+        display:grid;
+        gap:10px;
+        position:sticky;
+        top:86px}
+        .home-left-rail .ad{
+            height:210px}
+            .home-right-rail .ad{
+                height:100px}
+                .home-main{
+                    min-width:0}
+                    .home-hero-ad{
+                        height:120px;
+                        margin-bottom:18px}
+                        .home-live{
+                            min-height:310px}
+                            .home-live-stage{
+                                padding:24px;
+                                text-align:center;
+                                background:linear-gradient(135deg,#0d2343,#173d70);
+                                color:#fff;
+                                border-radius:0 0 12px 12px}
+                                .home-live-stage h2{
+                                    margin:5px}
+                                    .home-data{
+                                        display:grid;
+                                        grid-template-columns:2fr 1fr 1fr;
+                                        gap:16px;
+                                        margin-top:16px}
+                                        .home-data .card{
+                                            min-width:0}
+                                            .home-mid-ads{
+                                                display:grid;
+                                                grid-template-columns:1fr 1fr;
+                                                gap:14px;
+                                                margin:18px 0}
+                                                .home-mid-ads .ad{
+                                                    height:92px}
+                                                    .home-lower{
+                                                        display:grid;
+                                                        grid-template-columns:1.4fr .8fr;
+                                                        gap:16px}
+                                                        .partner-strip{
+                                                            display:grid;
+                                                            grid-template-columns:repeat(5,1fr);
+                                                            gap:8px;
+                                                            margin-top:18px}
+                                                            .partner-strip .ad{
+                                                                height:64px}
+                                                                @media(max-width:1200px){
+                                                                    .home-shell{
+                                                                        grid-template-columns:1fr}
+                                                                        .home-left-rail,.home-right-rail{
+                                                                            display:none}
+                                                                        }
+                                                                        @media(max-width:850px){
+                                                                            .home-data,.home-lower,.home-mid-ads{
+                                                                                grid-template-columns:1fr}
+                                                                                .partner-strip{
+                                                                                    grid-template-columns:repeat(2,1fr)}
+                                                                                }
