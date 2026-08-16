@@ -1,170 +1,74 @@
 <!doctype html>
 <html lang="ko">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>패턴 | TOVIEW</title>
-<link rel="stylesheet" href="common.css">
-<style>
-body{margin:0;font-family:Arial,"Noto Sans KR",sans-serif;background:#07101f;color:#eef4ff}
-.pattern-wrap{max-width:1200px;margin:22px auto;padding:0 18px 50px}
-.pattern-top{display:flex;justify-content:space-between;align-items:end;gap:14px;margin-bottom:16px}
-.pattern-title small{display:block;color:#5b9dff;font-size:10px;font-weight:900;letter-spacing:1.4px}
-.pattern-title h1{margin:5px 0 3px;font-size:25px}
-.pattern-title p{margin:0;color:#7185a5;font-size:11px}
-.pattern-controls{display:flex;gap:8px}
-.pattern-controls select{height:40px;min-width:190px;padding:0 10px;border:1px solid #2a3d5a;border-radius:8px;background:#0d1a2d;color:#fff;outline:none}
-.status-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-.status-chip{padding:8px 10px;border:1px solid #203653;border-radius:8px;background:#0a1728;color:#7890af;font-size:10px}
-.status-chip b{color:#fff;font-variant-numeric:tabular-nums}
-.pattern-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
-.card{background:#0e192b;border:1px solid #22334e;border-radius:12px;overflow:hidden}
-.head{padding:14px 16px;border-bottom:1px solid #22334e;display:flex;justify-content:space-between;align-items:center;font-weight:800}
-.head span{font-size:9px;color:#657895}
-.pattern-body{padding:16px}
-.patternrow{display:grid;grid-template-columns:repeat(10,minmax(32px,1fr));gap:6px}
-.dot{height:36px;border-radius:7px;background:#2563eb;display:grid;place-items:center;font-size:10px;font-weight:900;color:#fff;position:relative}
-.dot.red{background:#d9465f}
-.dot small{position:absolute;right:3px;bottom:2px;font-size:7px;color:#ffffff99;font-weight:700}
-.legend{display:flex;gap:12px;margin-top:13px;color:#7185a5;font-size:10px}.legend i{width:8px;height:8px;border-radius:3px;display:inline-block;margin-right:4px;background:#2563eb}.legend i.red{background:#d9465f}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px}
-.stat{padding:14px;border:1px solid #1c304c;border-radius:9px;background:#091426;color:#7185a5;font-size:10px}
-.stat strong{display:block;margin-top:5px;color:#fff;font-size:21px;font-variant-numeric:tabular-nums}
-.empty{padding:20px;color:#657895;font-size:11px;text-align:center}
-.note{margin-top:16px;padding:12px 14px;border:1px solid #1d3453;border-radius:9px;background:#0a1728;color:#7185a5;font-size:10px;line-height:1.6}
-.foot{text-align:center;color:#52627a;padding:28px;font-size:10px}
-@media(max-width:850px){.pattern-top{align-items:stretch;flex-direction:column}.pattern-controls{flex-direction:column}.pattern-controls select{width:100%}.pattern-grid{grid-template-columns:1fr}.patternrow{grid-template-columns:repeat(5,1fr)}}
-</style>
-</head>
-<body>
-
-<header class="top">
-<div class="bar">
-<a href="index.html" class="brand"><div class="brand-mark">T</div><div class="brand-name"><strong>TO<span>VIEW</span></strong><small>DATA & COMMUNITY</small></div></a>
-<nav class="nav"><a href="index.html#live">실시간</a><a href="results.html">결과</a><a href="analysis.html">분석</a><a href="pattern.html">패턴</a><a href="community.html">커뮤니티</a><a href="dashboard.html">대시보드</a></nav>
-<button class="menu-btn" type="button" onclick="openMainMenu()"><span class="menu-icon">☰</span><span>전체메뉴</span></button>
-<button id="loginBtn" type="button" onclick="location.href='account.html'">로그인</button>
-<button id="userBtn" type="button" hidden onclick="location.href='dashboard.html'">내 계정</button>
-</div>
-</header>
-
-<div class="menu-overlay" id="mainMenuOverlay" onclick="closeMainMenu(event)">
-<div class="menu-panel">
-<div class="menu-panel-top"><div><strong>전체 메뉴</strong><span>TOVIEW SERVICE</span></div><button type="button" class="menu-close" onclick="closeMainMenu()">✕</button></div>
-<div class="menu-sections">
-<div class="menu-section"><div class="menu-section-title">GAME</div><a href="index.html#live"><b>실시간 게임</b><span>실시간 회차 및 결과</span></a><a href="results.html"><b>게임 결과</b><span>최근 회차 결과 조회</span></a><a href="pattern.html"><b>패턴 분석</b><span>결과 흐름 및 패턴</span></a></div>
-<div class="menu-section"><div class="menu-section-title">ANALYSIS</div><a href="analysis.html#daily"><b>일별 분석</b><span>날짜별 데이터 분석</span></a><a href="analysis.html#range"><b>구간 분석</b><span>구간별 결과 통계</span></a><a href="analysis.html#round"><b>회차 분석</b><span>회차별 상세 데이터</span></a></div>
-<div class="menu-section"><div class="menu-section-title">COMMUNITY</div><a href="community.html?board=자유게시판"><b>자유게시판</b><span>자유로운 커뮤니티</span></a><a href="community.html?board=분석%20토론"><b>분석 토론</b><span>데이터 및 분석 토론</span></a><a href="community.html#rank"><b>활동 랭킹</b><span>회원 활동 순위</span></a></div>
-<div class="menu-section"><div class="menu-section-title">MY TOVIEW</div><a href="dashboard.html"><b>대시보드</b><span>내 활동 한눈에 보기</span></a><a href="javascript:void(0)" onclick="openAlerts();closeMainMenu();"><b>알림센터</b><span>새로운 알림 확인</span></a><a href="account.html"><b>내 계정</b><span>로그인 및 계정 관리</span></a></div>
-</div>
-<div class="menu-panel-bottom">TOVIEW · DATA & COMMUNITY PLATFORM</div>
-</div>
-</div>
-
-<main class="pattern-wrap">
-<div class="pattern-top">
-<div class="pattern-title"><small>TOVIEW PATTERN</small><h1>패턴 시각화</h1><p>결과 페이지와 동일한 서버 데이터를 기준으로 최근 결과 흐름을 표시합니다.</p></div>
-<div class="pattern-controls">
-<select id="gameSelect">
-<option value="dh_randomball">동행파워볼(랜덤볼)</option>
-<option value="dh_speedkeno">동행스피드키노</option>
-<option value="speedkeno_ladder">스피드키노사다리</option>
-<option value="bubble_powerball">보글파워볼</option>
-<option value="bubble_ladder">보글사다리</option>
-</select>
-<select id="kindSelect"></select>
-</div>
-</div>
-
-<div class="status-row">
-<div class="status-chip">현재 회차 <b id="currentRound">-</b></div>
-<div class="status-chip">남은 시간 <b id="remaining">--:--</b></div>
-<div class="status-chip">최근 확정 <b id="lastRound">-</b></div>
-<div class="status-chip">표시 결과 <b id="resultCount">0</b></div>
-</div>
-
-<div class="pattern-grid">
-<section class="card">
-<div class="head">최근 패턴 <span id="patternName">PATTERN</span></div>
-<div class="pattern-body">
-<div class="patternrow" id="dots"><div class="empty">데이터를 불러오는 중입니다.</div></div>
-<div class="legend" id="legend"></div>
-</div>
-</section>
-<section class="card">
-<div class="head">패턴 통계 <span>RECENT STATS</span></div>
-<div class="stats" id="stats"></div>
-</section>
-</div>
-
-<div class="note">패턴 화면은 서버에서 수집된 과거 결과를 시각화합니다. 과거 결과의 배열이나 비율은 다음 회차의 결과를 보장하지 않습니다.</div>
-</main>
-
-<footer class="foot">TOVIEW · DATA & COMMUNITY PLATFORM · © 2026 TOVIEW</footer>
-
-<script src="auth.js"></script>
-<script>
-(function(){
-'use strict';
-const $=id=>document.getElementById(id);
-let game='dh_randomball',state=null;
-function mmss(s){s=Math.max(0,Number(s)||0);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
-function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function pct(n,t){return t?Math.round(n/t*100):0}
-function options(){
- const ladder=state?.type==='ladder';
- $('kindSelect').innerHTML=ladder
- ?'<option value="odd">홀/짝</option><option value="start">좌/우</option><option value="lines">3줄/4줄</option>'
- :'<option value="powerOdd">파워 홀/짝</option><option value="powerUnder">파워 언더/오버</option><option value="normalOdd">일반볼 합 홀/짝</option>';
-}
-function valueFor(r,k){
- if(state.type==='ladder'){
-  if(k==='start')return r.ladder?.start==='left'?['좌',false]:['우',true];
-  if(k==='lines')return Number(r.ladder?.lines)===3?['3줄',false]:['4줄',true];
-  return (r.ladder?.result==='odd'||r.pOddEven===1)?['홀',false]:['짝',true];
- }
- if(k==='powerUnder')return r.pUnderOver===1?['언더',false]:['오버',true];
- if(k==='normalOdd')return r.oddEven===1?['홀',false]:['짝',true];
- return r.pOddEven===1?['홀',false]:['짝',true];
-}
-function renderPattern(){
- if(!state)return;
- const rs=state.recentResults||[],k=$('kindSelect').value;
- $('resultCount').textContent=rs.length;
- if(!rs.length){$('dots').innerHTML='<div class="empty">최근 결과 데이터가 아직 없습니다.</div>';$('stats').innerHTML='<div class="empty">통계 데이터가 없습니다.</div>';return}
- const vals=rs.slice(0,50).map(r=>({round:r.AllRound??r.Round,v:valueFor(r,k)}));
- $('dots').innerHTML=vals.map(x=>`<span class="dot ${x.v[1]?'red':''}" title="${esc(x.round)}회차">${esc(x.v[0])}<small>${esc(x.round)}</small></span>`).join('');
- const labels=[...new Set(vals.map(x=>x.v[0]))];
- const counts=labels.map(l=>[l,vals.filter(x=>x.v[0]===l).length]);
- $('stats').innerHTML=counts.map(x=>`<div class="stat">${esc(x[0])}<strong>${x[1]} <small>(${pct(x[1],vals.length)}%)</small></strong></div>`).join('');
- $('legend').innerHTML=labels.map((l,i)=>`<span><i class="${i?'red':''}"></i>${esc(l)}</span>`).join('');
- $('patternName').textContent=$('kindSelect').selectedOptions[0]?.textContent||'PATTERN';
-}
-function render(){
- $('currentRound').textContent=(state.currentRound||'-')+'회차';
- $('remaining').textContent=mmss(state.remainingSeconds);
- $('lastRound').textContent=state.lastCompletedRound?(state.lastCompletedRound+'회차'):'-';
- options();renderPattern();
-}
-async function load(){
- try{
-  const r=await fetch('/api/game-state/'+game,{credentials:'include',cache:'no-store'});
-  const d=await r.json();if(!r.ok)throw new Error(d.error||'데이터 요청 실패');
-  state=d;render();
- }catch(e){
-  console.error('패턴 데이터 오류:',e);
-  $('dots').innerHTML='<div class="empty">게임 데이터를 불러오지 못했습니다.</div>';
- }
-}
-$('gameSelect').addEventListener('change',e=>{game=e.target.value;state=null;load()});
-$('kindSelect').addEventListener('change',renderPattern);
-document.addEventListener('DOMContentLoaded',()=>{load();setInterval(load,5000);setInterval(()=>{if(state){state.remainingSeconds=Math.max(0,state.remainingSeconds-1);$('remaining').textContent=mmss(state.remainingSeconds);if(state.remainingSeconds===0)load()}},1000)});
-})();
-
-function openMainMenu(){const m=document.getElementById('mainMenuOverlay');if(!m)return;m.classList.add('on');document.body.style.overflow='hidden'}
-function closeMainMenu(e){const m=document.getElementById('mainMenuOverlay');if(!m)return;if(e&&e.target!==m)return;m.classList.remove('on');document.body.style.overflow=''}
-function openAlerts(){alert('알림센터는 준비 중입니다.')}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMainMenu()});
-</script>
-</body>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>패턴 | TOVIEW</title>
+        <link rel="stylesheet" href="css/core.css">
+        <link rel="stylesheet" href="css/pattern.css">
+    </head>
+    <body>
+        <header class="top">
+            <div class="bar">
+                <a class="brand" href="index.html">
+                    <span class="brand-mark">T</span>
+                    <span>TOVIEW</span>
+                </a>
+                <nav class="nav">
+                    <a href="index.html">홈</a>
+                    <a href="results.html">결과</a>
+                    <a href="analysis.html">분석</a>
+                    <a href="pattern.html">패턴</a>
+                    <a href="sports.html">스포츠</a>
+                    <a href="community.html">커뮤니티</a>
+                    <a href="ranking.html">랭킹</a>
+                    <a href="verified.html">보증업체</a>
+                </nav>
+                <div class="header-actions">
+                    <button class="btn primary" id="loginBtn">로그인</button>
+                    <button class="btn" id="userBtn" hidden>내 계정</button>
+                </div>
+                <div class="profile-menu" id="profileMenu">
+                </div>
+            </div>
+        </header>
+        <main class="wrap">
+            <div class="page-title">
+                <h1>패턴 시각화</h1>
+                <p class="muted">선택한 게임의 하루 전체 확정 결과</p>
+            </div>
+            <div class="pattern-controls">
+                <div class="game-tabs" id="patternGameTabs">
+                </div>
+                <input type="date" id="patternDate">
+            </div>
+            <section class="card">
+                <div class="card-head">하루 전체 패턴</div>
+                <div class="pattern-board" id="patternBoard">
+                </div>
+            </section>
+        </main>
+        <div class="modal" id="moreGames">
+            <div class="modal-box">
+                <h3>미니게임 더보기</h3>
+                <div class="game-tabs more-body">
+                </div>
+                <button class="btn" data-close-more="1">닫기</button>
+            </div>
+        </div>
+        <script src="js/core.js">
+        </script>
+        <script src="js/gate.js">
+        </script>
+        <script src="js/auth.js">
+        </script>
+        <script src="js/ads.js">
+        </script>
+        <script src="js/animation.js">
+        </script>
+        <script src="js/games-ui.js">
+        </script>
+        <script src="js/pattern.js">
+        </script>
+    </body>
 </html>
