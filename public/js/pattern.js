@@ -1,0 +1,13 @@
+'use strict';
+(async()=>{const tabs=TV.qs('#patternGameTabs'),board=TV.qs('#patternBoard'),date=TV.qs('#patternDate');
+date.value=TV.today();
+let current;
+async function load(g){current=g;
+try{const rows=await TV.api(`/api/games/${g.id}/pattern?date=${date.value}`);
+board.innerHTML=rows.map(x=>`<div class="pattern-cell"><small>${x.roundNumber}회</small><b>${TV.esc(x.result?.oddEven||x.result?.start||'-')}</b></div>`).join('')||'<div class="empty">해당 날짜의 확정 결과가 없습니다.</div>';
+}catch(e){board.innerHTML='<div class="empty">패턴 데이터를 불러오지 못했습니다.</div>';
+}}const games=await TVGames.mount(tabs,load);
+date.onchange=()=>current&&load(current);
+const g=games.find(x=>x.id===TV.gameParam())||games[0];
+if(g)load(g);
+})();
