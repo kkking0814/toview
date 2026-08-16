@@ -1,6 +1,6 @@
 'use strict';
 const path=require('path'),crypto=require('crypto');
-const express=require('express'),session=require('express-session'),bcrypt=require('bcryptjs'),helmet=require('helmet'),nodemailer=require('nodemailer');
+const express=require('express'),session=require('express-session'),bcrypt=require('bcryptjs'),helmet=require('helmet');
 const {Pool,Client}=require('pg');
 const {validateCatalog,publicCatalog,gameById}=require('./lib/game-catalog');
 validateCatalog();
@@ -88,8 +88,28 @@ i++){const a=t.charCodeAt(i),b=t.charCodeAt(i+1),c=t.charCodeAt(i+2);
 if((b===a+1&&c===b+1)||(b===a-1&&c===b-1))return true;
 }return false;
 }
-function mailTransport(){if(!process.env.SMTP_HOST)return null;
-return nodemailer.createTransport({host:process.env.SMTP_HOST,port:Number(process.env.SMTP_PORT||587),secure:String(process.env.SMTP_SECURE)==='true',auth:process.env.SMTP_USER?{user:process.env.SMTP_USER,pass:process.env.SMTP_PASS}:undefined});
+async function sendVerificationEmail(to,code){
+const apiKey=String(process.env.RESEND_API_KEY||'').trim();
+const from=String(process.env.RESEND_FROM||process.env.GMAIL_USER||'').trim();
+if(!apiKey||!from)return false;
+const response=await fetch('https://api.resend.com/emails',{
+method:'POST',
+headers:{
+'Authorization':`Bearer ${apiKey}`,
+'Content-Type':'application/json'
+},
+body:JSON.stringify({
+from,
+to:[to],
+subject:'TOVIEW 이메일 인증번호',
+text:`TOVIEW 인증번호는 ${code} 입니다. 10분 안에 입력해 주세요.`
+})
+});
+if(!response.ok){
+const detail=await response.text().catch(()=> '');
+throw new Error(`RESEND_SEND_FAILED:${response.status}:${detail.slice(0,500)}`);
+}
+return true;
 }
 app.post('/api/email/send',rateLimit('email-send',5,10*60*1000),async(req,res)=>{try{const email=String(req.body.email||'').trim().toLowerCase();
 if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return fail(res,400,'INVALID_EMAIL','이메일을 확인해 주세요.');
@@ -97,11 +117,11 @@ const exists=await pool.query('SELECT 1 FROM users WHERE email=$1 LIMIT 1',[emai
 if(exists.rowCount)return fail(res,409,'EMAIL_IN_USE','이미 가입된 이메일입니다.');
 const code=String(Math.floor(100000+Math.random()*900000)),hash=crypto.createHash('sha256').update(code).digest('hex');
 await pool.query("INSERT INTO email_verifications(email,code_hash,expires_at) VALUES($1,$2,now()+interval '10 minutes') ON CONFLICT(email) DO UPDATE SET code_hash=EXCLUDED.code_hash,expires_at=EXCLUDED.expires_at,verified_at=NULL",[email,hash]);
-const tx=mailTransport();
-if(!tx){if(process.env.NODE_ENV==='production')return fail(res,503,'EMAIL_NOT_CONFIGURED','이메일 인증 서비스가 준비되지 않았습니다.');
+const sent=await sendVerificationEmail(email,code);
+if(!sent){if(process.env.NODE_ENV==='production')return fail(res,503,'EMAIL_NOT_CONFIGURED','이메일 인증 서비스가 준비되지 않았습니다.');
 console.log('[DEV EMAIL CODE]',email,code);
 return ok(res,{sent:true,devCode:code});
-}await tx.sendMail({from:process.env.SMTP_FROM||process.env.SMTP_USER,to:email,subject:'TOVIEW 이메일 인증번호',text:`TOVIEW 인증번호는 ${code} 입니다. 10분 안에 입력해 주세요.`});
+}
 ok(res,{sent:true});
 }catch(e){console.error(e);
 fail(res,500,'EMAIL_SEND_ERROR','인증메일 발송에 실패했습니다.');
