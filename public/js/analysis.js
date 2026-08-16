@@ -1,0 +1,15 @@
+'use strict';
+(async()=>{const tabs=TV.qs('#analysisGameTabs'),summary=TV.qs('#analysisSummary'),bars=TV.qs('#analysisBars');
+async function load(g){try{const a=await TV.api(`/api/games/${g.id}/analysis?days=${TV.qs('#analysisDays').value}`),s=a.summary;
+summary.innerHTML=`<div class="card analysis-stat">분석 회차<b>${s.total}</b></div><div class="card analysis-stat">홀 / 짝<b>${s.odd} / ${s.even}</b></div><div class="card analysis-stat">언더 / 오버<b>${s.under} / ${s.over}</b></div>`;
+const total=Math.max(1,s.total);
+bars.innerHTML=[['홀',s.odd],['짝',s.even],['언더',s.under],['오버',s.over]].map(([n,v])=>`<div class="bar-row"><b>${n}</b><div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/total*100)}%"></div></div><span>${v}</span></div>`).join('');
+}catch{summary.innerHTML='<div class="empty">분석 데이터를 불러오지 못했습니다.</div>';
+}}const games=await TVGames.mount(tabs,load);
+let g=games.find(x=>x.id===TV.gameParam())||games[0];
+TV.qs('#analysisDays').onchange=()=>load(g);
+tabs.addEventListener('click',e=>{const id=e.target.dataset.game;
+if(id)g=games.find(x=>x.id===id)||g;
+});
+if(g)load(g);
+})();
