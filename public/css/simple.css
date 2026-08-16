@@ -1,0 +1,16 @@
+.simple-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px}
+    .simple-item{
+        padding:18px}
+        .simple-item h3{
+            margin:0 0 8px}
+            .admin-grid{
+                display:grid;
+                grid-template-columns:repeat(3,1fr);
+                gap:14px}
+                @media(max-width:850px){
+                    .simple-grid,.admin-grid{
+                        grid-template-columns:1fr}
+                    }
