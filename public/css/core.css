@@ -1,0 +1,207 @@
+:root{
+    --bg:#f4f6f8;
+    --card:#fff;
+    --ink:#152033;
+    --muted:#6c788a;
+    --line:#e3e8ef;
+    --blue:#1769e0;
+    --navy:#0f2342;
+    --green:#18a566;
+    --red:#d94a5d;
+    --radius:12px;
+    --shadow:0 8px 28px rgba(23,38,61,.06)}
+    *{
+        box-sizing:border-box}
+        body{
+            margin:0;
+            background:var(--bg);
+            color:var(--ink);
+            font-family:Arial,'Noto Sans KR',sans-serif;
+            font-size:15px;
+            line-height:1.5}
+            a{
+                text-decoration:none;
+                color:inherit}
+                button,input,select,textarea{
+                    font:inherit}
+                    .top{
+                        position:sticky;
+                        top:0;
+                        z-index:40;
+                        background:#fff;
+                        border-bottom:1px solid var(--line)}
+                        .bar{
+                            max-width:1440px;
+                            height:70px;
+                            margin:auto;
+                            padding:0 24px;
+                            display:flex;
+                            align-items:center;
+                            gap:24px}
+                            .brand{
+                                display:flex;
+                                align-items:center;
+                                gap:9px;
+                                font-weight:900;
+                                font-size:24px}
+                                .brand-mark{
+                                    width:36px;
+                                    height:36px;
+                                    border-radius:9px;
+                                    background:var(--blue);
+                                    color:#fff;
+                                    display:grid;
+                                    place-items:center}
+                                    .nav{
+                                        display:flex;
+                                        gap:20px;
+                                        font-weight:700;
+                                        font-size:14px}
+                                        .nav a.active,.nav a:hover{
+                                            color:var(--blue)}
+                                            .header-actions{
+                                                margin-left:auto;
+                                                display:flex;
+                                                gap:8px}
+                                                .btn{
+                                                    border:1px solid var(--line);
+                                                    background:#fff;
+                                                    color:var(--ink);
+                                                    padding:10px 14px;
+                                                    border-radius:9px;
+                                                    cursor:pointer;
+                                                    font-weight:700}
+                                                    .btn.primary{
+                                                        background:var(--blue);
+                                                        color:#fff;
+                                                        border-color:var(--blue)}
+                                                        .btn.dark{
+                                                            background:var(--navy);
+                                                            color:#fff;
+                                                            border-color:var(--navy)}
+                                                            .wrap{
+                                                                max-width:1440px;
+                                                                margin:24px auto;
+                                                                padding:0 24px}
+                                                                .page-title{
+                                                                    margin:0 0 22px}
+                                                                    .page-title h1{
+                                                                        font-size:30px;
+                                                                        margin:0 0 5px}
+                                                                        .muted{
+                                                                            color:var(--muted)}
+                                                                            .card{
+                                                                                background:var(--card);
+                                                                                border:1px solid var(--line);
+                                                                                border-radius:var(--radius);
+                                                                                box-shadow:var(--shadow)}
+                                                                                .card-head{
+                                                                                    padding:16px 18px;
+                                                                                    border-bottom:1px solid var(--line);
+                                                                                    font-weight:900;
+                                                                                    display:flex;
+                                                                                    justify-content:space-between;
+                                                                                    align-items:center}
+                                                                                    .card-body{
+                                                                                        padding:18px}
+                                                                                        .game-tabs{
+                                                                                            display:flex;
+                                                                                            gap:8px;
+                                                                                            flex-wrap:wrap;
+                                                                                            margin-bottom:18px}
+                                                                                            .game-tabs button{
+                                                                                                border:1px solid var(--line);
+                                                                                                background:#fff;
+                                                                                                padding:10px 13px;
+                                                                                                border-radius:9px;
+                                                                                                cursor:pointer;
+                                                                                                font-weight:800}
+                                                                                                .game-tabs button.on{
+                                                                                                    background:var(--navy);
+                                                                                                    color:#fff}
+                                                                                                    .status-pill{
+                                                                                                        display:inline-flex;
+                                                                                                        padding:5px 9px;
+                                                                                                        border-radius:999px;
+                                                                                                        background:#eaf7f0;
+                                                                                                        color:#087a49;
+                                                                                                        font-size:12px;
+                                                                                                        font-weight:900}
+                                                                                                        .empty{
+                                                                                                            padding:30px;
+                                                                                                            text-align:center;
+                                                                                                            color:var(--muted)}
+                                                                                                            .table{
+                                                                                                                width:100%;
+                                                                                                                border-collapse:collapse}
+                                                                                                                .table th,.table td{
+                                                                                                                    padding:12px;
+                                                                                                                    border-bottom:1px solid var(--line);
+                                                                                                                    text-align:center}
+                                                                                                                    .table th{
+                                                                                                                        font-size:12px;
+                                                                                                                        color:var(--muted);
+                                                                                                                        background:#fafbfc}
+                                                                                                                        .ad{
+                                                                                                                            display:none;
+                                                                                                                            overflow:hidden;
+                                                                                                                            border-radius:10px}
+                                                                                                                            .ad.on{
+                                                                                                                                display:block}
+                                                                                                                                .ad img{
+                                                                                                                                    display:block;
+                                                                                                                                    width:100%;
+                                                                                                                                    height:100%;
+                                                                                                                                    object-fit:cover}
+                                                                                                                                    .modal{
+                                                                                                                                        display:none;
+                                                                                                                                        position:fixed;
+                                                                                                                                        inset:0;
+                                                                                                                                        background:#0007;
+                                                                                                                                        z-index:100;
+                                                                                                                                        place-items:center;
+                                                                                                                                        padding:20px}
+                                                                                                                                        .modal.on{
+                                                                                                                                            display:grid}
+                                                                                                                                            .modal-box{
+                                                                                                                                                background:#fff;
+                                                                                                                                                border-radius:14px;
+                                                                                                                                                max-width:460px;
+                                                                                                                                                width:100%;
+                                                                                                                                                padding:24px}
+                                                                                                                                                .profile-menu{
+                                                                                                                                                    position:absolute;
+                                                                                                                                                    right:24px;
+                                                                                                                                                    top:62px;
+                                                                                                                                                    width:220px;
+                                                                                                                                                    background:#fff;
+                                                                                                                                                    border:1px solid var(--line);
+                                                                                                                                                    border-radius:12px;
+                                                                                                                                                    box-shadow:var(--shadow);
+                                                                                                                                                    padding:8px;
+                                                                                                                                                    display:none;
+                                                                                                                                                    z-index:60}
+                                                                                                                                                    .profile-menu.on{
+                                                                                                                                                        display:block}
+                                                                                                                                                        .profile-menu a,.profile-menu button{
+                                                                                                                                                            display:block;
+                                                                                                                                                            width:100%;
+                                                                                                                                                            text-align:left;
+                                                                                                                                                            padding:10px;
+                                                                                                                                                            border:0;
+                                                                                                                                                            background:none;
+                                                                                                                                                            border-radius:8px;
+                                                                                                                                                            cursor:pointer}
+                                                                                                                                                            .profile-menu a:hover,.profile-menu button:hover{
+                                                                                                                                                                background:#f2f5f9}
+                                                                                                                                                                @media(max-width:900px){
+                                                                                                                                                                    .nav{
+                                                                                                                                                                        display:none}
+                                                                                                                                                                        .bar,.wrap{
+                                                                                                                                                                            padding-left:14px;
+                                                                                                                                                                            padding-right:14px}
+                                                                                                                                                                            .wrap{
+                                                                                                                                                                                margin-top:16px}
+                                                                                                                                                                                .page-title h1{
+                                                                                                                                                                                    font-size:25px}
+                                                                                                                                                                   
