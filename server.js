@@ -90,8 +90,8 @@ if((b===a+1&&c===b+1)||(b===a-1&&c===b-1))return true;
 }
 async function sendVerificationEmail(to,code){
 const apiKey=String(process.env.RESEND_API_KEY||'').trim();
-const from=String(process.env.RESEND_FROM||process.env.GMAIL_USER||'').trim();
-if(!apiKey||!from)return false;
+const from=String(process.env.RESEND_FROM||'TOVIEW <onboarding@resend.dev>').trim();
+if(!apiKey)return false;
 const response=await fetch('https://api.resend.com/emails',{
 method:'POST',
 headers:{
@@ -367,6 +367,73 @@ if(r.rowCount)broadcast('game-result',norm(r.rows[0]));
 }});
 }
 startDbListener().catch(e=>console.error('[db-listen-start]',e.message));
+
+
+// --- Community detail / comments ---
+app.get('/api/community/posts/:id', auth, async (req, res) => {
+    try {
+        const post = await pool.query(`
+            SELECT p.id,p.board_id,p.title,p.body,p.is_pinned,p.created_at,
+                   u.id user_id,u.nickname,u.role
+            FROM posts p LEFT JOIN users u ON u.id=p.user_id
+            WHERE p.id=$1 LIMIT 1
+        `, [Number(req.params.id)]);
+        if (!post.rowCount) return fail(res,404,'POST_NOT_FOUND','게시글을 찾을 수 없습니다.');
+        const comments = await pool.query(`
+            SELECT c.id,c.body,c.created_at,u.id user_id,u.nickname,u.role
+            FROM comments c LEFT JOIN users u ON u.id=c.user_id
+            WHERE c.post_id=$1 ORDER BY c.id ASC
+        `, [Number(req.params.id)]);
+        ok(res,{post:post.rows[0],comments:comments.rows});
+    } catch (e) { console.error(e); fail(res,500,'POST_DETAIL_ERROR','게시글을 불러오지 못했습니다.'); }
+});
+app.post('/api/community/posts/:id/comments', auth, async (req, res) => {
+    try {
+        const body=String(req.body.body||'').trim();
+        if(!body || body.length>5000) return fail(res,400,'INVALID_COMMENT','댓글 내용을 확인해 주세요.');
+        const r=await pool.query('INSERT INTO comments(post_id,user_id,body) VALUES($1,$2,$3) RETURNING id,post_id,user_id,body,created_at',[Number(req.params.id),Number(req.session.user.id),body]);
+        ok(res,r.rows[0]);
+    } catch(e){ console.error(e); fail(res,500,'COMMENT_CREATE_ERROR','댓글 등록에 실패했습니다.'); }
+});
+
+// --- Dashboard / rankings ---
+app.get('/api/dashboard', auth, async (req,res) => {
+    try {
+        const uid=Number(req.session.user.id);
+        const [mini,sports,posts,followers,following]=await Promise.all([
+            pool.query("SELECT count(*)::int total,count(*) FILTER(WHERE verdict='WIN')::int wins,count(*) FILTER(WHERE verdict='LOSE')::int losses FROM mini_game_picks WHERE user_id=$1",[uid]),
+            pool.query("SELECT count(*)::int total,count(*) FILTER(WHERE verdict='WIN')::int wins,count(*) FILTER(WHERE verdict='LOSE')::int losses FROM sports_picks WHERE user_id=$1",[uid]),
+            pool.query('SELECT count(*)::int total FROM posts WHERE user_id=$1',[uid]),
+            pool.query('SELECT count(*)::int total FROM follows WHERE following_id=$1',[uid]),
+            pool.query('SELECT count(*)::int total FROM follows WHERE follower_id=$1',[uid])
+        ]);
+        ok(res,{user:req.session.user,mini:mini.rows[0],sports:sports.rows[0],posts:posts.rows[0].total,followers:followers.rows[0].total,following:following.rows[0].total});
+    } catch(e){ console.error(e); fail(res,500,'DASHBOARD_ERROR','마이페이지를 불러오지 못했습니다.'); }
+});
+app.get('/api/rankings', auth, async (req,res) => {
+    try {
+        const r=await pool.query(`
+            WITH mini AS (
+                SELECT user_id,count(*)::int total,count(*) FILTER(WHERE verdict='WIN')::int wins
+                FROM mini_game_picks WHERE verdict IS NOT NULL GROUP BY user_id
+            ), sports AS (
+                SELECT user_id,count(*)::int total,count(*) FILTER(WHERE verdict='WIN')::int wins
+                FROM sports_picks WHERE verdict IS NOT NULL GROUP BY user_id
+            ), activity AS (
+                SELECT user_id,count(*)::int posts FROM posts GROUP BY user_id
+            )
+            SELECT u.id,u.nickname,u.role,
+                   COALESCE(m.total,0) mini_total,COALESCE(m.wins,0) mini_wins,
+                   COALESCE(s.total,0) sports_total,COALESCE(s.wins,0) sports_wins,
+                   COALESCE(a.posts,0) posts
+            FROM users u
+            LEFT JOIN mini m ON m.user_id=u.id LEFT JOIN sports s ON s.user_id=u.id LEFT JOIN activity a ON a.user_id=u.id
+            ORDER BY (COALESCE(m.wins,0)+COALESCE(s.wins,0)) DESC,(COALESCE(m.total,0)+COALESCE(s.total,0)) DESC,COALESCE(a.posts,0) DESC
+            LIMIT 100
+        `);
+        ok(res,r.rows);
+    } catch(e){ console.error(e); fail(res,500,'RANKING_ERROR','랭킹을 불러오지 못했습니다.'); }
+});
 app.post('/api/admin/broadcast',admin,(req,res)=>{broadcast('admin-notice',{message:String(req.body.message||'').slice(0,500)});
 ok(res,{sent:true});
 });
