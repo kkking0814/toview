@@ -1,0 +1,32 @@
+.pattern-controls{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:18px}
+    .pattern-controls select,.pattern-controls input{
+        padding:10px;
+        border:1px solid var(--line);
+        border-radius:8px;
+        background:#fff}
+        .pattern-board{
+            display:grid;
+            grid-template-columns:repeat(10,minmax(62px,1fr));
+            gap:8px;
+            padding:18px}
+            .pattern-cell{
+                border:1px solid var(--line);
+                border-radius:8px;
+                padding:8px;
+                text-align:center;
+                background:#fff}
+                .pattern-cell small{
+                    display:block;
+                    color:var(--muted)}
+                    .pattern-cell b{
+                        display:block;
+                        margin-top:4px;
+                        color:var(--blue)}
+                        @media(max-width:900px){
+                            .pattern-board{
+                                grid-template-columns:repeat(5,1fr)}
+                            }
