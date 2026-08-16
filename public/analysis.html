@@ -1,173 +1,78 @@
 <!doctype html>
 <html lang="ko">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>분석 | TOVIEW</title>
-<link rel="stylesheet" href="common.css">
-<style>
-body{margin:0;font-family:Arial,"Noto Sans KR",sans-serif;background:#07101f;color:#eef4ff}
-.analysis-wrap{max-width:1200px;margin:22px auto;padding:0 18px 50px}
-.analysis-top{display:flex;justify-content:space-between;gap:14px;align-items:end;margin-bottom:16px}
-.analysis-title small{display:block;color:#5b9dff;font-size:10px;font-weight:900;letter-spacing:1.4px}
-.analysis-title h1{margin:5px 0 3px;font-size:25px}.analysis-title p{margin:0;color:#7185a5;font-size:11px}
-.game-select{min-width:210px;height:40px;border:1px solid #2a3d5a;border-radius:8px;background:#0d1a2d;color:#fff;padding:0 10px}
-.analysis-status{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-.status-chip{padding:8px 10px;border:1px solid #203653;border-radius:8px;background:#0a1728;color:#7890af;font-size:10px}
-.status-chip b{color:#e7eef9}
-.analysis-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:16px}
-.analysis-card{border:1px solid #22334e;border-radius:12px;background:#0e192b;overflow:hidden}
-.analysis-head{padding:14px 16px;border-bottom:1px solid #22334e;display:flex;align-items:center;justify-content:space-between}
-.analysis-head strong{font-size:13px}.analysis-head span{font-size:9px;color:#657895}
-.analysis-body{padding:16px}
-.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.stat-box{padding:14px;border:1px solid #1c304c;border-radius:9px;background:#091426;color:#7185a5;font-size:10px}
-.stat-box strong{display:block;margin-top:5px;color:#fff;font-size:21px;font-variant-numeric:tabular-nums}
-.pattern-line{display:flex;gap:5px;flex-wrap:wrap;min-height:34px}
-.pattern-dot{min-width:30px;height:30px;padding:0 6px;border-radius:6px;display:grid;place-items:center;background:#2563eb;color:#fff;font-size:9px;font-weight:800}
-.pattern-dot.alt{background:#d9465f}.empty{color:#657895;font-size:11px;padding:10px 0}
-.round-form{display:flex;gap:8px}.round-form input{flex:1;min-width:0;height:42px;padding:0 12px;border:1px solid #293e5e;border-radius:8px;background:#091426;color:#fff;outline:none}
-.round-form button{height:42px;padding:0 17px;border:1px solid #3b82f6;border-radius:8px;background:#2563eb;color:#fff;font-weight:800;cursor:pointer}
-.round-result{margin-top:14px}
-.result-table{width:100%;border-collapse:collapse;font-size:11px}.result-table th,.result-table td{padding:10px;border-bottom:1px solid #1b2b42;text-align:center}.result-table th{color:#7185a5;background:#091426}
-.analysis-footer{text-align:center;color:#52627a;padding:28px;font-size:10px}
-@media(max-width:850px){.analysis-grid{grid-template-columns:1fr}.analysis-top{align-items:stretch;flex-direction:column}.game-select{width:100%}.stat-grid{grid-template-columns:1fr 1fr}}
-</style>
-</head>
-<body>
-<header class="top">
-<div class="bar">
-<a href="index.html" class="brand"><div class="brand-mark">T</div><div class="brand-name"><strong>TO<span>VIEW</span></strong><small>DATA & COMMUNITY</small></div></a>
-<nav class="nav"><a href="index.html#live">실시간</a><a href="results.html">결과</a><a href="analysis.html">분석</a><a href="pattern.html">패턴</a><a href="community.html">커뮤니티</a><a href="dashboard.html">대시보드</a></nav>
-<button class="menu-btn" type="button" onclick="openMainMenu()"><span class="menu-icon">☰</span><span>전체메뉴</span></button>
-<button id="loginBtn" type="button" onclick="location.href='account.html'">로그인</button>
-<button id="userBtn" type="button" hidden onclick="location.href='dashboard.html'">내 계정</button>
-</div>
-</header>
-
-<div class="menu-overlay" id="mainMenuOverlay" onclick="closeMainMenu(event)">
-<div class="menu-panel">
-<div class="menu-panel-top"><div><strong>전체 메뉴</strong><span>TOVIEW SERVICE</span></div><button type="button" class="menu-close" onclick="closeMainMenu()">✕</button></div>
-<div class="menu-sections">
-<div class="menu-section"><div class="menu-section-title">GAME</div><a href="index.html#live"><b>실시간 게임</b><span>실시간 회차 및 결과</span></a><a href="results.html"><b>게임 결과</b><span>최근 회차 결과 조회</span></a><a href="pattern.html"><b>패턴 분석</b><span>결과 흐름 및 패턴</span></a></div>
-<div class="menu-section"><div class="menu-section-title">ANALYSIS</div><a href="#daily" onclick="closeMainMenu()"><b>일별 분석</b><span>게임별 최신 데이터 분석</span></a><a href="#range" onclick="closeMainMenu()"><b>구간 분석</b><span>최근 결과 분포</span></a><a href="#round" onclick="closeMainMenu()"><b>회차 분석</b><span>회차별 상세 데이터</span></a></div>
-<div class="menu-section"><div class="menu-section-title">COMMUNITY</div><a href="community.html?board=자유게시판"><b>자유게시판</b><span>자유로운 커뮤니티</span></a><a href="community.html?board=분석%20토론"><b>분석 토론</b><span>데이터 및 분석 토론</span></a><a href="community.html#rank"><b>활동 랭킹</b><span>회원 활동 순위</span></a></div>
-<div class="menu-section"><div class="menu-section-title">MY TOVIEW</div><a href="dashboard.html"><b>대시보드</b><span>내 활동 한눈에 보기</span></a><a href="javascript:void(0)" onclick="openAlerts();closeMainMenu();"><b>알림센터</b><span>새로운 알림 확인</span></a><a href="account.html"><b>내 계정</b><span>로그인 및 계정 관리</span></a></div>
-</div>
-<div class="menu-panel-bottom">TOVIEW · DATA & COMMUNITY PLATFORM</div>
-</div>
-</div>
-
-<main class="analysis-wrap">
-<div class="analysis-top">
-<div class="analysis-title"><small>TOVIEW DATA ANALYSIS</small><h1>게임 데이터 분석</h1><p>결과 페이지와 동일한 서버 게임 상태를 기준으로 분석합니다.</p></div>
-<select id="gameSelect" class="game-select">
-<option value="dh_randomball">동행파워볼(랜덤볼)</option>
-<option value="dh_speedkeno">동행스피드키노</option>
-<option value="speedkeno_ladder">스피드키노사다리</option>
-<option value="bubble_powerball">보글파워볼</option>
-<option value="bubble_ladder">보글사다리</option>
-</select>
-</div>
-
-<div class="analysis-status">
-<div class="status-chip">현재 회차 <b id="currentRound">-</b></div>
-<div class="status-chip">남은 시간 <b id="remaining">--:--</b></div>
-<div class="status-chip">최근 확정 <b id="lastRound">-</b></div>
-<div class="status-chip">데이터 <b id="source">확인 중</b></div>
-</div>
-
-<div class="analysis-grid">
-<section class="analysis-card" id="daily">
-<div class="analysis-head"><strong>일별 분석</strong><span id="dailyLabel">TODAY</span></div>
-<div class="analysis-body"><div class="stat-grid" id="statGrid"></div></div>
-</section>
-<section class="analysis-card" id="range">
-<div class="analysis-head"><strong>최근 구간 분석</strong><span>RECENT FLOW</span></div>
-<div class="analysis-body"><div class="pattern-line" id="patternLine"></div></div>
-</section>
-</div>
-
-<section class="analysis-card" id="round" style="margin-top:16px">
-<div class="analysis-head"><strong>회차 분석</strong><span>ROUND DETAIL</span></div>
-<div class="analysis-body">
-<div class="round-form"><input id="roundInput" inputmode="numeric" placeholder="분석할 회차 입력"><button type="button" id="roundBtn">분석하기</button></div>
-<div class="round-result" id="roundResult"><div class="empty">회차를 입력하면 현재 불러온 최근 결과에서 찾아 표시합니다.</div></div>
-</div>
-</section>
-</main>
-<footer class="analysis-footer">TOVIEW · DATA & COMMUNITY PLATFORM · © 2026 TOVIEW</footer>
-
-<script>
-(function(){
-'use strict';
-const $=id=>document.getElementById(id);
-let game='dh_randomball', state=null, tick=null;
-function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function mmss(s){s=Math.max(0,Number(s)||0);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
-function percent(n,t){return t?Math.round((Number(n)||0)/t*100):0}
-function stat(name,n,total){return `<div class="stat-box">${esc(name)}<strong>${Number(n)||0} <small>(${percent(n,total)}%)</small></strong></div>`}
-function render(){
- if(!state)return;
- $('currentRound').textContent=(state.currentRound||'-')+'회차';
- $('remaining').textContent=mmss(state.remainingSeconds);
- $('lastRound').textContent=state.lastCompletedRound?(state.lastCompletedRound+'회차'):'-';
- $('source').textContent=state.source||'대기';
- $('dailyLabel').textContent=(state.name||'')+' · '+(state.recentResults?.length||0)+' RESULTS';
- const s=state.stats||{}, total=s.total||0;
- if(state.type==='ladder'){
-   $('statGrid').innerHTML=stat('좌 출발',s.left,total)+stat('우 출발',s.right,total)+stat('3줄',s.line3,total)+stat('4줄',s.line4,total)+stat('홀',s.odd,total)+stat('짝',s.even,total);
- }else{
-   $('statGrid').innerHTML=stat('파워 홀',s.powerOdd,total)+stat('파워 짝',s.powerEven,total)+stat('파워 언더',s.powerUnder,total)+stat('파워 오버',s.powerOver,total)+stat('일반 홀',s.normalOdd,total)+stat('일반 짝',s.normalEven,total);
- }
- const rs=state.recentResults||[];
- $('patternLine').innerHTML=rs.length?rs.slice(0,30).map((r,i)=>{
-   let label,alt;
-   if(state.type==='ladder'){label=r.ladder?.result==='odd'?'홀':'짝';alt=label==='짝'}
-   else{label=r.pOddEven===1?'홀':'짝';alt=label==='짝'}
-   return `<span class="pattern-dot ${alt?'alt':''}" title="${esc(r.AllRound??r.Round)}회">${label}</span>`;
- }).join(''):'<div class="empty">최근 결과 데이터가 아직 없습니다.</div>';
-}
-async function load(){
- try{
-   const r=await fetch('/api/game-state/'+game,{credentials:'include',cache:'no-store'});
-   const d=await r.json(); if(!r.ok)throw new Error(d.error||'데이터 요청 실패');
-   state=d; render();
- }catch(e){
-   console.error('분석 데이터 오류:',e); $('source').textContent='연결 오류';
- }
-}
-function roundAnalyze(){
- const n=Number($('roundInput').value.trim());
- if(!Number.isInteger(n)||n<1){$('roundResult').innerHTML='<div class="empty">올바른 회차 번호를 입력하세요.</div>';return}
- const r=(state?.recentResults||[]).find(x=>Number(x.AllRound??x.Round)===n);
- if(!r){$('roundResult').innerHTML=`<div class="empty">${esc(n)}회차는 현재 서버가 보유한 최근 결과 범위에 없습니다.</div>`;return}
- if(state.type==='ladder'){
-   const l=r.ladder||{};
-   $('roundResult').innerHTML=`<table class="result-table"><thead><tr><th>회차</th><th>출발</th><th>줄수</th><th>결과</th></tr></thead><tbody><tr><td>${n}</td><td>${l.start==='left'?'좌':'우'}</td><td>${esc(l.lines)}줄</td><td>${l.result==='odd'?'홀':'짝'}</td></tr></tbody></table>`;
- }else{
-   const nums=r.numbers||[r.nBall1,r.nBall2,r.nBall3,r.nBall4,r.nBall5];
-   $('roundResult').innerHTML=`<table class="result-table"><thead><tr><th>회차</th><th>일반볼</th><th>합</th><th>파워/결과</th><th>홀짝</th></tr></thead><tbody><tr><td>${n}</td><td>${esc(nums.filter(x=>x!=null).join(' · '))}</td><td>${esc(r.nBallSum??'-')}</td><td>${esc(r.PowerBall??'-')}</td><td>${r.pOddEven===1?'홀':'짝'}</td></tr></tbody></table>`;
- }
-}
-$('gameSelect').addEventListener('change',e=>{game=e.target.value;state=null;$('roundResult').innerHTML='<div class="empty">회차를 입력하면 현재 불러온 최근 결과에서 찾아 표시합니다.</div>';load()});
-$('roundBtn').addEventListener('click',roundAnalyze);
-$('roundInput').addEventListener('keydown',e=>{if(e.key==='Enter')roundAnalyze()});
-document.addEventListener('DOMContentLoaded',()=>{load();setInterval(load,5000);tick=setInterval(()=>{if(state){state.remainingSeconds=Math.max(0,state.remainingSeconds-1);$('remaining').textContent=mmss(state.remainingSeconds);if(state.remainingSeconds===0)load()}},1000)});
-})();
-
-async function checkLogin(){
- try{
-  const r=await fetch('/api/me',{credentials:'include',cache:'no-store'}); if(!r.ok)return;
-  const u=await r.json(),lb=document.getElementById('loginBtn'),ub=document.getElementById('userBtn');
-  if(u?.username){lb.hidden=true;ub.hidden=false;ub.textContent=(u.nickname||u.username)+' 님'}
- }catch(e){console.error('로그인 상태 확인 실패:',e)}
-}
-function openMainMenu(){const m=document.getElementById('mainMenuOverlay');if(!m)return;m.classList.add('on');document.body.style.overflow='hidden'}
-function closeMainMenu(e){const m=document.getElementById('mainMenuOverlay');if(!m)return;if(e&&e.target!==m)return;m.classList.remove('on');document.body.style.overflow=''}
-function openAlerts(){alert('알림센터는 준비 중입니다.')}
-document.addEventListener('DOMContentLoaded',checkLogin);
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMainMenu()});
-</script>
-</body>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>분석 | TOVIEW</title>
+        <link rel="stylesheet" href="css/core.css">
+        <link rel="stylesheet" href="css/analysis.css">
+    </head>
+    <body>
+        <header class="top">
+            <div class="bar">
+                <a class="brand" href="index.html">
+                    <span class="brand-mark">T</span>
+                    <span>TOVIEW</span>
+                </a>
+                <nav class="nav">
+                    <a href="index.html">홈</a>
+                    <a href="results.html">결과</a>
+                    <a href="analysis.html">분석</a>
+                    <a href="pattern.html">패턴</a>
+                    <a href="sports.html">스포츠</a>
+                    <a href="community.html">커뮤니티</a>
+                    <a href="ranking.html">랭킹</a>
+                    <a href="verified.html">보증업체</a>
+                </nav>
+                <div class="header-actions">
+                    <button class="btn primary" id="loginBtn">로그인</button>
+                    <button class="btn" id="userBtn" hidden>내 계정</button>
+                </div>
+                <div class="profile-menu" id="profileMenu">
+                </div>
+            </div>
+        </header>
+        <main class="wrap">
+            <div class="page-title">
+                <h1>데이터 분석</h1>
+                <p class="muted">여유 있는 세로형 분석 대시보드</p>
+            </div>
+            <div class="game-tabs" id="analysisGameTabs">
+            </div>
+            <select class="btn" id="analysisDays">
+                <option value="1">오늘</option>
+                <option value="7">최근 7일</option>
+                <option value="30">최근 30일</option>
+            </select>
+            <section class="analysis-section analysis-summary" id="analysisSummary">
+            </section>
+            <section class="card analysis-section analysis-chart">
+                <div class="card-head">결과 분포</div>
+                <div id="analysisBars">
+                </div>
+            </section>
+        </main>
+        <div class="modal" id="moreGames">
+            <div class="modal-box">
+                <h3>미니게임 더보기</h3>
+                <div class="game-tabs more-body">
+                </div>
+                <button class="btn" data-close-more="1">닫기</button>
+            </div>
+        </div>
+        <script src="js/core.js">
+        </script>
+        <script src="js/gate.js">
+        </script>
+        <script src="js/auth.js">
+        </script>
+        <script src="js/ads.js">
+        </script>
+        <script src="js/animation.js">
+        </script>
+        <script src="js/games-ui.js">
+        </script>
+        <script src="js/analysis.js">
+        </script>
+    </body>
 </html>
