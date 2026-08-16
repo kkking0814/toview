@@ -1,125 +1,52 @@
 <!doctype html>
 <html lang="ko">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width,initial-scale=1">
-        <title>홈 | TOVIEW</title>
-        <link rel="stylesheet" href="css/core.css">
-        <link rel="stylesheet" href="css/home.css">
-    </head>
-    <body>
-        <header class="top">
-            <div class="bar">
-                <a class="brand" href="index.html">
-                    <span class="brand-mark">T</span>
-                    <span>TOVIEW</span>
-                </a>
-                <nav class="nav">
-                    <a href="index.html">홈</a>
-                    <a href="results.html">결과</a>
-                    <a href="analysis.html">분석</a>
-                    <a href="pattern.html">패턴</a>
-                    <a href="sports.html">스포츠</a>
-                    <a href="community.html">커뮤니티</a>
-                    <a href="ranking.html">랭킹</a>
-                    <a href="verified.html">보증업체</a>
-                </nav>
-                <div class="header-actions">
-                    <button class="btn primary" id="loginBtn">로그인</button>
-                    <button class="btn" id="userBtn" hidden>내 계정</button>
-                </div>
-                <div class="profile-menu" id="profileMenu">
-                </div>
-            </div>
-        </header>
-        <main class="wrap home-shell">
-            <aside class="home-left-rail">
-                <div class="ad" data-ad-slot="HOME_LEFT_1">
-                </div>
-                <div class="ad" data-ad-slot="HOME_LEFT_2">
-                </div>
-            </aside>
-            <section class="home-main">
-                <div class="ad home-hero-ad" data-ad-slot="HOME_HERO" data-eager="1">
-                </div>
-                <div class="game-tabs" id="homeGameTabs">
-                </div>
-                <section class="card home-live">
-                    <div class="card-head">TOVIEW LIVE <span class="status-pill">LIVE</span>
-                    </div>
-                    <div class="home-live-stage" id="homeLiveStage">
-                    </div>
-                </section>
-                <div class="home-data">
-                    <section class="card">
-                        <div class="card-head">최근 결과</div>
-                        <div class="card-body" id="homeRecent">
-                        </div>
-                    </section>
-                    <section class="card">
-                        <div class="card-head">패턴 시각화</div>
-                        <div class="card-body" id="homePattern">
-                        </div>
-                    </section>
-                    <section class="card">
-                        <div class="card-head">최근 통계</div>
-                        <div class="card-body" id="homeStats">
-                        </div>
-                    </section>
-                </div>
-                <div class="home-mid-ads">
-                    <div class="ad" data-ad-slot="HOME_MID_A">
-                    </div>
-                    <div class="ad" data-ad-slot="HOME_MID_B">
-                    </div>
-                </div>
-                <div class="home-lower">
-                    <section class="card">
-                        <div class="card-head">커뮤니티</div>
-                        <div class="card-body">회원 커뮤니티 최신글은 로그인 후 확인할 수 있습니다.</div>
-                    </section>
-                    <section class="card">
-                        <div class="card-head">PICK 랭킹</div>
-                        <div class="card-body">랭킹 미리보기</div>
-                    </section>
-                </div>
-                <div class="partner-strip">
-                    <div class="ad" data-ad-slot="HOME_PARTNER_1">
-                    </div>
-                    <div class="ad" data-ad-slot="HOME_PARTNER_2">
-                    </div>
-                    <div class="ad" data-ad-slot="HOME_PARTNER_3">
-                    </div>
-                </div>
-            </section>
-            <aside class="home-right-rail">
-                <div class="ad" data-ad-slot="HOME_RIGHT_1">
-                </div>
-                <div class="ad" data-ad-slot="HOME_RIGHT_2">
-                </div>
-                <div class="ad" data-ad-slot="HOME_RIGHT_3">
-                </div>
-            </aside>
-        </main>
-        <div class="modal" id="moreGames">
-            <div class="modal-box">
-                <h3>미니게임 더보기</h3>
-                <div class="game-tabs more-body">
-                </div>
-                <button class="btn" data-close-more="1">닫기</button>
-            </div>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>TOVIEW | 데이터 · LIVE · 커뮤니티</title>
+    <link rel="stylesheet" href="css/core.css">
+    <link rel="stylesheet" href="css/home.css">
+</head>
+<body>
+<header class="top">
+    <div class="bar">
+        <a class="brand" href="index.html"><span class="brand-mark">T</span><span>TOVIEW</span></a>
+        <nav class="nav">
+            <a class="active" href="index.html">홈</a><a href="results.html">결과</a><a href="analysis.html">분석</a><a href="pattern.html">패턴</a><a href="sports.html">스포츠</a><a href="community.html">커뮤니티</a><a href="ranking.html">랭킹</a><a href="verified.html">보증업체</a>
+        </nav>
+        <div class="header-actions"><button class="btn primary" id="loginBtn">로그인</button><button class="btn" id="userBtn" hidden>내 계정</button></div>
+        <div class="profile-menu" id="profileMenu"></div>
+    </div>
+</header>
+<main class="wrap home-shell">
+    <aside class="home-left-rail" aria-label="주요 제휴">
+        <div class="ad-slot" data-ad-slot="HOME_LEFT_1" data-placeholder="PREMIUM PARTNER"></div>
+        <div class="ad-slot" data-ad-slot="HOME_LEFT_2" data-placeholder="PREMIUM PARTNER"></div>
+        <div class="ad-slot" data-ad-slot="HOME_LEFT_3" data-placeholder="PREMIUM PARTNER"></div>
+    </aside>
+    <section class="home-main">
+        <div class="ad-slot home-hero-ad" data-ad-slot="HOME_HERO" data-placeholder="TOVIEW MAIN PARTNER"></div>
+        <div id="homeGameTabs"></div>
+        <section class="card home-live">
+            <div class="card-head"><span>TOVIEW LIVE</span><span class="status-pill">LIVE</span></div>
+            <div class="home-live-stage" id="homeLiveStage"></div>
+        </section>
+        <div class="home-data">
+            <section class="card"><div class="card-head"><span>최근 결과</span><a class="muted" href="results.html">전체보기</a></div><div class="card-body" id="homeRecent"></div></section>
+            <section class="card"><div class="card-head"><span>패턴 시각화</span><a class="muted" href="pattern.html">상세</a></div><div class="card-body" id="homePattern"></div></section>
+            <section class="card"><div class="card-head"><span>최근 통계</span><a class="muted" href="analysis.html">분석</a></div><div class="card-body" id="homeStats"></div></section>
         </div>
-        <script src="js/core.js">
-        </script>
-        <script src="js/auth.js">
-        </script>
-        <script src="js/ads.js">
-        </script>
-        <script src="js/animation.js">
-        </script>
-        <script src="js/games-ui.js">
-        </script>
-        <script src="js/home.js">
-        </script>
-    </body>
+        <div class="home-mid-ads"><div class="ad-slot" data-ad-slot="HOME_MID_A" data-placeholder="PARTNER"></div><div class="ad-slot" data-ad-slot="HOME_MID_B" data-placeholder="PARTNER"></div></div>
+        <div class="home-lower">
+            <section class="card"><div class="card-head">커뮤니티</div><div class="card-body" id="homeCommunity">로그인 후 최신 커뮤니티 글을 확인할 수 있습니다.</div></section>
+            <section class="card"><div class="card-head">PICK 랭킹</div><div class="card-body" id="homeRanking">회원 PICK 랭킹은 로그인 후 확인할 수 있습니다.</div></section>
+        </div>
+        <div class="partner-strip"><div class="ad-slot" data-ad-slot="HOME_PARTNER_1" data-placeholder="PARTNER"></div><div class="ad-slot" data-ad-slot="HOME_PARTNER_2" data-placeholder="PARTNER"></div><div class="ad-slot" data-ad-slot="HOME_PARTNER_3" data-placeholder="PARTNER"></div></div>
+    </section>
+    <aside class="home-right-rail" aria-label="제휴 배너">
+        <div class="ad-slot" data-ad-slot="HOME_RIGHT_1" data-placeholder="PARTNER"></div><div class="ad-slot" data-ad-slot="HOME_RIGHT_2" data-placeholder="PARTNER"></div><div class="ad-slot" data-ad-slot="HOME_RIGHT_3" data-placeholder="PARTNER"></div><div class="ad-slot" data-ad-slot="HOME_RIGHT_4" data-placeholder="PARTNER"></div><div class="ad-slot" data-ad-slot="HOME_RIGHT_5" data-placeholder="PARTNER"></div>
+    </aside>
+</main>
+<script src="js/core.js"></script><script src="js/auth.js"></script><script src="js/ads.js"></script><script src="js/animation.js"></script><script src="js/games-ui.js"></script><script src="js/home.js"></script>
+</body>
 </html>
