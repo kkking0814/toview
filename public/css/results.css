@@ -1,0 +1,132 @@
+.results-layout{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 340px;
+    gap:18px}
+    .results-stage{
+        height:430px;
+        position:relative;
+        overflow:hidden;
+        background:#0c1c35;
+        color:#fff}
+        .animation-stage{
+            height:100%;
+            display:grid;
+            place-items:center;
+            text-align:center}
+            .anim-orbit{
+                width:210px;
+                height:210px;
+                border:2px solid #2f68a9;
+                border-radius:50%;
+                position:relative;
+                animation:spin 8s linear infinite}
+                .anim-ball{
+                    position:absolute;
+                    width:42px;
+                    height:42px;
+                    border-radius:50%;
+                    background:#2d7df0;
+                    display:grid;
+                    place-items:center;
+                    font-weight:900;
+                    box-shadow:0 7px 20px #0004}
+                    .anim-ball:nth-child(1){
+                        left:25px;
+                        top:80px}
+                        .anim-ball:nth-child(2){
+                            right:25px;
+                            top:80px}
+                            .anim-ball:nth-child(3){
+                                left:84px;
+                                top:22px}
+                                .anim-ball:nth-child(4){
+                                    left:84px;
+                                    bottom:22px}
+                                    .anim-ladder{
+                                        width:260px;
+                                        height:210px;
+                                        position:relative}
+                                        .anim-ladder:before,.anim-ladder:after{
+                                            content:'';
+                                            position:absolute;
+                                            top:10px;
+                                            bottom:10px;
+                                            width:4px;
+                                            background:#63a8ff}
+                                            .anim-ladder:before{
+                                                left:55px}
+                                                .anim-ladder:after{
+                                                    right:55px}
+                                                    .anim-ladder i{
+                                                        position:absolute;
+                                                        left:55px;
+                                                        right:55px;
+                                                        height:4px;
+                                                        background:#63a8ff}
+                                                        .anim-ladder i:nth-child(1){
+                                                            top:55px}
+                                                            .anim-ladder i:nth-child(2){
+                                                                top:105px}
+                                                                .anim-ladder i:nth-child(3){
+                                                                    top:155px}
+                                                                    .runner{
+                                                                        position:absolute;
+                                                                        width:18px;
+                                                                        height:18px;
+                                                                        border-radius:50%;
+                                                                        background:#ffd24d;
+                                                                        left:48px;
+                                                                        top:5px;
+                                                                        animation:run 2.8s linear infinite}
+                                                                        .results-pick{
+                                                                            padding:18px}
+                                                                            .pick-options{
+                                                                                display:grid;
+                                                                                grid-template-columns:1fr 1fr;
+                                                                                gap:8px}
+                                                                                .pick-options button{
+                                                                                    padding:12px;
+                                                                                    border:1px solid var(--line);
+                                                                                    background:#fff;
+                                                                                    border-radius:8px}
+                                                                                    .pick-options button.on{
+                                                                                        background:var(--blue);
+                                                                                        color:#fff}
+                                                                                        .results-list{
+                                                                                            margin-top:18px}
+                                                                                            @keyframes spin{
+                                                                                                to{
+                                                                                                    transform:rotate(360deg)}
+                                                                                                }
+                                                                                                @keyframes run{
+                                                                                                    0%{
+                                                                                                        left:48px;
+                                                                                                        top:5px}
+                                                                                                        45%{
+                                                                                                            left:48px;
+                                                                                                            top:100px}
+                                                                                                            55%{
+                                                                                                                left:194px;
+                                                                                                                top:100px}
+                                                                                                                100%{
+                                                                                                                    left:194px;
+                                                                                                                    top:190px}
+                                                                                                                }
+                                                                                                                @media(max-width:950px){
+                                                                                                                    .results-layout{
+                                                                                                                        grid-template-columns:1fr}
+                                                                                                                        .results-stage{
+                                                                                                                            height:360px}
+                                                                                                                        }
+                                                                                                                        .animation-result{
+                                                                                                                            margin-top:14px;
+                                                                                                                            font-weight:900;
+                                                                                                                            font-size:18px;
+                                                                                                                            text-align:center}
+                                                                                                                            .animation-caption{
+                                                                                                                                text-align:center;
+                                                                                                                                margin-top:14px}
+                                                                                                                                .animation-caption h2{
+                                                                                                                                    margin:0 0 6px}
+                                                                                                                                    .animation-caption p{
+                                                                                                                                        margin:0}
