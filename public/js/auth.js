@@ -1,0 +1,16 @@
+'use strict';
+(async()=>{const login=document.getElementById('loginBtn'),user=document.getElementById('userBtn'),menu=document.getElementById('profileMenu');
+let me=null;
+try{me=await TV.api('/api/me');
+}catch{}if(me){if(login)login.hidden=true;
+if(user){user.hidden=false;
+user.textContent=(me.nickname||me.username)+' 님 ▾';
+user.onclick=()=>menu?.classList.toggle('on');
+}if(menu){menu.innerHTML=`<a href="dashboard.html">마이페이지</a><a href="dashboard.html#picks">내 PICK</a><a href="dashboard.html#activity">내 활동</a><a href="dashboard.html#saved">내 보관함</a><a href="dashboard.html#settings">계정 설정</a>${me.role==='admin'?'<a href="admin.html">관리자</a>':''}<button id="logoutBtn">로그아웃</button>`;
+menu.querySelector('#logoutBtn').onclick=async()=>{await TV.api('/api/logout',{method:'POST'});
+location.href='index.html';
+};
+}}else{if(login){login.hidden=false;
+login.onclick=()=>location.href='account.html?next='+encodeURIComponent(location.pathname+location.search);
+}if(user)user.hidden=true;
+}})();
