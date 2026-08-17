@@ -1,16 +1,11 @@
-.simple-grid{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:14px}
-    .simple-item{
-        padding:18px}
-        .simple-item h3{
-            margin:0 0 8px}
-            .admin-grid{
-                display:grid;
-                grid-template-columns:repeat(3,1fr);
-                gap:14px}
-                @media(max-width:850px){
-                    .simple-grid,.admin-grid{
-                        grid-template-columns:1fr}
-                    }
+.simple-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.simple-grid h2 { margin:6px 0 0; font-size:24px; }
+.simple-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.form-stack { display:grid; gap:10px; }
+.form-stack input,.form-stack textarea,.form-stack select { width:100%; border:1px solid var(--line); border-radius:10px; padding:11px 12px; background:#fff; }
+.account-shell { max-width:560px; margin:50px auto; }
+.account-logo { display:flex; justify-content:center; margin-bottom:22px; }
+.account-card { padding:26px; }
+.notice-box { padding:14px; margin-bottom:14px; border:1px solid #d9e7fb; background:#f1f6ff; border-radius:10px; }
+@media(max-width:800px){.simple-grid{grid-template-columns:1fr}}
+.rank-tabs{display:flex;gap:6px;margin-bottom:10px}.podium{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}.podium-card{padding:20px;text-align:center;background:#fff;border:1px solid var(--line);border-radius:10px}.podium-card.first{background:#fff9e9;border-color:#efd48a}.rank-bottom{margin-top:10px}.rank-member{display:flex;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #edf0f4}.verified-hero{height:140px;border-radius:10px;background:linear-gradient(135deg,#07182d,#0b3b75);color:#fff;padding:25px 30px;display:flex;justify-content:space-between;align-items:center}.verified-hero strong{font-size:30px;color:#f0bd40}.verified-tools{display:flex;justify-content:space-between;margin:10px 0}.verified-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.vendor-card{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}.vendor-image{height:145px;background:linear-gradient(135deg,#091b32,#173d6c);color:#fff;display:grid;place-items:center;font-size:25px;font-weight:950}.vendor-info{padding:10px}.vendor-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}@media(max-width:800px){.verified-grid{grid-template-columns:1fr}}
