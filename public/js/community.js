@@ -1,23 +1,11 @@
 'use strict';
-(async()=>{let board='free';
+(async()=>{let board='all',all=[];
 const list=TV.qs('#communityList');
-async function load(){try{const rows=await TV.api('/api/community/posts?board='+board);
-list.innerHTML=rows.map(p=>`<div class="community-post"><span>${p.board_id}</span><b>${TV.esc(p.title)}</b><span>${p.role==='admin'?'<span class="admin-badge">관리자</span> ':''}${TV.esc(p.nickname||'탈퇴회원')}</span><span class="muted">${new Date(p.created_at).toLocaleDateString('ko-KR')}</span></div>`).join('')||'<div class="empty">게시글이 없습니다.</div>';
-}catch(e){list.innerHTML='<div class="empty">게시글을 불러오지 못했습니다.</div>';
-}}TV.qs('#communityTabs').onclick=e=>{const b=e.target.closest('[data-board]');
-if(!b)return;
-board=b.dataset.board;
-load();
-};
-TV.qs('#postForm').onsubmit=async e=>{e.preventDefault();
-try{await TV.api('/api/community/posts',{method:'POST',body:JSON.stringify({boardId:board,title:TV.qs('#postTitle').value,body:TV.qs('#postBody').value})});
-localStorage.removeItem('toviewDraft');
-e.target.reset();
-load();
-}catch(x){alert(x.message);
-}};
-const body=TV.qs('#postBody');
-body.value=localStorage.getItem('toviewDraft')||'';
-body.oninput=()=>localStorage.setItem('toviewDraft',body.value);
-load();
+function render(){const q=(TV.qs('#communitySearch').value||'').trim().toLowerCase();const rows=all.filter(p=>(board==='all'||p.board_id===board)&&(!q||(p.title+' '+p.body).toLowerCase().includes(q)));list.innerHTML=rows.map((p,i)=>`<div class="community-post"><span>${p.is_pinned?'공지':rows.length-i}</span><a href="community.html?post=${p.id}"><b>${TV.esc(p.title)}</b></a><span>${TV.esc(p.nickname||'회원')} <small class="level">Lv.${p.level||1}</small></span><span>${TV.esc(p.board_id)}</span><span>${new Date(p.created_at).toLocaleDateString('ko-KR')}</span><span>${p.views||0}</span><span>${p.comment_count||0}</span></div>`).join('')||'<div class="empty">게시글이 없습니다.</div>'}
+async function load(){try{all=[];for(const b of ['notice','free','analysis']){const r=await TV.api('/api/community/posts?board='+b);all.push(...r)}all.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));render()}catch(e){list.innerHTML='<div class="empty">게시글을 불러오지 못했습니다.</div>'}}
+document.querySelectorAll('[data-board]').forEach(b=>b.onclick=()=>{board=b.dataset.board;document.querySelectorAll('[data-board]').forEach(x=>x.classList.toggle('on',x===b));render()});
+TV.qs('#communitySearchBtn').onclick=render;TV.qs('#writeOpen').onclick=()=>TV.qs('#writeBox').hidden=false;TV.qs('#writeClose').onclick=()=>TV.qs('#writeBox').hidden=true;TV.qs('#communityChatJump').onclick=()=>TV.qs('#communityChat').scrollIntoView({behavior:'smooth'});
+TV.qs('#postForm').onsubmit=async e=>{e.preventDefault();try{await TV.api('/api/community/posts',{method:'POST',body:JSON.stringify({boardId:TV.qs('#postBoard').value,title:TV.qs('#postTitle').value,body:TV.qs('#postBody').value})});e.target.reset();TV.qs('#writeBox').hidden=true;load()}catch(x){alert(x.message)}};
+async function chat(){try{const r=await TV.api('/api/chat/COMMUNITY');TV.qs('#communityChatList').innerHTML=r.map(m=>`<div class="msg"><span class="avatar">${TV.esc((m.nickname||'?')[0])}</span><div><b>${TV.esc(m.nickname)} <span class="level">Lv.${m.level||1}</span></b><div>${TV.esc(m.body)}</div></div><small>${new Date(m.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</small></div>`).join('')}catch{}}
+TV.qs('#communityChatForm').onsubmit=async e=>{e.preventDefault();const i=TV.qs('#communityChatInput');if(!i.value.trim())return;try{await TV.api('/api/chat/COMMUNITY',{method:'POST',body:JSON.stringify({body:i.value.trim()})});i.value='';chat()}catch(x){alert(x.message)}};await load();await chat();const es=new EventSource('/api/events');es.addEventListener('chat-message',e=>{const x=JSON.parse(e.data);if(x.room==='COMMUNITY')chat()});window.addEventListener('pagehide',()=>es.close())
 })();
