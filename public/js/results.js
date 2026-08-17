@@ -1,56 +1,17 @@
 'use strict';
-(async()=>{const tabs=TV.qs('#resultsGameTabs'),stage=TV.qs('#resultsStage'),tbody=TV.qs('#resultsRows'),pickBox=TV.qs('#pickBox');
-let catalog=[],currentGame=null,selected=null,currentRound=null,reloadTimer=null,tickTimer=null;
-function scheduleReload(){clearTimeout(reloadTimer);
-reloadTimer=setTimeout(()=>currentGame&&load(currentGame),120);
-}
-function startCountdown(round){clearInterval(tickTimer);
-currentRound=round;
-if(!round)return;
-const tick=()=>{const left=Math.max(0,Math.ceil((new Date(round.scheduled_at).getTime()-Date.now())/1000));
-const el=stage.querySelector('.animation-caption p');
-if(el)el.textContent=left>0?`결과까지 ${String(Math.floor(left/60)).padStart(2,'0')}:${String(left%60).padStart(2,'0')}`:'결과 확인 중';
-if(left<=0)TVAnimation.render(stage,currentGame.family,'VERIFYING');
-};
-tick();
-tickTimer=setInterval(tick,1000);
-}
-async function load(g){currentGame=g;
-selected=null;
-pickBox.querySelectorAll('button[data-pick]').forEach(b=>b.classList.remove('on'));
-try{const [snap,rows]=await Promise.all([TV.api(`/api/games/${g.id}/snapshot`),TV.api(`/api/games/${g.id}/results?date=${TV.today()}&limit=100`)]);
-const last=snap.lastResult,current=snap.currentRound;
-const remaining=current?Math.ceil((new Date(current.scheduled_at).getTime()-Date.now())/1000):null;
-const state=current?(remaining>0?'WAITING':'VERIFYING'):(last?'RESULT':'VERIFYING');
-TVAnimation.render(stage,g.family,state,state==='RESULT'?last?.result:null);
-startCountdown(current);
-tbody.innerHTML=rows.map(x=>`<tr><td>${x.roundNumber}</td><td>${TV.esc(JSON.stringify(x.result))}</td><td>${x.publishedAt?new Date(x.publishedAt).toLocaleTimeString('ko-KR'):''}</td></tr>`).join('')||'<tr><td colspan="3">확정 결과 대기 중</td></tr>';
-pickBox.dataset.roundId=current?.round_id||'';
-}catch{TVAnimation.render(stage,g.family,'VERIFYING');
-}}
-catalog=await TVGames.mount(tabs,load);
-pickBox.onclick=e=>{const b=e.target.closest('[data-pick]');
-if(!b)return;
-selected=b.dataset.pick;
-pickBox.querySelectorAll('[data-pick]').forEach(x=>x.classList.toggle('on',x===b));
-};
-TV.qs('#pickSubmit').onclick=async()=>{if(!selected||!pickBox.dataset.roundId)return alert('PICK과 회차를 확인해 주세요.');
-if(!confirm('PICK을 등록하시겠습니까?\n등록 후에는 수정하거나 삭제할 수 없습니다.'))return;
-try{await TV.api('/api/picks/mini',{method:'POST',body:JSON.stringify({roundId:Number(pickBox.dataset.roundId),marketType:'odd_even',selection:selected,visibility:TV.qs('#pickVisibility').value})});
-alert('PICK이 확정되었습니다.');
-}catch(e){alert(e.message);
-}};
-const g=catalog.find(x=>x.id===TV.gameParam())||catalog.find(x=>x.active)||catalog[0];
-if(g)await load(g);
-const es=new EventSource('/api/events');
-es.addEventListener('game-result',e=>{try{const r=JSON.parse(e.data);
-if(r.gameId===currentGame?.id){TVAnimation.render(stage,currentGame.family,'RESULT',r.result);
-clearInterval(tickTimer);
-clearTimeout(reloadTimer);
-reloadTimer=setTimeout(()=>load(currentGame),3500);
-}}catch{}});
-window.addEventListener('pagehide',()=>{es.close();
-clearInterval(tickTimer);
-clearTimeout(reloadTimer);
-},{once:true});
+(async()=>{
+const tabs=TV.qs('#resultsGameTabs'),stage=TV.qs('#resultsStage'),tbody=TV.qs('#resultsRows'),pickBox=TV.qs('#pickBox');
+let catalog=[],currentGame=null,currentRound=null,selected=null,tickTimer=null,reloadTimer=null,results=[];
+function balls(result){if(!result)return '-';const nums=result.numbers||result.mainNumbers||[];const special=result.specialNumber??result.bonus;return nums.map(n=>`<span class="ball">${TV.esc(n)}</span>`).join('')+(special!=null?` <span class="ball red">${TV.esc(special)}</span>`:'')}
+function renderRecent(){TV.qs('#miniRecentHero').innerHTML=results.slice(0,5).map(r=>`<div class="recent-result"><b>${TV.esc(r.roundNumber)}</b><div>${balls(r.result)}</div></div>`).join('')||'<div class="empty">확정 결과 대기 중</div>'}
+function renderStats(){const odd=results.filter(r=>JSON.stringify(r.result).toLowerCase().includes('odd')).length,even=Math.max(0,results.length-odd);TV.qs('#miniStats').innerHTML=`<div class="row"><b>확정 회차</b><span>${results.length}</span></div><div class="row"><b>홀/짝</b><span>${odd} / ${even}</span></div>`;TV.qs('#miniMarket').innerHTML=`<div class="row"><b>홀 비중</b><span>${results.length?Math.round(odd/results.length*100):0}%</span></div><div class="row"><b>짝 비중</b><span>${results.length?Math.round(even/results.length*100):0}%</span></div>`;TV.qs('#miniPattern').innerHTML=results.slice(0,50).map((r,i)=>`<span class="pattern-dot ${i%2?'red':''}">${i+1}</span>`).join('')}
+function countdown(round){clearInterval(tickTimer);currentRound=round;const run=()=>{if(!round){TV.qs('#miniCountdown').textContent='--:--';return}const left=Math.max(0,Math.ceil((new Date(round.scheduled_at)-Date.now())/1000));TV.qs('#miniCountdown').textContent=`${String(Math.floor(left/60)).padStart(2,'0')}:${String(left%60).padStart(2,'0')}`;TV.qs('#miniState').textContent=left>0?'결과 대기 중':'결과 확인 중';TV.qs('#pickRoundLabel').textContent=round.round_number?`${round.round_number}회차`:'';if(left<=0)TVAnimation.render(stage,currentGame.family,'VERIFYING')};run();tickTimer=setInterval(run,1000)}
+async function load(g){currentGame=g;selected=null;TV.qs('#miniGameName').textContent=g.name;pickBox.querySelectorAll('[data-pick]').forEach(b=>b.classList.remove('on'));const [snap,rows]=await Promise.all([TV.api(`/api/games/${g.id}/snapshot`),TV.api(`/api/games/${g.id}/results?date=${TV.today()}&limit=100`)]);results=rows;currentRound=snap.currentRound;pickBox.dataset.roundId=currentRound?.round_id||'';const left=currentRound?new Date(currentRound.scheduled_at)-Date.now():-1;TVAnimation.render(stage,g.family,currentRound?(left>0?'WAITING':'VERIFYING'):(snap.lastResult?'RESULT':'VERIFYING'),snap.lastResult?.result);countdown(currentRound);tbody.innerHTML=rows.slice(0,20).map(x=>`<tr><td>${TV.esc(x.roundNumber)}</td><td>${balls(x.result)}</td><td>${x.publishedAt?new Date(x.publishedAt).toLocaleTimeString('ko-KR'):''}</td></tr>`).join('')||'<tr><td colspan="3">결과 대기 중</td></tr>';renderRecent();renderStats()}
+catalog=await TVGames.mount(tabs,load);const side=TV.qs('#miniSideGames');side.innerHTML=catalog.map(g=>`<button data-side-game="${g.id}">${TV.esc(g.name)}</button>`).join('');side.onclick=e=>{const b=e.target.closest('[data-side-game]');if(b)tabs.selectGame(b.dataset.sideGame)};
+pickBox.onclick=e=>{const b=e.target.closest('[data-pick]');if(!b)return;selected=b.dataset.pick;pickBox.querySelectorAll('[data-pick]').forEach(x=>x.classList.toggle('on',x===b))};
+TV.qs('#pickSubmit').onclick=async()=>{if(!selected||!pickBox.dataset.roundId)return alert('PICK과 현재 회차를 확인해 주세요.');if(!confirm('등록 후 수정·삭제할 수 없습니다. 등록할까요?'))return;try{await TV.api('/api/picks/mini',{method:'POST',body:JSON.stringify({roundId:Number(pickBox.dataset.roundId),marketType:'odd_even',selection:selected,visibility:TV.qs('#pickVisibility').value})});alert('PICK이 등록되었습니다.')}catch(e){alert(e.message)}};
+async function chatLoad(){try{const rows=await TV.api('/api/chat/MINI');TV.qs('#miniChatList').innerHTML=rows.map(m=>`<div class="msg"><span class="avatar">${TV.esc((m.nickname||'?')[0])}</span><div><b>${TV.esc(m.nickname)} <span class="level">Lv.${m.level||1}</span></b><div>${TV.esc(m.body)}</div></div><small>${new Date(m.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</small></div>`).join('')}catch{}}
+TV.qs('#miniChatForm').onsubmit=async e=>{e.preventDefault();const i=TV.qs('#miniChatInput'),body=i.value.trim();if(!body)return;try{await TV.api('/api/chat/MINI',{method:'POST',body:JSON.stringify({body})});i.value='';await chatLoad()}catch(x){alert(x.message)}};
+await chatLoad();const g=catalog.find(x=>x.id===TV.gameParam())||catalog[0];if(g)await tabs.selectGame(g.id);
+const es=new EventSource('/api/events');es.addEventListener('game-result',e=>{const r=JSON.parse(e.data);if(r.gameId===currentGame?.id){TVAnimation.render(stage,currentGame.family,'RESULT',r.result);clearTimeout(reloadTimer);reloadTimer=setTimeout(()=>load(currentGame),3000)}});es.addEventListener('chat-message',e=>{const x=JSON.parse(e.data);if(x.room==='MINI')chatLoad()});window.addEventListener('pagehide',()=>{es.close();clearInterval(tickTimer)})
 })();
