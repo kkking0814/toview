@@ -1,43 +1,9 @@
 'use strict';
-(async()=>{const list=TV.qs('#sportsEvents'),player=TV.qs('#sportsPlayer'),pre=TV.qs('#sportsPreviews'),pickMatch=TV.qs('#sportsPickMatch'),pickStats=TV.qs('#sportsPickStats');
-let current=null,selected='';
-async function stats(){if(!current)return;
-try{const s=await TV.api(`/api/picks/sports/${current.event_id}/stats`);
-pickStats.textContent=s.total?`회원 PICK ${s.total}명 · 홈 ${s.home} · 무 ${s.draw} · 원정 ${s.away}`:'아직 등록된 회원 PICK이 없습니다.';
-}catch{pickStats.textContent='';
-}}
-function select(e){current=e;
-selected='';
-document.querySelectorAll('[data-sports-pick]').forEach(b=>b.classList.remove('on'));
-player.replaceChildren();
-const box=document.createElement('div'),h=document.createElement('h2'),p=document.createElement('p'),score=document.createElement('strong'),note=document.createElement('p');
-h.textContent=`${e.home_name||''} vs ${e.away_name||''}`;
-p.textContent=`${e.league||''} · ${e.status||''}`;
-score.textContent=`${e.home_score??'-'} : ${e.away_score??'-'}`;
-note.className='muted';
-note.textContent='공식/허가된 스트림이 등록된 경우에만 영상이 표시됩니다.';
-box.append(h,p,score,note);
-player.append(box);
-pickMatch.textContent=`${e.home_name||'홈'} vs ${e.away_name||'원정'}`;
-stats();
-}
-try{const events=await TV.api('/api/sports/events');
-pre.innerHTML=events.filter(e=>e.status==='LIVE').slice(0,3).map(e=>`<div class="card sports-preview" data-id="${e.event_id}">${TV.esc(e.home_name)} vs ${TV.esc(e.away_name)}</div>`).join('');
-list.innerHTML=events.map(e=>`<div class="sports-event"><span>${TV.esc(e.sport)}</span><b>${TV.esc(e.home_name)} vs ${TV.esc(e.away_name)}</b><span>${e.home_score??'-'} : ${e.away_score??'-'}</span><button class="btn" data-id="${e.event_id}">보기</button></div>`).join('')||'<div class="empty">등록된 스포츠 경기가 없습니다.</div>';
-document.addEventListener('click',ev=>{const b=ev.target.closest('[data-id]');
-if(b){const e=events.find(x=>String(x.event_id)===b.dataset.id);
-if(e)select(e);
-}const p=ev.target.closest('[data-sports-pick]');
-if(p){selected=p.dataset.sportsPick;
-document.querySelectorAll('[data-sports-pick]').forEach(x=>x.classList.toggle('on',x===p));
-}});
-TV.qs('#sportsPickSubmit').onclick=async()=>{if(!current||!selected)return alert('경기와 PICK을 선택해 주세요.');
-if(!confirm('PICK을 등록하시겠습니까?\n등록 후에는 수정하거나 삭제할 수 없습니다.'))return;
-try{await TV.api('/api/picks/sports',{method:'POST',body:JSON.stringify({eventId:current.event_id,marketType:'winner',selection:selected,visibility:TV.qs('#sportsPickVisibility').value})});
-alert('PICK이 확정되었습니다.');
-await stats();
-}catch(e){alert(e.message);
-}};
-if(events[0])select(events[0]);
-}catch{list.innerHTML='<div class="empty">스포츠 데이터를 불러오지 못했습니다.</div>';
-}})();
+(async()=>{const list=TV.qs('#sportsEvents'),player=TV.qs('#sportsPlayer');let events=[],current=null,selected='';
+async function stats(){if(!current)return;try{const s=await TV.api(`/api/picks/sports/${current.event_id}/stats`);TV.qs('#sportsPickStats').textContent=s.total?`회원 PICK ${s.total}명 · 홈 ${s.home} · 무 ${s.draw} · 원정 ${s.away}`:'아직 회원 PICK이 없습니다.'}catch{}}
+function select(e){current=e;selected='';document.querySelectorAll('[data-sports-pick]').forEach(b=>b.classList.remove('navy'));player.innerHTML=`<div><span class="tag green">${TV.esc(e.status||'')}</span><h2>${TV.esc(e.league||'')}</h2><h1>${TV.esc(e.home_name)} <strong>${e.home_score??'-'} : ${e.away_score??'-'}</strong> ${TV.esc(e.away_name)}</h1><p>공식/허가된 스트림이 등록된 경우에만 영상이 표시됩니다.</p></div>`;TV.qs('#sportsPickMatch').textContent=`${e.home_name} vs ${e.away_name}`;TV.qs('#sportsInfo').innerHTML=`<b>${TV.esc(e.league||'')}</b><p>${new Date(e.start_at).toLocaleString('ko-KR')}</p><p>${TV.esc(e.status||'')}</p>`;stats()}
+try{events=await TV.api('/api/sports/events');list.innerHTML=events.map(e=>`<div class="sports-event"><span>${TV.esc(e.sport)}</span><b>${TV.esc(e.home_name)} vs ${TV.esc(e.away_name)}</b><span>${e.home_score??'-'} : ${e.away_score??'-'}</span><button class="btn" data-event="${e.event_id}">경기 보기</button></div>`).join('')||'<div class="empty">등록된 경기가 없습니다.</div>';if(events[0])select(events[0])}catch{list.innerHTML='<div class="empty">경기 데이터를 불러오지 못했습니다.</div>'}
+list.onclick=e=>{const b=e.target.closest('[data-event]');if(b){const x=events.find(v=>String(v.event_id)===b.dataset.event);if(x)select(x)}};document.querySelectorAll('[data-sports-pick]').forEach(b=>b.onclick=()=>{selected=b.dataset.sportsPick;document.querySelectorAll('[data-sports-pick]').forEach(x=>x.classList.toggle('navy',x===b))});
+TV.qs('#sportsPickSubmit').onclick=async()=>{if(!current||!selected)return alert('경기와 PICK을 선택하세요.');if(!confirm('등록 후 수정·삭제할 수 없습니다. 등록할까요?'))return;try{await TV.api('/api/picks/sports',{method:'POST',body:JSON.stringify({eventId:current.event_id,marketType:'winner',selection:selected,visibility:TV.qs('#sportsPickVisibility').value})});alert('PICK이 등록되었습니다.');stats()}catch(e){alert(e.message)}};
+async function chat(){try{const r=await TV.api('/api/chat/SPORTS');TV.qs('#sportsChatList').innerHTML=r.map(m=>`<div class="msg"><span class="avatar">${TV.esc((m.nickname||'?')[0])}</span><div><b>${TV.esc(m.nickname)} <span class="level">Lv.${m.level||1}</span></b><div>${TV.esc(m.body)}</div></div><small>${new Date(m.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</small></div>`).join('')}catch{}}TV.qs('#sportsChatForm').onsubmit=async e=>{e.preventDefault();const i=TV.qs('#sportsChatInput');if(!i.value.trim())return;try{await TV.api('/api/chat/SPORTS',{method:'POST',body:JSON.stringify({body:i.value.trim()})});i.value='';chat()}catch(x){alert(x.message)}};chat()
+})();
