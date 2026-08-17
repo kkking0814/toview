@@ -14,3 +14,5 @@ location.href='index.html';
 login.onclick=()=>location.href='account.html?next='+encodeURIComponent(location.pathname+location.search);
 }if(user)user.hidden=true;
 }})();
+
+document.addEventListener('DOMContentLoaded',async()=>{try{const me=await TV.api('/api/me');const lv=document.getElementById('headerLevel');if(lv&&me)lv.textContent='Lv.'+(me.level||1)}catch{}});
