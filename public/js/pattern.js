@@ -1,13 +1,5 @@
 'use strict';
-(async()=>{const tabs=TV.qs('#patternGameTabs'),board=TV.qs('#patternBoard'),date=TV.qs('#patternDate');
-date.value=TV.today();
-let current;
-async function load(g){current=g;
-try{const rows=await TV.api(`/api/games/${g.id}/pattern?date=${date.value}`);
-board.innerHTML=rows.map(x=>`<div class="pattern-cell"><small>${x.roundNumber}회</small><b>${TV.esc(x.result?.oddEven||x.result?.start||'-')}</b></div>`).join('')||'<div class="empty">해당 날짜의 확정 결과가 없습니다.</div>';
-}catch(e){board.innerHTML='<div class="empty">패턴 데이터를 불러오지 못했습니다.</div>';
-}}const games=await TVGames.mount(tabs,load);
-date.onchange=()=>current&&load(current);
-const g=games.find(x=>x.id===TV.gameParam())||games[0];
-if(g)load(g);
+(async()=>{const tabs=TV.qs('#patternGameTabs');let current=null;TV.qs('#patternDate').value=TV.today();
+async function load(g=current){if(!g)return;current=g;const date=TV.qs('#patternDate').value||TV.today();try{const rows=await TV.api(`/api/games/${g.id}/pattern?date=${date}`);const arr=Array.isArray(rows)?rows:(rows.rows||[]);TV.qs('#patternBoard').innerHTML=arr.map((r,i)=>`<div class="pattern-cell ${i%2?'even':'odd'}" title="${TV.esc(JSON.stringify(r))}">${r.round_number||r.roundNumber||i+1}</div>`).join('')||'<div class="empty">패턴 데이터가 없습니다.</div>';TV.qs('#patternSummary').innerHTML=`<div class="row">게임 <b>${TV.esc(g.name)}</b></div><div class="row">회차 <b>${arr.length}</b></div>`;TV.qs('#patternStreaks').innerHTML='<div class="body">연속 패턴은 확정 결과를 기준으로 계산됩니다.</div>'}catch(e){TV.qs('#patternBoard').innerHTML=`<div class="empty">${TV.esc(e.message)}</div>`}}
+await TVGames.mount(tabs,load);TV.qs('#patternApply').onclick=()=>load();const cat=await TV.api('/api/games');const g=cat.find(x=>x.id===TV.gameParam())||cat[0];if(g)tabs.selectGame(g.id)
 })();
