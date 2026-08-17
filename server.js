@@ -62,7 +62,7 @@ app.use(express.static(path.join(__dirname,'public'),{extensions:['html']}));
 const ok=(res,data,meta)=>res.json({ok:true,data,...(meta?{meta}:{})});
 const fail=(res,status,code,message)=>res.status(status).json({ok:false,error:{code,message}});
 const auth=(req,res,next)=>req.session?.user?next():fail(res,401,'AUTH_REQUIRED','로그인이 필요합니다.');
-const admin=(req,res,next)=>req.session?.user?.role==='admin'?next():fail(res,403,'ADMIN_REQUIRED','관리자 권한이 필요합니다.');
+const admin=(req,res,next)=>['admin','super_admin'].includes(req.session?.user?.role)?next():fail(res,403,'ADMIN_REQUIRED','관리자 권한이 필요합니다.');
 app.post('/api/activity',auth,(req,res)=>ok(res,{active:true}));
 app.get('/api/health',(req,res)=>ok(res,{status:'ok',time:new Date().toISOString()}));
 app.get('/api/games',(req,res)=>ok(res,publicCatalog()));
@@ -273,13 +273,13 @@ fail(res,500,'BLOCK_ERROR','차단 처리에 실패했습니다.');
 }});
 app.get('/api/community/posts',auth,async(req,res)=>{try{const board=String(req.query.board||'free');
 if(!['notice','free','analysis'].includes(board))return fail(res,400,'BAD_BOARD','게시판을 확인해 주세요.');
-const r=await pool.query('SELECT p.*,u.nickname,u.role FROM posts p LEFT JOIN users u ON u.id=p.user_id WHERE board_id=$1 ORDER BY is_pinned DESC,created_at DESC LIMIT 100',[board]);
+const r=await pool.query('SELECT p.*,u.nickname,u.role,u.level FROM posts p LEFT JOIN users u ON u.id=p.user_id WHERE board_id=$1 ORDER BY is_pinned DESC,created_at DESC LIMIT 100',[board]);
 ok(res,r.rows);
 }catch(e){console.error(e);
 fail(res,500,'POSTS_ERROR','게시글을 불러오지 못했습니다.');
 }});
 app.post('/api/community/posts',auth,async(req,res)=>{try{const board=String(req.body.boardId||'free');
-if(!['free','analysis'].includes(board)&&req.session.user.role!=='admin')return fail(res,400,'BAD_BOARD','게시판을 확인해 주세요.');
+if(!['free','analysis'].includes(board)&&!['admin','super_admin'].includes(req.session.user.role))return fail(res,400,'BAD_BOARD','게시판을 확인해 주세요.');
 const title=String(req.body.title||'').trim().slice(0,160),body=String(req.body.body||'').trim().slice(0,20000);
 if(!title||!body)return fail(res,400,'EMPTY_POST','제목과 내용을 입력해 주세요.');
 const r=await pool.query('INSERT INTO posts(user_id,board_id,title,body) VALUES($1,$2,$3,$4) RETURNING *',[req.session.user.id,board,title,body]);
@@ -422,7 +422,7 @@ app.get('/api/rankings', auth, async (req,res) => {
             ), activity AS (
                 SELECT user_id,count(*)::int posts FROM posts GROUP BY user_id
             )
-            SELECT u.id,u.nickname,u.role,
+            SELECT u.id,u.nickname,u.role,u.level,u.xp,
                    COALESCE(m.total,0) mini_total,COALESCE(m.wins,0) mini_wins,
                    COALESCE(s.total,0) sports_total,COALESCE(s.wins,0) sports_wins,
                    COALESCE(a.posts,0) posts
@@ -441,6 +441,34 @@ app.get('/api/admin/status',admin,async(req,res)=>{try{const r=await pool.query(
 ok(res,{games:r.rows,sseClients:sse.size});
 }catch(e){fail(res,500,'ADMIN_STATUS_ERROR','상태 조회에 실패했습니다.');
 }});
+
+app.get('/api/chat/:room',auth,async(req,res)=>{
+ try{
+  const room=String(req.params.room||'').toUpperCase();
+  if(!['MINI','SPORTS','COMMUNITY'].includes(room))return fail(res,400,'BAD_ROOM','채팅방을 확인해 주세요.');
+  const r=await pool.query(`SELECT m.id,m.body,m.created_at,u.id user_id,u.nickname,u.level,u.role
+    FROM chat_messages m JOIN users u ON u.id=m.user_id WHERE m.room=$1
+    ORDER BY m.created_at DESC LIMIT 100`,[room]);
+  ok(res,r.rows.reverse());
+ }catch(e){console.error(e);fail(res,500,'CHAT_LOAD_ERROR','채팅을 불러오지 못했습니다.');}
+});
+app.post('/api/chat/:room',auth,rateLimit('chat',30,60000),async(req,res)=>{
+ try{
+  const room=String(req.params.room||'').toUpperCase(),body=String(req.body.body||'').trim();
+  if(!['MINI','SPORTS','COMMUNITY'].includes(room))return fail(res,400,'BAD_ROOM','채팅방을 확인해 주세요.');
+  if(!body||body.length>300)return fail(res,400,'BAD_CHAT','메시지는 1~300자로 입력해 주세요.');
+  const r=await pool.query('INSERT INTO chat_messages(user_id,room,body) VALUES($1,$2,$3) RETURNING id,body,created_at',[req.session.user.id,room,body]);
+  await pool.query('UPDATE users SET xp=xp+1,level=GREATEST(level,1+floor((xp+1)/100)::int) WHERE id=$1',[req.session.user.id]);
+  broadcast('chat-message',{room,...r.rows[0],userId:req.session.user.id,nickname:req.session.user.nickname});
+  ok(res,r.rows[0]);
+ }catch(e){console.error(e);fail(res,500,'CHAT_SEND_ERROR','메시지 전송에 실패했습니다.');}
+});
+app.get('/api/rankings/levels',auth,async(req,res)=>{
+ try{const r=await pool.query(`SELECT id,nickname,role,level,xp FROM users
+   ORDER BY level DESC,xp DESC,id ASC LIMIT 100`);ok(res,r.rows);}
+ catch(e){console.error(e);fail(res,500,'LEVEL_RANK_ERROR','레벨 랭킹을 불러오지 못했습니다.');}
+});
+
 app.use('/api',(req,res)=>fail(res,404,'API_NOT_FOUND','요청한 API가 없습니다.'));
 app.listen(PORT,()=>console.log(`TOVIEW listening on ${PORT}`));
 module.exports={app,pool,broadcast};
