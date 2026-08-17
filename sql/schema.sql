@@ -1,7 +1,9 @@
 CREATE TABLE IF NOT EXISTS users (
  id BIGSERIAL PRIMARY KEY, username VARCHAR(40) UNIQUE NOT NULL, password_hash TEXT NOT NULL,
- nickname VARCHAR(30) UNIQUE NOT NULL, email TEXT UNIQUE NOT NULL, role VARCHAR(16) NOT NULL DEFAULT 'user' CHECK(role IN('user','moderator','admin')),
- created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+ nickname VARCHAR(30) UNIQUE NOT NULL, email TEXT UNIQUE NOT NULL, role VARCHAR(16) NOT NULL DEFAULT 'user' CHECK(role IN('user','moderator','admin','super_admin')),
+ created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+ level integer NOT NULL DEFAULT 1,
+ xp bigint NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS game_rounds (
  round_id BIGSERIAL PRIMARY KEY, game_id VARCHAR(64) NOT NULL, draw_date DATE NOT NULL, round_number INTEGER NOT NULL,
@@ -40,3 +42,12 @@ CREATE TABLE IF NOT EXISTS email_verifications (
  expires_at TIMESTAMPTZ NOT NULL,
  verified_at TIMESTAMPTZ
 );
+
+CREATE TABLE IF NOT EXISTS chat_messages (
+ id bigserial PRIMARY KEY,
+ user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ room varchar(32) NOT NULL CHECK(room IN('MINI','SPORTS','COMMUNITY')),
+ body varchar(300) NOT NULL,
+ created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS chat_messages_room_created_idx ON chat_messages(room,created_at DESC);
